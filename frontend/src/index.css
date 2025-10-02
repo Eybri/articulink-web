@@ -1,68 +1,119 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+/* src/App.css */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap");
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
+/* Reset for app container only */
+.app-container {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 320px;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 25%, #16213e 50%, #0f3460 100%);
+  position: relative;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.app-container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.05) 0%, transparent 50%);
+  z-index: 0;
+  pointer-events: none;
 }
 
-button {
+/* Main content area - centered */
+.main-content {
+  flex-grow: 1;
+  padding: 24px;
+  min-width: 0;
+  margin-top: 64px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Remove all global tag selectors and replace with class-based */
+
+/* Font styles for app components only */
+.app-container * {
+  font-family: "Inter", system-ui, Avenir, Helvetica, Arial, sans-serif !important;
+}
+
+.app-container .mui-typography {
+  font-family: "Poppins", system-ui, Avenir, Helvetica, Arial, sans-serif !important;
+}
+
+.app-container .mui-button {
+  font-family: "Inter", system-ui, Avenir, Helvetica, Arial, sans-serif !important;
+  font-weight: 500 !important;
+}
+
+.app-container .mui-textfield input,
+.app-container .mui-textfield label,
+.app-container .mui-inputlabel {
+  font-family: "Inter", system-ui, Avenir, Helvetica, Arial, sans-serif !important;
+}
+
+/* Custom button styles for app */
+.app-container .custom-button {
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
-  font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
+  font-family: "Inter", system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
-button:hover {
+
+.app-container .custom-button:hover {
   border-color: #646cff;
 }
-button:focus,
-button:focus-visible {
+
+.app-container .custom-button:focus,
+.app-container .custom-button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+/* Custom link styles */
+.app-container .custom-link {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+
+.app-container .custom-link:hover {
+  color: #535bf2;
+}
+
+/* Login page specific centering */
+.login-container {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+}
+
+@media (max-width: 899px) {
+  .main-content {
+    margin-top: 56px;
   }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
+  
+  .app-container {
+    padding: 16px;
   }
 }

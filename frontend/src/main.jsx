@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import CssBaseline from "@mui/material/CssBaseline";
 import 'bootstrap/dist/css/bootstrap.min.css';
-
+import './index.css' // Import the CSS here
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <CssBaseline />
