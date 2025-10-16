@@ -1,33 +1,28 @@
 // src/components/PrivateRoute.jsx
-import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
-import api from "../api/api";
+import { useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
+import { getToken, getUser, isAdmin } from '../api/api';
 
-export default function PrivateRoute({ children }) {
-  const [loading, setLoading] = useState(true);
-  const [authed, setAuthed] = useState(false);
-
+const PrivateRoute = ({ children }) => {
+  const token = getToken();
+  const user = getUser();
+  
   useEffect(() => {
-    const check = async () => {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        setAuthed(false);
-        setLoading(false);
-        return;
-      }
-      try {
-        await api.get("/auth/me");
-        setAuthed(true);
-      } catch (e) {
-        setAuthed(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-    check();
-  }, []);
+    // Check if user is authenticated and is admin
+    if (!token || !user || !isAdmin()) {
+      console.warn('Access denied: Invalid token or non-admin user');
+    }
+  }, [token, user]);
 
-  if (loading) return <div>Loading...</div>;
-  if (!authed) return <Navigate to="/login" replace />;
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!user || !isAdmin()) {
+    return <Navigate to="/login?error=admin_required" replace />;
+  }
+
   return children;
-}
+};
+
+export default PrivateRoute;

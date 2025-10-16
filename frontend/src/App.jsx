@@ -1,17 +1,26 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box } from "@mui/material";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import PrivateRoute from "./components/PrivateRoute";
 import Header from "./components/Header";
 import Sidebar, { drawerWidth, miniDrawerWidth } from "./components/Sidebar";
+import { getUser, isAdmin } from "./api/api";
 
 export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
   const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Load user from localStorage on app start
+    const storedUser = getUser();
+    if (storedUser && isAdmin()) {
+      setUser(storedUser);
+    }
+  }, []);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -51,49 +60,50 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="*" element={
-            <>
-              <Header
-                currentDrawerWidth={currentDrawerWidth}
-                handleDrawerToggle={handleDrawerToggle}
-                title="Dashboard Overview"
-              />
+            <PrivateRoute>
+              <>
+                <Header
+                  currentDrawerWidth={currentDrawerWidth}
+                  handleDrawerToggle={handleDrawerToggle}
+                  title="Admin Dashboard"
+                  user={user}
+                />
 
-              <Sidebar
-                user={user}
-                mobileOpen={mobileOpen}
-                sidebarMinimized={sidebarMinimized}
-                handleDrawerToggle={handleDrawerToggle}
-                handleSidebarToggle={handleSidebarToggle}
-                setUser={setUser}
-              />
+                <Sidebar
+                  user={user}
+                  mobileOpen={mobileOpen}
+                  sidebarMinimized={sidebarMinimized}
+                  handleDrawerToggle={handleDrawerToggle}
+                  handleSidebarToggle={handleSidebarToggle}
+                  setUser={setUser}
+                />
 
-              <Box
-                component="main"
-                sx={{
-                  flexGrow: 1,
-                  p: 3,
-                  width: {
-                    xs: "100%",
-                    md: `calc(100% - ${currentDrawerWidth}px)`,
-                  },
-                  minWidth: 0,
-                  mt: { xs: 8, md: 8 },
-                  transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  transform: "translateZ(0)",
-                  position: "relative",
-                  zIndex: 1,
-                }}
-              >
-                <Routes>
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route path="/dashboard" element={
-                    <PrivateRoute>
+                <Box
+                  component="main"
+                  sx={{
+                    flexGrow: 1,
+                    p: 3,
+                    width: {
+                      xs: "100%",
+                      md: `calc(100% - ${currentDrawerWidth}px)`,
+                    },
+                    minWidth: 0,
+                    mt: { xs: 8, md: 8 },
+                    transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                    transform: "translateZ(0)",
+                    position: "relative",
+                    zIndex: 1,
+                  }}
+                >
+                  <Routes>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/dashboard" element={
                       <Dashboard user={user} setUser={setUser} />
-                    </PrivateRoute>
-                  } />
-                </Routes>
-              </Box>
-            </>
+                    } />
+                  </Routes>
+                </Box>
+              </>
+            </PrivateRoute>
           } />
         </Routes>
       </Box>

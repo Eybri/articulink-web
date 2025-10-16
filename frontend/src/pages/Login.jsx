@@ -1,7 +1,7 @@
 "use client"
 
 // src/pages/Login.jsx
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Container, Box, TextField, Button, Typography, Alert, Paper, InputAdornment, IconButton } from "@mui/material"
 import {
   Email as EmailIcon,
@@ -12,8 +12,8 @@ import {
   SecurityOutlined,
   ArrowForward
 } from "@mui/icons-material"
-import api from "../api/api"
-import { useNavigate } from "react-router-dom"
+import api, { setToken, setUser } from "../api/api"
+import { useNavigate, useSearchParams } from "react-router-dom"
 
 export default function Login() {
   const [email, setEmail] = useState("")
@@ -22,6 +22,15 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+
+  useEffect(() => {
+    // Check for admin access error in URL
+    const error = searchParams.get('error')
+    if (error === 'admin_required') {
+      setErr("Admin access required. Please login with admin credentials.")
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -29,13 +38,26 @@ export default function Login() {
     setIsLoading(true)
     
     try {
-      const res = await api.post("/auth/login", { email, password })
-      localStorage.setItem("access_token", res.data.access_token)
-      localStorage.setItem("refresh_token", res.data.refresh_token)
+      const res = await api.post("/api/v1/auth/login", { email, password })
+      
+      // Store token and user data
+      setToken(res.data.access_token)
+      setUser(res.data.user)
+      
+      // Verify user is admin
+      if (res.data.user?.role !== 'admin') {
+        setErr("Admin access required. Please contact system administrator.")
+        api.logout()
+        return
+      }
+      
       navigate("/dashboard")
     } catch (error) {
-      console.error(error)
-      setErr(error.response?.data?.detail || "Login failed")
+      console.error("Login error:", error)
+      const errorMessage = error.response?.data?.detail || 
+                          error.response?.data?.message || 
+                          "Login failed. Please check your credentials."
+      setErr(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -152,7 +174,7 @@ export default function Login() {
                   },
                 }}
               >
-                <LoginIcon sx={{ fontSize: 48, color: "white" }} />
+                <SecurityOutlined sx={{ fontSize: 48, color: "white" }} />
               </Box>
             </Box>
             
@@ -182,7 +204,7 @@ export default function Login() {
                   fontWeight: 600,
                 }}
               >
-                Admin Dashboard
+                Admin Portal
               </Typography>
             </Box>
             
@@ -195,7 +217,7 @@ export default function Login() {
                 margin: "0 auto",
               }}
             >
-              Secure access to your administration panel
+              Restricted access - Admin credentials required
             </Typography>
           </Box>
 
@@ -221,7 +243,7 @@ export default function Login() {
 
             <Box sx={{ position: "relative" }}>
               <TextField
-                label="Email Address"
+                label="Admin Email"
                 type="email"
                 required
                 fullWidth
@@ -273,7 +295,7 @@ export default function Login() {
 
             <Box sx={{ position: "relative" }}>
               <TextField
-                label="Password"
+                label="Admin Password"
                 type={showPassword ? "text" : "password"}
                 required
                 fullWidth
@@ -384,7 +406,7 @@ export default function Login() {
               }}
               endIcon={!isLoading && <ArrowForward sx={{ ml: 1 }} />}
             >
-              {isLoading ? "Signing In..." : "Sign In to Dashboard"}
+              {isLoading ? "Authenticating..." : "Admin Login"}
             </Button>
           </Box>
 
@@ -403,7 +425,7 @@ export default function Login() {
               }}
             >
               <SecurityOutlined sx={{ fontSize: 16 }} />
-              Protected by enterprise-grade security
+              Restricted to authorized administrators only
             </Typography>
           </Box>
         </Paper>

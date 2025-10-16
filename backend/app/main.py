@@ -5,10 +5,25 @@ from app.routers import auth
 from dotenv import load_dotenv
 import os
 
+
 load_dotenv()
 app = FastAPI(title="ArticuLink Admin API")
 
 origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
-app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+
+@app.get("/")
+async def root():
+    return {"message": "ArticuLink API is running"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}

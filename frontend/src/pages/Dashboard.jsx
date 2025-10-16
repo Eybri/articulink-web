@@ -1,8 +1,7 @@
 // src/pages/Dashboard.jsx
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { Box, Typography, Paper, Grid, Card, CardContent, useTheme, useMediaQuery, LinearProgress } from "@mui/material"
 import { TrendingUp, Analytics, People, VolumeUp, TrendingDown, Speed, Insights } from "@mui/icons-material"
-import api from "../api/api"
 import {
   BarChart,
   Bar,
@@ -17,7 +16,7 @@ import {
   Area,
 } from "recharts"
 
-export default function Dashboard({ user, setUser }) {
+export default function Dashboard({ user }) {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const theme = useTheme()
@@ -39,20 +38,6 @@ export default function Dashboard({ user, setUser }) {
   ]
 
   useEffect(() => {
-    const fetchMe = async () => {
-      setLoading(true)
-      try {
-        const res = await api.get("/auth/me")
-        setUser(res.data)
-      } catch (e) {
-        console.error(e)
-      }
-    }
-    
-    if (!user) {
-      fetchMe()
-    }
-
     // Simulate loading delay for better UX
     setTimeout(() => {
       setData([
@@ -65,7 +50,7 @@ export default function Dashboard({ user, setUser }) {
       ])
       setLoading(false)
     }, 1500)
-  }, [user, setUser])
+  }, [])
 
   const statsData = [
     { 
