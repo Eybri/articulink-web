@@ -1,10 +1,9 @@
 # app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth
+from app.routers import auth, users  # Import users router
 from dotenv import load_dotenv
 import os
-
 
 load_dotenv()
 app = FastAPI(title="ArticuLink Admin API")
@@ -18,7 +17,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+# Include routers
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(users.router, prefix="/api", tags=["users"])  # Add users router
 
 @app.get("/")
 async def root():

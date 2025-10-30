@@ -13,6 +13,8 @@ class UserCreate(BaseModel):
     profile_pic: Optional[str] = None
     birthdate: Optional[date] = None
     gender: Optional[str] = None
+    status: Optional[str] = "active"
+    deactivation_reason: Optional[str] = None  # Added deactivation_reason
 
     @validator('email')
     def email_to_lowercase(cls, v):
@@ -27,6 +29,8 @@ class UserOut(BaseModel):
     profile_pic: Optional[str] = None
     birthdate: Optional[date] = None
     gender: Optional[str] = None
+    status: Optional[str] = None
+    deactivation_reason: Optional[str] = None  # Added deactivation_reason
 
     class Config:
         from_attributes = True
@@ -49,6 +53,8 @@ class UserUpdate(BaseModel):
     last_name: Optional[str] = None
     birthdate: Optional[str] = None
     gender: Optional[str] = None
+    status: Optional[str] = None
+    deactivation_reason: Optional[str] = None  # Added deactivation_reason
     
     @validator('birthdate', pre=True)
     def parse_birthdate(cls, v):
@@ -73,6 +79,8 @@ class UserUpdateResponse(BaseModel):
     profile_pic: Optional[str] = None
     birthdate: Optional[date] = None
     gender: Optional[str] = None
+    status: Optional[str] = None
+    deactivation_reason: Optional[str] = None  # Added deactivation_reason
     message: str = "Profile updated successfully"
     
     class Config:

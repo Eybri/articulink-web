@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Box } from "@mui/material";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import UserList from "./pages/UserList"; // Add this import
 import PrivateRoute from "./components/PrivateRoute";
 import Header from "./components/Header";
 import Sidebar, { drawerWidth, miniDrawerWidth } from "./components/Sidebar";
@@ -100,6 +101,8 @@ export default function App() {
                     <Route path="/dashboard" element={
                       <Dashboard user={user} setUser={setUser} />
                     } />
+                    {/* Add UserList route */}
+<Route path="/users" element={<UserList user={user} />} />
                   </Routes>
                 </Box>
               </>

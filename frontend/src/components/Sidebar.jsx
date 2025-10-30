@@ -1,3 +1,4 @@
+// src/components/Sidebar.jsx
 "use client"
 
 import {
@@ -28,7 +29,7 @@ import {
   ChevronRight,
   AdminPanelSettings,
 } from "@mui/icons-material"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom" // Add useLocation
 import { logout, getUser } from "../api/api"
 import { useState, useEffect } from "react"
 
@@ -46,6 +47,7 @@ export default function Sidebar({
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
   const navigate = useNavigate()
+  const location = useLocation() // Add this to track current route
   const [user, setLocalUser] = useState(propUser)
   const currentDrawerWidth = sidebarMinimized ? miniDrawerWidth : drawerWidth
 
@@ -68,14 +70,28 @@ export default function Sidebar({
     navigate("/login")
   }
 
+  // Updated menu items with navigation
   const menuItems = [
-    { text: "Dashboard", icon: <DashboardIcon />, active: true },
-    { text: "Analytics", icon: <Analytics />, active: false },
-    { text: "Users", icon: <People />, active: false },
-    { text: "Pronunciation", icon: <VolumeUp />, active: false },
-    { text: "Reports", icon: <Assessment />, active: false },
-    { text: "Settings", icon: <Settings />, active: false },
+    { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
+    { text: "Analytics", icon: <Analytics />, path: "/analytics" },
+    { text: "Users", icon: <People />, path: "/users" },
+    { text: "Pronunciation", icon: <VolumeUp />, path: "/pronunciation" },
+    { text: "Reports", icon: <Assessment />, path: "/reports" },
+    { text: "Settings", icon: <Settings />, path: "/settings" },
   ]
+
+  // Check if a menu item is active
+  const isActive = (path) => {
+    return location.pathname === path;
+  }
+
+  // Handle navigation
+  const handleNavigation = (path) => {
+    navigate(path)
+    if (isMobile) {
+      handleDrawerToggle()
+    }
+  }
 
   // Get user display name
   const getUserDisplayName = () => {
@@ -186,10 +202,11 @@ export default function Sidebar({
         {menuItems.map((item) => (
           <Tooltip key={item.text} title={sidebarMinimized ? item.text : ""} placement="right">
             <ListItem
+              onClick={() => handleNavigation(item.path)}
               sx={{
                 mb: 1,
                 borderRadius: 3,
-                background: item.active 
+                background: isActive(item.path)
                   ? "linear-gradient(135deg, #646cff 0%, #535bf2 100%)" 
                   : "transparent",
                 justifyContent: sidebarMinimized ? "center" : "flex-start",
@@ -198,7 +215,7 @@ export default function Sidebar({
                 cursor: "pointer",
                 transition: "all 0.3s ease",
                 "&:hover": {
-                  background: item.active 
+                  background: isActive(item.path)
                     ? "linear-gradient(135deg, #535bf2 0%, #4c44e6 100%)" 
                     : "rgba(255, 255, 255, 0.05)",
                   transform: sidebarMinimized ? "scale(1.1)" : "translateX(8px)",
@@ -207,7 +224,7 @@ export default function Sidebar({
             >
               <ListItemIcon
                 sx={{
-                  color: item.active ? "white" : "#646cff",
+                  color: isActive(item.path) ? "white" : "#646cff",
                   minWidth: sidebarMinimized ? "auto" : 40,
                   justifyContent: "center",
                 }}
@@ -220,10 +237,10 @@ export default function Sidebar({
                   primary={
                     <Typography
                       sx={{
-                        fontWeight: item.active ? 700 : 500,
+                        fontWeight: isActive(item.path) ? 700 : 500,
                         fontSize: "0.9rem",
                         fontFamily: "'Inter', sans-serif",
-                        color: item.active ? "white" : "rgba(255, 255, 255, 0.8)",
+                        color: isActive(item.path) ? "white" : "rgba(255, 255, 255, 0.8)",
                       }}
                     >
                       {item.text}

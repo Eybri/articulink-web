@@ -2,10 +2,10 @@ from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 from app.models.user import (
     UserOut, Token, LoginRequest, 
     UserUpdate, UserUpdateResponse,
-    get_user_by_email, get_user_by_id, update_user
+    get_user_by_email, update_user  # Remove get_user_by_id from here
 )
 from app.utils.password import verify_password
-from app.security import create_access_token, get_current_user_id, require_auth, require_admin, get_current_admin_user_id
+from app.security import create_access_token, get_current_user_id, require_auth, require_admin, get_current_admin_user_id, get_user_by_id  # Add get_user_by_id here
 from app.utils.cloudinary_helper import upload_profile_picture, delete_profile_picture, extract_public_id_from_url
 import logging
 
