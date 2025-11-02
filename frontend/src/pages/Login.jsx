@@ -38,7 +38,7 @@ export default function Login() {
     setIsLoading(true)
     
     try {
-      const res = await api.post("/api/v1/auth/login", { email, password })
+      const res = await api.post("/api/auth/login", { email, password })
       
       // Store token and user data
       setToken(res.data.access_token)

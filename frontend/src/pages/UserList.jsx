@@ -34,8 +34,12 @@ import {
   Menu,
   TextField,
   Stack,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Tooltip,
 } from "@mui/material"
-import { Edit, Delete, Visibility, Refresh, People, AdminPanelSettings, Person, MoreVert, Info } from "@mui/icons-material"
+import { Edit, Delete, Visibility, Refresh, People, AdminPanelSettings, Person, MoreVert, Info, Schedule, AutoMode } from "@mui/icons-material"
 import { userAPI } from "../api/api"
 
 export default function UserList({ user }) {
@@ -53,7 +57,11 @@ export default function UserList({ user }) {
   })
   const [menuAnchor, setMenuAnchor] = useState(null)
   const [selectedUserForMenu, setSelectedUserForMenu] = useState(null)
-  const [deactivationReason, setDeactivationReason] = useState("")
+  const [deactivationData, setDeactivationData] = useState({
+    deactivation_type: 'temporary',
+    duration: '1day',
+    deactivation_reason: ''
+  })
 
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
@@ -84,35 +92,54 @@ export default function UserList({ user }) {
     fetchData()
   }, [filters])
 
-  const handleStatusChange = async (userId, newStatus, reason = null) => {
+  const handleDeactivateUser = async () => {
     try {
-      await userAPI.updateUserStatus(userId, newStatus, reason)
-      setSuccess(`User status updated to ${newStatus} successfully`)
-      fetchData() // Refresh data
-      handleMenuClose() // Close the menu
-      setDeactivationReason("") // Reset reason
-      setDeactivateDialogOpen(false) // Close dialog
+      await userAPI.deactivateUser(selectedUser.id, deactivationData)
+      
+      let successMessage = `User deactivated successfully`
+      if (deactivationData.deactivation_type === 'temporary') {
+        successMessage += ` for ${deactivationData.duration}`
+      }
+      
+      setSuccess(successMessage)
+      fetchData()
+      setDeactivateDialogOpen(false)
+      setDeactivationData({
+        deactivation_type: 'temporary',
+        duration: '1day',
+        deactivation_reason: ''
+      })
     } catch (err) {
-      setError("Failed to update user status")
+      setError("Failed to deactivate user")
+    }
+  }
+
+  const handleActivateUser = async (userId) => {
+    try {
+      await userAPI.activateUser(userId)
+      setSuccess("User activated successfully")
+      fetchData()
+      handleMenuClose()
+    } catch (err) {
+      setError("Failed to activate user")
     }
   }
 
   const handleDeactivateClick = (user) => {
     setSelectedUser(user)
+    setDeactivationData({
+      deactivation_type: 'temporary',
+      duration: '1day',
+      deactivation_reason: ''
+    })
     setDeactivateDialogOpen(true)
-  }
-
-  const handleDeactivateConfirm = () => {
-    if (selectedUser) {
-      handleStatusChange(selectedUser.id, "inactive", deactivationReason)
-    }
   }
 
   const handleRoleChange = async (userId, newRole) => {
     try {
       await userAPI.updateUserRole(userId, newRole)
       setSuccess(`User role updated to ${newRole} successfully`)
-      fetchData() // Refresh data
+      fetchData()
     } catch (err) {
       setError("Failed to update user role")
     }
@@ -129,7 +156,7 @@ export default function UserList({ user }) {
       setSuccess("User deleted successfully")
       setDeleteDialogOpen(false)
       setSelectedUser(null)
-      fetchData() // Refresh data
+      fetchData()
     } catch (err) {
       setError("Failed to delete user")
     }
@@ -150,6 +177,16 @@ export default function UserList({ user }) {
       ...prev,
       [filterType]: value
     }))
+  }
+
+  const handleTriggerAutoReactivate = async () => {
+    try {
+      const result = await userAPI.triggerAutoReactivate()
+      setSuccess(`Auto-reactivation completed: ${result.reactivated_count} users reactivated`)
+      fetchData()
+    } catch (err) {
+      setError("Failed to trigger auto-reactivation")
+    }
   }
 
   const getStatusColor = (status) => {
@@ -185,8 +222,45 @@ export default function UserList({ user }) {
     })
   }
 
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "N/A"
+    return new Date(dateString).toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    })
+  }
+
+  const getRemainingTime = (endDate) => {
+    if (!endDate) return null
+    const now = new Date()
+    const end = new Date(endDate)
+    const diffMs = end - now
+    
+    if (diffMs <= 0) return "Expired"
+    
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    
+    if (days > 0) return `${days}d ${hours}h`
+    return `${hours}h`
+  }
+
   const getInitials = (firstName, lastName) => {
     return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase()
+  }
+
+  const getDeactivationTypeColor = (type) => {
+    switch (type) {
+      case 'temporary':
+        return '#f59e0b'
+      case 'permanent':
+        return '#ef4444'
+      default:
+        return '#6b7280'
+    }
   }
 
   return (
@@ -360,6 +434,52 @@ export default function UserList({ user }) {
               </CardContent>
             </Card>
           </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Card
+              sx={{
+                height: 120,
+                background: "rgba(255, 255, 255, 0.03)",
+                backdropFilter: "blur(20px)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: 3,
+              }}
+            >
+              <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    background: "linear-gradient(135deg, #f59e0b20, #f59e0b10)",
+                    color: "#f59e0b",
+                  }}
+                >
+                  <Schedule />
+                </Box>
+                <Box>
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      fontWeight: 800,
+                      color: "white",
+                      fontFamily: "'Poppins', sans-serif",
+                    }}
+                  >
+                    {stats.by_deactivation_type?.temporary || 0}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "rgba(255, 255, 255, 0.7)",
+                      fontFamily: "'Inter', sans-serif",
+                    }}
+                  >
+                    Temp Deactivated
+                  </Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
       )}
 
@@ -405,6 +525,20 @@ export default function UserList({ user }) {
         >
           Refresh
         </Button>
+
+        <Tooltip title="Manually check and reactivate users whose temporary deactivation period has ended">
+          <Button
+            startIcon={<AutoMode />}
+            onClick={handleTriggerAutoReactivate}
+            sx={{
+              color: "#10b981",
+              border: "1px solid rgba(16, 185, 129, 0.3)",
+              background: "rgba(16, 185, 129, 0.1)",
+            }}
+          >
+            Auto-Reactivate
+          </Button>
+        </Tooltip>
       </Box>
 
       {/* User Table */}
@@ -449,16 +583,16 @@ export default function UserList({ user }) {
                   Role
                 </TableCell>
                 <TableCell sx={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", py: 3, fontFamily: "'Inter', sans-serif", fontWeight: 600, color: "rgba(255, 255, 255, 0.9)", fontSize: "0.9rem" }}>
-                  Birthdate
-                </TableCell>
-                <TableCell sx={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", py: 3, fontFamily: "'Inter', sans-serif", fontWeight: 600, color: "rgba(255, 255, 255, 0.9)", fontSize: "0.9rem" }}>
-                  Gender
-                </TableCell>
-                <TableCell sx={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", py: 3, fontFamily: "'Inter', sans-serif", fontWeight: 600, color: "rgba(255, 255, 255, 0.9)", fontSize: "0.9rem" }}>
                   Status
                 </TableCell>
                 <TableCell sx={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", py: 3, fontFamily: "'Inter', sans-serif", fontWeight: 600, color: "rgba(255, 255, 255, 0.9)", fontSize: "0.9rem" }}>
-                  Deactivation Reason
+                  Deactivation Type
+                </TableCell>
+                <TableCell sx={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", py: 3, fontFamily: "'Inter', sans-serif", fontWeight: 600, color: "rgba(255, 255, 255, 0.9)", fontSize: "0.9rem" }}>
+                  Auto-Reactivate
+                </TableCell>
+                <TableCell sx={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", py: 3, fontFamily: "'Inter', sans-serif", fontWeight: 600, color: "rgba(255, 255, 255, 0.9)", fontSize: "0.9rem" }}>
+                  Reason
                 </TableCell>
                 <TableCell sx={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", py: 3, fontFamily: "'Inter', sans-serif", fontWeight: 600, color: "rgba(255, 255, 255, 0.9)", fontSize: "0.9rem" }}>
                   Join Date
@@ -520,12 +654,6 @@ export default function UserList({ user }) {
                       }}
                     />
                   </TableCell>
-                  <TableCell sx={{ py: 2.5, borderBottom: "1px solid rgba(255, 255, 255, 0.04)", fontFamily: "'Inter', sans-serif", color: "rgba(255, 255, 255, 0.8)", fontSize: "0.9rem" }}>
-                    {formatDate(user.birthdate)}
-                  </TableCell>
-                  <TableCell sx={{ py: 2.5, borderBottom: "1px solid rgba(255, 255, 255, 0.04)", fontFamily: "'Inter', sans-serif", color: "rgba(255, 255, 255, 0.8)", fontSize: "0.9rem" }}>
-                    {user.gender || "N/A"}
-                  </TableCell>
                   <TableCell sx={{ py: 2.5, borderBottom: "1px solid rgba(255, 255, 255, 0.04)" }}>
                     <Chip
                       label={user.status}
@@ -540,6 +668,37 @@ export default function UserList({ user }) {
                         border: `1px solid ${getStatusColor(user.status)}40`,
                       }}
                     />
+                  </TableCell>
+                  <TableCell sx={{ py: 2.5, borderBottom: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                    {user.deactivation_type ? (
+                      <Chip
+                        label={user.deactivation_type}
+                        size="small"
+                        sx={{
+                          bgcolor: `${getDeactivationTypeColor(user.deactivation_type)}20`,
+                          color: getDeactivationTypeColor(user.deactivation_type),
+                          fontWeight: 600,
+                          fontFamily: "'Inter', sans-serif",
+                          fontSize: "0.75rem",
+                          textTransform: "capitalize",
+                          border: `1px solid ${getDeactivationTypeColor(user.deactivation_type)}40`,
+                        }}
+                      />
+                    ) : (
+                      "N/A"
+                    )}
+                  </TableCell>
+                  <TableCell sx={{ py: 2.5, borderBottom: "1px solid rgba(255, 255, 255, 0.04)", fontFamily: "'Inter', sans-serif", color: "rgba(255, 255, 255, 0.8)", fontSize: "0.9rem" }}>
+                    {user.deactivation_end_date ? (
+                      <Tooltip title={`Auto-reactivates on: ${formatDateTime(user.deactivation_end_date)}`}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Schedule fontSize="small" sx={{ color: '#f59e0b' }} />
+                          <span>{getRemainingTime(user.deactivation_end_date)}</span>
+                        </Box>
+                      </Tooltip>
+                    ) : (
+                      "N/A"
+                    )}
                   </TableCell>
                   <TableCell sx={{ py: 2.5, borderBottom: "1px solid rgba(255, 255, 255, 0.04)", fontFamily: "'Inter', sans-serif", color: "rgba(255, 255, 255, 0.8)", fontSize: "0.9rem", maxWidth: 200 }}>
                     {user.deactivation_reason ? (
@@ -624,7 +783,7 @@ export default function UserList({ user }) {
           </MenuItem>
         ) : (
           <MenuItem 
-            onClick={() => handleStatusChange(selectedUserForMenu.id, "active")}
+            onClick={() => handleActivateUser(selectedUserForMenu.id)}
             sx={{
               color: "#10b981",
               "&:hover": {
@@ -656,7 +815,11 @@ export default function UserList({ user }) {
         open={deactivateDialogOpen}
         onClose={() => {
           setDeactivateDialogOpen(false)
-          setDeactivationReason("")
+          setDeactivationData({
+            deactivation_type: 'temporary',
+            duration: '1day',
+            deactivation_reason: ''
+          })
         }}
         PaperProps={{
           sx: {
@@ -664,20 +827,86 @@ export default function UserList({ user }) {
             backdropFilter: "blur(20px)",
             border: "1px solid rgba(255, 255, 255, 0.08)",
             color: "white",
-            minWidth: 400,
+            minWidth: 500,
           }
         }}
       >
         <DialogTitle>Deactivate User</DialogTitle>
         <DialogContent>
-          <Stack spacing={2}>
+          <Stack spacing={3}>
             <DialogContentText sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
               Are you sure you want to deactivate {selectedUser?.first_name} {selectedUser?.last_name}?
             </DialogContentText>
+            
+            <FormControl component="fieldset">
+              <Typography sx={{ color: "rgba(255, 255, 255, 0.9)", mb: 1, fontWeight: 600 }}>
+                Deactivation Type
+              </Typography>
+              <RadioGroup
+                value={deactivationData.deactivation_type}
+                onChange={(e) => setDeactivationData(prev => ({ 
+                  ...prev, 
+                  deactivation_type: e.target.value 
+                }))}
+              >
+                <FormControlLabel 
+                  value="temporary" 
+                  control={<Radio sx={{ color: '#f59e0b' }} />} 
+                  label={
+                    <Box>
+                      <Typography sx={{ color: "rgba(255, 255, 255, 0.9)" }}>
+                        Temporary Deactivation
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.6)" }}>
+                        User will be automatically reactivated after selected duration
+                      </Typography>
+                    </Box>
+                  } 
+                />
+                <FormControlLabel 
+                  value="permanent" 
+                  control={<Radio sx={{ color: '#ef4444' }} />} 
+                  label={
+                    <Box>
+                      <Typography sx={{ color: "rgba(255, 255, 255, 0.9)" }}>
+                        Permanent Deactivation
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.6)" }}>
+                        User will remain deactivated until manually reactivated
+                      </Typography>
+                    </Box>
+                  } 
+                />
+              </RadioGroup>
+            </FormControl>
+
+            {deactivationData.deactivation_type === 'temporary' && (
+              <FormControl fullWidth>
+                <InputLabel sx={{ color: "rgba(255, 255, 255, 0.7)" }}>Deactivation Duration</InputLabel>
+                <Select
+                  value={deactivationData.duration}
+                  label="Deactivation Duration"
+                  onChange={(e) => setDeactivationData(prev => ({ 
+                    ...prev, 
+                    duration: e.target.value 
+                  }))}
+                  sx={{ color: "white" }}
+                >
+                  <MenuItem value="1day">1 Day</MenuItem>
+                  <MenuItem value="1week">1 Week</MenuItem>
+                  <MenuItem value="1month">1 Month</MenuItem>
+                  <MenuItem value="1year">1 Year</MenuItem>
+                </Select>
+              </FormControl>
+            )}
+
             <TextField
               label="Deactivation Reason (Optional)"
-              value={deactivationReason}
-              onChange={(e) => setDeactivationReason(e.target.value)}
+              value={deactivationData.deactivation_reason}
+              onChange={(e) => setDeactivationData(prev => ({ 
+                ...prev, 
+                deactivation_reason: e.target.value 
+              }))}
               multiline
               rows={3}
               placeholder="Enter reason for deactivation..."
@@ -705,19 +934,22 @@ export default function UserList({ user }) {
           <Button 
             onClick={() => {
               setDeactivateDialogOpen(false)
-              setDeactivationReason("")
+              setDeactivationData({
+                deactivation_type: 'temporary',
+                duration: '1day',
+                deactivation_reason: ''
+              })
             }} 
             sx={{ color: "rgba(255, 255, 255, 0.7)" }}
           >
             Cancel
           </Button>
           <Button 
-            onClick={handleDeactivateConfirm} 
+            onClick={handleDeactivateUser} 
             color="warning" 
             variant="contained"
-            disabled={!deactivationReason.trim()}
           >
-            Deactivate
+            {deactivationData.deactivation_type === 'temporary' ? 'Deactivate Temporarily' : 'Deactivate Permanently'}
           </Button>
         </DialogActions>
       </Dialog>

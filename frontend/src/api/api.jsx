@@ -115,9 +115,6 @@ export const authAPI = {
 };
 
 // User management API functions
-// In your api.js file, update the userAPI section:
-
-// User management API functions
 export const userAPI = {
   // Get all users
   getUsers: async (params = {}) => {
@@ -137,7 +134,7 @@ export const userAPI = {
     return response.data;
   },
 
-  // Update user status with deactivation reason
+  // Update user status (legacy - for backward compatibility)
   updateUserStatus: async (userId, status, deactivationReason = null) => {
     const response = await api.put(`/api/users/${userId}/status`, null, {
       params: { 
@@ -162,7 +159,25 @@ export const userAPI = {
     return response.data;
   },
 
-  // Bulk update user statuses with deactivation reason
+  // NEW: Deactivate user with type and duration
+  deactivateUser: async (userId, deactivationData) => {
+    const response = await api.put(`/api/users/${userId}/deactivate`, deactivationData);
+    return response.data;
+  },
+
+  // NEW: Activate user (clear all deactivation fields)
+  activateUser: async (userId) => {
+    const response = await api.put(`/api/users/${userId}/activate`);
+    return response.data;
+  },
+
+  // NEW: Trigger auto-reactivation manually
+  triggerAutoReactivate: async () => {
+    const response = await api.post('/api/users/auto-reactivate');
+    return response.data;
+  },
+
+  // Bulk update user statuses
   bulkUpdateUserStatus: async (userIds, status, deactivationReason = null) => {
     const response = await api.put('/api/users/bulk/status', null, {
       params: { 

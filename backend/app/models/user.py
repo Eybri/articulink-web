@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field, validator
 from typing import Optional, Dict, Any
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from bson import ObjectId
 from app.db import db
 
@@ -14,7 +14,9 @@ class UserCreate(BaseModel):
     birthdate: Optional[date] = None
     gender: Optional[str] = None
     status: Optional[str] = "active"
-    deactivation_reason: Optional[str] = None  # Added deactivation_reason
+    deactivation_reason: Optional[str] = None
+    deactivation_type: Optional[str] = None  # 'permanent' or 'temporary'
+    deactivation_end_date: Optional[datetime] = None  # For auto-reactivation
 
     @validator('email')
     def email_to_lowercase(cls, v):
@@ -30,7 +32,9 @@ class UserOut(BaseModel):
     birthdate: Optional[date] = None
     gender: Optional[str] = None
     status: Optional[str] = None
-    deactivation_reason: Optional[str] = None  # Added deactivation_reason
+    deactivation_reason: Optional[str] = None
+    deactivation_type: Optional[str] = None  # Added
+    deactivation_end_date: Optional[datetime] = None  # Added
 
     class Config:
         from_attributes = True
@@ -54,7 +58,9 @@ class UserUpdate(BaseModel):
     birthdate: Optional[str] = None
     gender: Optional[str] = None
     status: Optional[str] = None
-    deactivation_reason: Optional[str] = None  # Added deactivation_reason
+    deactivation_reason: Optional[str] = None
+    deactivation_type: Optional[str] = None  # Added
+    deactivation_end_date: Optional[datetime] = None  # Added
     
     @validator('birthdate', pre=True)
     def parse_birthdate(cls, v):
@@ -80,11 +86,19 @@ class UserUpdateResponse(BaseModel):
     birthdate: Optional[date] = None
     gender: Optional[str] = None
     status: Optional[str] = None
-    deactivation_reason: Optional[str] = None  # Added deactivation_reason
+    deactivation_reason: Optional[str] = None
+    deactivation_type: Optional[str] = None  # Added
+    deactivation_end_date: Optional[datetime] = None  # Added
     message: str = "Profile updated successfully"
     
     class Config:
         from_attributes = True
+
+# Deactivation request model
+class DeactivateRequest(BaseModel):
+    deactivation_type: str  # 'permanent' or 'temporary'
+    duration: Optional[str] = None  # '1day', '1week', '1month', '1year'
+    deactivation_reason: Optional[str] = None
 
 # MongoDB Model Functions
 async def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
@@ -123,3 +137,41 @@ async def delete_user(user_id: str) -> bool:
     except Exception as e:
         print(f"Error deleting user: {e}")
         return False
+
+# Auto-reactivation function
+async def auto_reactivate_users():
+    """
+    Automatically reactivate users whose temporary deactivation period has ended
+    """
+    try:
+        current_time = datetime.now()
+        
+        # Find users with expired temporary deactivation
+        users_to_reactivate = await db.users.find({
+            "status": "inactive",
+            "deactivation_type": "temporary",
+            "deactivation_end_date": {"$lte": current_time}
+        }).to_list(length=None)
+        
+        reactivated_count = 0
+        for user in users_to_reactivate:
+            await db.users.update_one(
+                {"_id": user["_id"]},
+                {"$set": {
+                    "status": "active",
+                    "deactivation_type": None,
+                    "deactivation_reason": None,
+                    "deactivation_end_date": None
+                }}
+            )
+            reactivated_count += 1
+            logger.info(f"Auto-reactivated user {user.get('email', 'Unknown')}")
+        
+        if reactivated_count > 0:
+            logger.info(f"Auto-reactivated {reactivated_count} users")
+        
+        return reactivated_count
+        
+    except Exception as e:
+        logger.error(f"Error in auto-reactivation: {str(e)}")
+        return 0
