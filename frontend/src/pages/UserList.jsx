@@ -28,9 +28,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Grid,
-  Card,
-  CardContent,
   Menu,
   TextField,
   Stack,
@@ -41,6 +38,7 @@ import {
 } from "@mui/material"
 import { Edit, Delete, Visibility, Refresh, People, AdminPanelSettings, Person, MoreVert, Info, Schedule, AutoMode } from "@mui/icons-material"
 import { userAPI } from "../api/api"
+import StatsCards from "../components/StatsCards" // Import the cards component
 
 export default function UserList({ user }) {
   const [users, setUsers] = useState([])
@@ -294,196 +292,15 @@ export default function UserList({ user }) {
         </Typography>
       </Box>
 
-      {/* Stats Cards */}
-      {stats && (
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card
-              sx={{
-                height: 120,
-                background: "rgba(255, 255, 255, 0.03)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                borderRadius: 3,
-              }}
-            >
-              <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    background: "linear-gradient(135deg, #646cff20, #646cff10)",
-                    color: "#646cff",
-                  }}
-                >
-                  <People />
-                </Box>
-                <Box>
-                  <Typography
-                    variant="h4"
-                    sx={{
-                      fontWeight: 800,
-                      color: "white",
-                      fontFamily: "'Poppins', sans-serif",
-                    }}
-                  >
-                    {stats.total_users}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "rgba(255, 255, 255, 0.7)",
-                      fontFamily: "'Inter', sans-serif",
-                    }}
-                  >
-                    Total Users
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+      {/* Stats Cards Component */}
+      <StatsCards 
+        stats={stats}
+        onRefresh={fetchData}
+        onAutoReactivate={handleTriggerAutoReactivate}
+        loading={loading}
+      />
 
-          <Grid item xs={12} sm={6} md={3}>
-            <Card
-              sx={{
-                height: 120,
-                background: "rgba(255, 255, 255, 0.03)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                borderRadius: 3,
-              }}
-            >
-              <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    background: "linear-gradient(135deg, #ef444420, #ef444410)",
-                    color: "#ef4444",
-                  }}
-                >
-                  <AdminPanelSettings />
-                </Box>
-                <Box>
-                  <Typography
-                    variant="h4"
-                    sx={{
-                      fontWeight: 800,
-                      color: "white",
-                      fontFamily: "'Poppins', sans-serif",
-                    }}
-                  >
-                    {stats.by_role?.admin || 0}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "rgba(255, 255, 255, 0.7)",
-                      fontFamily: "'Inter', sans-serif",
-                    }}
-                  >
-                    Administrators
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <Card
-              sx={{
-                height: 120,
-                background: "rgba(255, 255, 255, 0.03)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                borderRadius: 3,
-              }}
-            >
-              <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    background: "linear-gradient(135deg, #10b98120, #10b98110)",
-                    color: "#10b981",
-                  }}
-                >
-                  <Person />
-                </Box>
-                <Box>
-                  <Typography
-                    variant="h4"
-                    sx={{
-                      fontWeight: 800,
-                      color: "white",
-                      fontFamily: "'Poppins', sans-serif",
-                    }}
-                  >
-                    {stats.by_status?.active || 0}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "rgba(255, 255, 255, 0.7)",
-                      fontFamily: "'Inter', sans-serif",
-                    }}
-                  >
-                    Active Users
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <Card
-              sx={{
-                height: 120,
-                background: "rgba(255, 255, 255, 0.03)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                borderRadius: 3,
-              }}
-            >
-              <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    background: "linear-gradient(135deg, #f59e0b20, #f59e0b10)",
-                    color: "#f59e0b",
-                  }}
-                >
-                  <Schedule />
-                </Box>
-                <Box>
-                  <Typography
-                    variant="h4"
-                    sx={{
-                      fontWeight: 800,
-                      color: "white",
-                      fontFamily: "'Poppins', sans-serif",
-                    }}
-                  >
-                    {stats.by_deactivation_type?.temporary || 0}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "rgba(255, 255, 255, 0.7)",
-                      fontFamily: "'Inter', sans-serif",
-                    }}
-                  >
-                    Temp Deactivated
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {/* Filters and Refresh */}
+      {/* Filters */}
       <Box sx={{ mb: 3, display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
         <FormControl size="small" sx={{ minWidth: 120 }}>
           <InputLabel sx={{ color: "rgba(255, 255, 255, 0.7)" }}>Role</InputLabel>
@@ -720,7 +537,7 @@ export default function UserList({ user }) {
                     )}
                   </TableCell>
                   <TableCell sx={{ py: 2.5, borderBottom: "1px solid rgba(255, 255, 255, 0.04)", fontFamily: "'Inter', sans-serif", color: "rgba(255, 255, 255, 0.8)", fontSize: "0.9rem" }}>
-                    {formatDate(user.join_date)}
+                    {formatDate(user.created_at)}
                   </TableCell>
                   <TableCell sx={{ py: 2.5, borderBottom: "1px solid rgba(255, 255, 255, 0.04)" }}>
                     <Box sx={{ display: "flex", gap: 1 }}>

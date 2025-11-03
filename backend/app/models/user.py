@@ -1,3 +1,4 @@
+#models/user.py
 from pydantic import BaseModel, EmailStr, Field, validator
 from typing import Optional, Dict, Any
 from datetime import date, datetime, timedelta
@@ -35,6 +36,8 @@ class UserOut(BaseModel):
     deactivation_reason: Optional[str] = None
     deactivation_type: Optional[str] = None  # Added
     deactivation_end_date: Optional[datetime] = None  # Added
+    created_at: Optional[datetime] = None  # Add this field
+    updated_at: Optional[datetime] = None  # Add this field
 
     class Config:
         from_attributes = True
@@ -55,22 +58,18 @@ class LoginRequest(BaseModel):
 class UserUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    birthdate: Optional[str] = None
+    birthdate: Optional[str] = None  # Keep as string for frontend compatibility
     gender: Optional[str] = None
     status: Optional[str] = None
     deactivation_reason: Optional[str] = None
-    deactivation_type: Optional[str] = None  # Added
-    deactivation_end_date: Optional[datetime] = None  # Added
+    deactivation_type: Optional[str] = None
+    deactivation_end_date: Optional[datetime] = None
     
     @validator('birthdate', pre=True)
     def parse_birthdate(cls, v):
         if v is None or v == "":
             return None
-        if isinstance(v, str):
-            try:
-                return datetime.fromisoformat(v.replace('Z', '+00:00')).date()
-            except:
-                return v
+        # Just return the string as-is, let MongoDB handle the conversion
         return v
     
     class Config:
@@ -89,6 +88,8 @@ class UserUpdateResponse(BaseModel):
     deactivation_reason: Optional[str] = None
     deactivation_type: Optional[str] = None  # Added
     deactivation_end_date: Optional[datetime] = None  # Added
+    created_at: Optional[datetime] = None  # Add this field
+    updated_at: Optional[datetime] = None  # Add this field
     message: str = "Profile updated successfully"
     
     class Config:
@@ -115,12 +116,20 @@ async def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
 
 async def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
     user_data["email"] = user_data["email"].lower()
+    # Add created_at and updated_at timestamps
+    current_time = datetime.now()
+    user_data["created_at"] = current_time
+    user_data["updated_at"] = current_time
+    
     result = await db.users.insert_one(user_data)
     new_user = await db.users.find_one({"_id": result.inserted_id})
     return new_user
 
 async def update_user(user_id: str, update_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     try:
+        # Add updated_at timestamp
+        update_data["updated_at"] = datetime.now()
+        
         await db.users.update_one(
             {"_id": ObjectId(user_id)},
             {"$set": update_data}
@@ -161,7 +170,8 @@ async def auto_reactivate_users():
                     "status": "active",
                     "deactivation_type": None,
                     "deactivation_reason": None,
-                    "deactivation_end_date": None
+                    "deactivation_end_date": None,
+                    "updated_at": datetime.now()
                 }}
             )
             reactivated_count += 1

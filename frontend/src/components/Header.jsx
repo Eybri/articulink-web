@@ -26,7 +26,7 @@ import {
 } from "@mui/icons-material"
 import { useState, useEffect } from "react"
 import { getUser } from "../api/api"
-
+import { useNavigate, useLocation } from "react-router-dom";
 export default function Header({ 
   currentDrawerWidth, 
   handleDrawerToggle, 
@@ -37,7 +37,7 @@ export default function Header({
   const [anchorEl, setAnchorEl] = useState(null)
   const [notificationsAnchor, setNotificationsAnchor] = useState(null)
   const [user, setUser] = useState(propUser)
-
+  const navigate = useNavigate(); 
   // Sync with prop changes and localStorage
   useEffect(() => {
     if (propUser) {
@@ -68,9 +68,8 @@ export default function Header({
   }
 
   const handleProfile = () => {
-    console.log("Navigate to profile")
-    handleProfileMenuClose()
-  }
+    navigate('/profile');
+  };
 
   const handleSettings = () => {
     console.log("Navigate to settings")
@@ -382,12 +381,33 @@ export default function Header({
             <Divider sx={{ borderColor: "rgba(255, 255, 255, 0.1)", my: 1 }} />
 
             {/* Menu Items */}
-            <MenuItem onClick={handleProfile}>
-              <ListItemIcon>
-                <Person sx={{ color: "#646cff", fontSize: 20 }} />
-              </ListItemIcon>
-              <ListItemText>My Profile</ListItemText>
-            </MenuItem>
+<MenuItem 
+  onClick={handleProfile}
+  sx={{
+    backgroundColor: location.pathname === '/profile' ? 'rgba(100, 108, 255, 0.1)' : 'transparent',
+    borderRight: location.pathname === '/profile' ? '3px solid #646cff' : 'none',
+    '&:hover': {
+      backgroundColor: 'rgba(100, 108, 255, 0.08)',
+    }
+  }}
+>
+  <ListItemIcon>
+    <Person sx={{ 
+      color: location.pathname === '/profile' ? "#646cff" : "rgba(255, 255, 255, 0.7)", 
+      fontSize: 20 
+    }} />
+  </ListItemIcon>
+  <ListItemText 
+    sx={{
+      color: location.pathname === '/profile' ? "#646cff" : "rgba(255, 255, 255, 0.7)",
+      '& .MuiTypography-root': {
+        fontWeight: location.pathname === '/profile' ? 600 : 400,
+      }
+    }}
+  >
+    My Profile
+  </ListItemText>
+</MenuItem>
 
             <MenuItem onClick={handleSettings}>
               <ListItemIcon>

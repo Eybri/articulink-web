@@ -5,6 +5,7 @@ import { Box } from "@mui/material";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import UserList from "./pages/UserList"; // Add this import
+import Profile from "./pages/Profile"; 
 import PrivateRoute from "./components/PrivateRoute";
 import Header from "./components/Header";
 import Sidebar, { drawerWidth, miniDrawerWidth } from "./components/Sidebar";
@@ -102,7 +103,8 @@ export default function App() {
                       <Dashboard user={user} setUser={setUser} />
                     } />
                     {/* Add UserList route */}
-<Route path="/users" element={<UserList user={user} />} />
+                  <Route path="/users" element={<UserList user={user} />} />
+                  <Route path="/profile" element={<Profile user={user} />} />
                   </Routes>
                 </Box>
               </>

@@ -12,7 +12,7 @@ from app.models.user import DeactivateRequest, auto_reactivate_users
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# Response model for user data
+# In app/routers/users.py - Update the UserOut model
 class UserOut(BaseModel):
     id: str
     email: str
@@ -25,12 +25,11 @@ class UserOut(BaseModel):
     status: str
     deactivation_reason: Optional[str] = None
     deactivation_type: Optional[str] = None
-    deactivation_end_date: Optional[str] = None  # Changed to string
-    join_date: Optional[str] = None
+    deactivation_end_date: Optional[str] = None
+    created_at: Optional[str] = None  # Change from join_date to created_at
 
     class Config:
         from_attributes = True
-
 # Helper function to convert datetime to string
 def format_datetime_for_response(dt):
     if dt is None:
@@ -82,7 +81,7 @@ async def get_all_users(
                 "deactivation_reason": user.get("deactivation_reason"),
                 "deactivation_type": user.get("deactivation_type"),
                 "deactivation_end_date": format_datetime_for_response(user.get("deactivation_end_date")),
-                "join_date": user.get("created_at")
+                "created_at": format_datetime_for_response(user.get("created_at"))  # Use created_at instead of join_date
             })
         
         logger.info(f"Retrieved {len(users_response)} users from database")
@@ -94,7 +93,7 @@ async def get_all_users(
             status_code=500,
             detail="Error fetching users from database"
         )
-
+    
 # GET /api/users/stats/count - Get user statistics from database
 @router.get("/users/stats/count")
 async def get_user_stats(
@@ -458,3 +457,219 @@ async def bulk_update_user_status(
             status_code=500,
             detail="Error updating user statuses"
         )
+    
+@router.get("/dashboard/gender-demographics")
+async def get_gender_demographics(
+    # user_id: str = Depends(get_current_admin_user_id)  # Uncomment if using auth
+):
+    """
+    Get gender demographics for dashboard chart
+    """
+    try:
+        # Run auto-reactivation before getting stats
+        await auto_reactivate_users()
+        
+        # Aggregate gender counts
+        pipeline = [
+            {
+                "$group": {
+                    "_id": "$gender",
+                    "count": {"$sum": 1}
+                }
+            },
+            {
+                "$project": {
+                    "gender": {
+                        "$ifNull": ["$_id", "Not Specified"]
+                    },
+                    "count": 1,
+                    "_id": 0
+                }
+            },
+            {
+                "$sort": {"count": -1}
+            }
+        ]
+        
+        cursor = db.users.aggregate(pipeline)
+        gender_data = await cursor.to_list(length=None)
+        
+        # Format response
+        total_users = await db.users.count_documents({})
+        
+        # Calculate percentages
+        for item in gender_data:
+            item["percentage"] = round((item["count"] / total_users) * 100, 2) if total_users > 0 else 0
+        
+        return {
+            "total_users": total_users,
+            "gender_distribution": gender_data
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching gender demographics: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error fetching gender demographics"
+        )
+
+@router.get("/dashboard/user-growth")
+async def get_user_growth_over_time(
+    timeframe: str = Query("monthly", description="Timeframe: monthly, weekly, or daily"),
+    # user_id: str = Depends(get_current_admin_user_id)  # Uncomment if using auth
+):
+    """
+    Get user growth over time for dashboard line/area chart
+    """
+    try:
+        # Run auto-reactivation before getting stats
+        await auto_reactivate_users()
+        
+        # Define date format based on timeframe
+        if timeframe == "daily":
+            date_format = "%Y-%m-%d"
+        elif timeframe == "weekly":
+            date_format = "%Y-%U"  # Year-Week number
+        else:  # monthly
+            date_format = "%Y-%m"
+        
+        pipeline = [
+            {
+                "$group": {
+                    "_id": {
+                        "$dateToString": {
+                            "format": date_format,
+                            "date": "$created_at"
+                        }
+                    },
+                    "count": {"$sum": 1},
+                    "date": {"$first": "$created_at"}
+                }
+            },
+            {
+                "$project": {
+                    "period": "$_id",
+                    "count": 1,
+                    "date": 1,
+                    "_id": 0
+                }
+            },
+            {
+                "$sort": {"date": 1}
+            }
+        ]
+        
+        cursor = db.users.aggregate(pipeline)
+        growth_data = await cursor.to_list(length=None)
+        
+        # Calculate cumulative growth
+        cumulative = 0
+        for item in growth_data:
+            cumulative += item["count"]
+            item["cumulative"] = cumulative
+        
+        return {
+            "timeframe": timeframe,
+            "growth_data": growth_data,
+            "total_periods": len(growth_data)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching user growth data: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error fetching user growth data"
+        )
+
+@router.get("/dashboard/age-distribution")
+async def get_age_distribution(
+    # user_id: str = Depends(get_current_admin_user_id)  # Uncomment if using auth
+):
+    """
+    Get age distribution for dashboard histogram/bar chart
+    """
+    try:
+        # Run auto-reactivation before getting stats
+        await auto_reactivate_users()
+        
+        # Get users with birthdate
+        users_with_birthdate = await db.users.find({
+            "birthdate": {"$exists": True, "$ne": None}
+        }).to_list(length=None)
+        
+        # Calculate ages and group into ranges
+        age_ranges = {
+            "Under 18": 0,
+            "18-25": 0,
+            "26-35": 0,
+            "36-45": 0,
+            "46-55": 0,
+            "56-65": 0,
+            "Over 65": 0
+        }
+        
+        current_date = datetime.now()
+        
+        for user in users_with_birthdate:
+            birthdate_str = user.get("birthdate")
+            if birthdate_str:
+                try:
+                    # Parse birthdate (assuming ISO format or similar)
+                    if isinstance(birthdate_str, str):
+                        birthdate = datetime.fromisoformat(birthdate_str.replace('Z', '+00:00'))
+                    else:
+                        birthdate = birthdate_str
+                    
+                    # Calculate age
+                    age = current_date.year - birthdate.year
+                    # Adjust if birthday hasn't occurred this year
+                    if (current_date.month, current_date.day) < (birthdate.month, birthdate.day):
+                        age -= 1
+                    
+                    # Assign to age range
+                    if age < 18:
+                        age_ranges["Under 18"] += 1
+                    elif 18 <= age <= 25:
+                        age_ranges["18-25"] += 1
+                    elif 26 <= age <= 35:
+                        age_ranges["26-35"] += 1
+                    elif 36 <= age <= 45:
+                        age_ranges["36-45"] += 1
+                    elif 46 <= age <= 55:
+                        age_ranges["46-55"] += 1
+                    elif 56 <= age <= 65:
+                        age_ranges["56-65"] += 1
+                    else:
+                        age_ranges["Over 65"] += 1
+                        
+                except Exception as e:
+                    logger.warning(f"Error parsing birthdate for user {user.get('email')}: {str(e)}")
+                    continue
+        
+        # Convert to list format for frontend
+        age_distribution = []
+        total_with_birthdate = sum(age_ranges.values())
+        
+        for range_name, count in age_ranges.items():
+            percentage = round((count / total_with_birthdate) * 100, 2) if total_with_birthdate > 0 else 0
+            age_distribution.append({
+                "age_range": range_name,
+                "count": count,
+                "percentage": percentage
+            })
+        
+        return {
+            "age_distribution": age_distribution,
+            "total_users_with_birthdate": total_with_birthdate,
+            "total_users": await db.users.count_documents({}),
+            "users_without_birthdate": await db.users.count_documents({"birthdate": {"$exists": False}}) + 
+                                      await db.users.count_documents({"birthdate": None})
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching age distribution: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error fetching age distribution"
+        )
+    
