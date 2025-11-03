@@ -9,7 +9,6 @@ from app.utils.password import verify_password
 from app.security import create_access_token, get_current_user_id, require_auth, require_admin, get_current_admin_user_id
 from app.utils.cloudinary_helper import upload_profile_picture, delete_profile_picture, extract_public_id_from_url
 import logging
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 router = APIRouter( tags=["auth"])
@@ -91,7 +90,6 @@ async def get_current_user_profile(user_id: str = Depends(get_current_user_id)):
         "gender": user.get("gender")
     }
 
-# app/routers/auth.py - Update the update_profile route
 @router.put("/profile", response_model=UserUpdateResponse, dependencies=[Depends(require_admin)])
 async def update_profile(
     profile_data: UserUpdate,
@@ -108,21 +106,6 @@ async def update_profile(
         )
     
     update_data = profile_data.dict(exclude_none=True)
-    
-    # Convert birthdate string to datetime if provided
-    if 'birthdate' in update_data and update_data['birthdate']:
-        try:
-            # Parse the date string (format: YYYY-MM-DD)
-            birthdate_str = update_data['birthdate']
-            if isinstance(birthdate_str, str):
-                update_data['birthdate'] = datetime.strptime(birthdate_str, '%Y-%m-%d')
-        except ValueError as e:
-            logger.error(f"Error parsing birthdate: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Invalid birthdate format. Use YYYY-MM-DD"
-            )
-    
     if not update_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -138,14 +121,6 @@ async def update_profile(
             detail="Failed to update profile"
         )
     
-    # Format birthdate for response
-    response_birthdate = None
-    if updated_user.get("birthdate"):
-        if isinstance(updated_user["birthdate"], datetime):
-            response_birthdate = updated_user["birthdate"].date()
-        else:
-            response_birthdate = updated_user["birthdate"]
-    
     return UserUpdateResponse(
         id=str(updated_user["_id"]),
         email=updated_user["email"],
@@ -153,10 +128,11 @@ async def update_profile(
         last_name=updated_user.get("last_name"),
         role=updated_user.get("role"),
         profile_pic=updated_user.get("profile_pic"),
-        birthdate=response_birthdate,
+        birthdate=updated_user.get("birthdate"),
         gender=updated_user.get("gender"),
         message="Profile updated successfully"
     )
+
 @router.post("/profile/picture", response_model=UserUpdateResponse, dependencies=[Depends(require_admin)])
 async def upload_profile_pic(
     file: UploadFile = File(...),

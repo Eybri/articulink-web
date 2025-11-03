@@ -58,7 +58,7 @@ class LoginRequest(BaseModel):
 class UserUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    birthdate: Optional[str] = None  # Keep as string for frontend compatibility
+    birthdate: Optional[str] = None  # Change from date to str
     gender: Optional[str] = None
     status: Optional[str] = None
     deactivation_reason: Optional[str] = None
@@ -69,12 +69,19 @@ class UserUpdate(BaseModel):
     def parse_birthdate(cls, v):
         if v is None or v == "":
             return None
-        # Just return the string as-is, let MongoDB handle the conversion
+        # Accept string date in YYYY-MM-DD format directly
+        if isinstance(v, str):
+            # Validate it's a proper date string
+            try:
+                # Just validate it's a proper date, but return the string
+                datetime.strptime(v, '%Y-%m-%d')
+                return v
+            except ValueError:
+                raise ValueError("Invalid date format. Use YYYY-MM-DD")
         return v
     
     class Config:
         from_attributes = True
-
 class UserUpdateResponse(BaseModel):
     id: str
     email: EmailStr
