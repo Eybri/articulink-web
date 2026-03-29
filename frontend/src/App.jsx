@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { Box } from "@mui/material";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import UserList from "./pages/UserList"; // Add this import
-import Profile from "./pages/Profile"; 
+import UserList from "./pages/UserList";
+import Settings from "./pages/Settings"; // Import Settings
+import Pronunciation from "./pages/Pronunciation";
 import PrivateRoute from "./components/PrivateRoute";
 import Header from "./components/Header";
+
 import Sidebar, { drawerWidth, miniDrawerWidth } from "./components/Sidebar";
 import { getUser, isAdmin } from "./api/api";
 
@@ -102,9 +104,9 @@ export default function App() {
                     <Route path="/dashboard" element={
                       <Dashboard user={user} setUser={setUser} />
                     } />
-                    {/* Add UserList route */}
-                  <Route path="/users" element={<UserList user={user} />} />
-                  <Route path="/profile" element={<Profile user={user} />} />
+                    <Route path="/users" element={<UserList user={user} />} />
+                    <Route path="/settings" element={<Settings user={user} />} />
+                    <Route path="/pronunciation" element={<Pronunciation />} />
                   </Routes>
                 </Box>
               </>
