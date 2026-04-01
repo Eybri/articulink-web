@@ -7,7 +7,6 @@ import {
   Typography, 
   useTheme, 
   Box,
-  Badge,
   Tooltip,
   Avatar,
   Menu,
@@ -18,8 +17,6 @@ import {
 } from "@mui/material"
 import { 
   Menu as MenuIcon, 
-  Notifications, 
-  Search,
   Settings,
   Person,
   ManageAccounts
@@ -27,6 +24,7 @@ import {
 import { useState, useEffect } from "react"
 import { getUser } from "../api/api"
 import { useNavigate, useLocation } from "react-router-dom";
+
 export default function Header({ 
   currentDrawerWidth, 
   handleDrawerToggle, 
@@ -35,9 +33,10 @@ export default function Header({
 }) {
   const theme = useTheme()
   const [anchorEl, setAnchorEl] = useState(null)
-  const [notificationsAnchor, setNotificationsAnchor] = useState(null)
   const [user, setUser] = useState(propUser)
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   // Sync with prop changes and localStorage
   useEffect(() => {
     if (propUser) {
@@ -59,20 +58,8 @@ export default function Header({
     setAnchorEl(null)
   }
 
-  const handleNotificationsOpen = (event) => {
-    setNotificationsAnchor(event.currentTarget)
-  }
-
-  const handleNotificationsClose = () => {
-    setNotificationsAnchor(null)
-  }
-
-  const handleProfile = () => {
-    navigate('/profile');
-  };
-
   const handleSettings = () => {
-    console.log("Navigate to settings")
+    navigate('/settings');
     handleProfileMenuClose()
   }
 
@@ -197,103 +184,10 @@ export default function Header({
 
         {/* Action Buttons */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {/* Search Button */}
-          <Tooltip title="Search" arrow>
-            <IconButton
-              sx={{
-                color: "rgba(255, 255, 255, 0.8)",
-                background: "rgba(255, 255, 255, 0.05)",
-                backdropFilter: "blur(10px)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                width: 44,
-                height: 44,
-                "&:hover": {
-                  background: "rgba(100, 108, 255, 0.2)",
-                  color: "#646cff",
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 4px 20px rgba(100, 108, 255, 0.3)",
-                },
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
-            >
-              <Search sx={{ fontSize: 20 }} />
-            </IconButton>
-          </Tooltip>
-
-          {/* Notifications */}
-          <Tooltip title="Notifications" arrow>
-            <IconButton
-              onClick={handleNotificationsOpen}
-              sx={{
-                color: "rgba(255, 255, 255, 0.8)",
-                background: "rgba(255, 255, 255, 0.05)",
-                backdropFilter: "blur(10px)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                width: 44,
-                height: 44,
-                "&:hover": {
-                  background: "rgba(255, 107, 107, 0.2)",
-                  color: "#ff6b6b",
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 4px 20px rgba(255, 107, 107, 0.3)",
-                },
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
-            >
-              <Badge
-                badgeContent={3}
-                sx={{
-                  "& .MuiBadge-badge": {
-                    background: "linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%)",
-                    color: "white",
-                    fontSize: "0.7rem",
-                    fontWeight: 600,
-                    minWidth: 18,
-                    height: 18,
-                    boxShadow: "0 2px 8px rgba(255, 107, 107, 0.4)",
-                  },
-                }}
-              >
-                <Notifications sx={{ fontSize: 20 }} />
-              </Badge>
-            </IconButton>
-          </Tooltip>
-
-          {/* Notifications Menu */}
-          <Menu
-            anchorEl={notificationsAnchor}
-            open={Boolean(notificationsAnchor)}
-            onClose={handleNotificationsClose}
-            PaperProps={{
-              sx: {
-                background: "rgba(255, 255, 255, 0.05)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                borderRadius: 3,
-                mt: 1,
-                minWidth: 300,
-                "& .MuiMenuItem-root": {
-                  fontFamily: "'Inter', sans-serif",
-                  color: "rgba(255, 255, 255, 0.8)",
-                  "&:hover": { background: "rgba(255, 255, 255, 0.05)" },
-                },
-              },
-            }}
-          >
-            <MenuItem onClick={handleNotificationsClose}>
-              <ListItemText primary="New user registration" secondary="5 minutes ago" />
-            </MenuItem>
-            <MenuItem onClick={handleNotificationsClose}>
-              <ListItemText primary="System update available" secondary="1 hour ago" />
-            </MenuItem>
-            <MenuItem onClick={handleNotificationsClose}>
-              <ListItemText primary="Performance alert" secondary="2 hours ago" />
-            </MenuItem>
-          </Menu>
-
-          {/* Settings */}
+          {/* Settings Button - Now clickable to navigate to /settings */}
           <Tooltip title="Settings" arrow>
             <IconButton
+              onClick={handleSettings}
               sx={{
                 color: "rgba(255, 255, 255, 0.8)",
                 background: "rgba(255, 255, 255, 0.05)",
@@ -315,10 +209,9 @@ export default function Header({
             </IconButton>
           </Tooltip>
 
-          {/* Profile Avatar with Menu */}
-          <Tooltip title="Profile Menu" arrow>
+          {/* Profile Avatar - Removed onClick, not clickable anymore */}
+          <Tooltip title="Profile" arrow>
             <Avatar
-              onClick={handleProfileMenuOpen}
               sx={{
                 width: 44,
                 height: 44,
@@ -329,7 +222,7 @@ export default function Header({
                 border: "2px solid rgba(255, 255, 255, 0.1)",
                 fontSize: "0.9rem",
                 fontWeight: 700,
-                cursor: "pointer",
+                cursor: "default", // Changed from pointer to default
                 "&:hover": {
                   transform: "scale(1.1) translateY(-2px)",
                   boxShadow: "0 8px 32px rgba(100, 108, 255, 0.5)",
@@ -343,79 +236,6 @@ export default function Header({
               {getUserInitials()}
             </Avatar>
           </Tooltip>
-
-          {/* Profile Menu */}
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleProfileMenuClose}
-            PaperProps={{
-              sx: {
-                background: "rgba(255, 255, 255, 0.05)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                borderRadius: 3,
-                mt: 1,
-                minWidth: 220,
-                "& .MuiMenuItem-root": {
-                  fontFamily: "'Inter', sans-serif",
-                  color: "rgba(255, 255, 255, 0.8)",
-                  "&:hover": { background: "rgba(255, 255, 255, 0.05)" },
-                },
-              },
-            }}
-          >
-            {/* User Info Section */}
-            <MenuItem disabled>
-              <ListItemText 
-                primary={getUserDisplayName()}
-                secondary={user?.email || "Admin User"}
-                primaryTypographyProps={{ fontSize: "0.9rem", fontWeight: 600 }}
-                secondaryTypographyProps={{ 
-                  fontSize: "0.75rem", 
-                  color: "rgba(255, 255, 255, 0.6)" 
-                }}
-              />
-            </MenuItem>
-            
-            <Divider sx={{ borderColor: "rgba(255, 255, 255, 0.1)", my: 1 }} />
-
-            {/* Menu Items */}
-<MenuItem 
-  onClick={handleProfile}
-  sx={{
-    backgroundColor: location.pathname === '/profile' ? 'rgba(100, 108, 255, 0.1)' : 'transparent',
-    borderRight: location.pathname === '/profile' ? '3px solid #646cff' : 'none',
-    '&:hover': {
-      backgroundColor: 'rgba(100, 108, 255, 0.08)',
-    }
-  }}
->
-  <ListItemIcon>
-    <Person sx={{ 
-      color: location.pathname === '/profile' ? "#646cff" : "rgba(255, 255, 255, 0.7)", 
-      fontSize: 20 
-    }} />
-  </ListItemIcon>
-  <ListItemText 
-    sx={{
-      color: location.pathname === '/profile' ? "#646cff" : "rgba(255, 255, 255, 0.7)",
-      '& .MuiTypography-root': {
-        fontWeight: location.pathname === '/profile' ? 600 : 400,
-      }
-    }}
-  >
-    My Profile
-  </ListItemText>
-</MenuItem>
-
-            <MenuItem onClick={handleSettings}>
-              <ListItemIcon>
-                <ManageAccounts sx={{ color: "#10b981", fontSize: 20 }} />
-              </ListItemIcon>
-              <ListItemText>Account Settings</ListItemText>
-            </MenuItem>
-          </Menu>
         </Box>
       </Toolbar>
     </AppBar>

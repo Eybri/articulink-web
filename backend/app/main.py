@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 from app.scheduler import start_scheduler
+from app.routers import users, auth, pronunciation  # Add pronunciation
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -24,7 +25,7 @@ from app.routers import users, auth  # adjust based on your actual routers
 
 app.include_router(users.router, prefix="/api")
 app.include_router(auth.router, prefix="/api/auth")
-
+app.include_router(pronunciation.router)  # Add this line
 # Start the scheduler when the app starts
 @app.on_event("startup")
 async def startup_event():

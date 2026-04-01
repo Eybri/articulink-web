@@ -111,6 +111,12 @@ export const authAPI = {
   deleteProfilePicture: async () => {
     const response = await api.delete('/api/auth/profile/picture');
     return response.data;
+  },
+
+  // ADD THIS: Change password
+  changePassword: async (passwordData) => {
+    const response = await api.put('/api/auth/change-password', passwordData);
+    return response.data;
   }
 };
 
@@ -159,19 +165,19 @@ export const userAPI = {
     return response.data;
   },
 
-  // NEW: Deactivate user with type and duration
+  // Deactivate user with type and duration
   deactivateUser: async (userId, deactivationData) => {
     const response = await api.put(`/api/users/${userId}/deactivate`, deactivationData);
     return response.data;
   },
 
-  // NEW: Activate user (clear all deactivation fields)
+  // Activate user (clear all deactivation fields)
   activateUser: async (userId) => {
     const response = await api.put(`/api/users/${userId}/activate`);
     return response.data;
   },
 
-  // NEW: Trigger auto-reactivation manually
+  // Trigger auto-reactivation manually
   triggerAutoReactivate: async () => {
     const response = await api.post('/api/users/auto-reactivate');
     return response.data;
@@ -186,6 +192,26 @@ export const userAPI = {
         ...(deactivationReason && { deactivation_reason: deactivationReason })
       }
     });
+    return response.data;
+  },
+
+  // Get gender demographics
+  getGenderDemographics: async () => {
+    const response = await api.get('/api/dashboard/gender-demographics');
+    return response.data;
+  },
+
+  // Get user growth over time
+  getUserGrowth: async (timeframe = 'monthly') => {
+    const response = await api.get('/api/dashboard/user-growth', {
+      params: { timeframe }
+    });
+    return response.data;
+  },
+
+  // Get age distribution
+  getAgeDistribution: async () => {
+    const response = await api.get('/api/dashboard/age-distribution');
     return response.data;
   }
 };
@@ -238,6 +264,30 @@ export const pronunciationAPI = {
   getProgress: async () => {
     const response = await api.get('/api/pronunciation/progress');
     return response.data;
+  },
+
+  // NEW: Get all audio clips from database
+  getAudioClips: async (params = {}) => {
+    const response = await api.get('/api/pronunciation/audio-clips', { params });
+    return response.data;
+  },
+
+  // NEW: Get audio clip by ID
+  getAudioClipById: async (id) => {
+    const response = await api.get(`/api/pronunciation/audio-clips/${id}`);
+    return response.data;
+  },
+
+  // NEW: Update audio clip
+  updateAudioClip: async (id, data) => {
+    const response = await api.put(`/api/pronunciation/audio-clips/${id}`, data);
+    return response.data;
+  },
+
+  // NEW: Delete audio clip
+  deleteAudioClip: async (id) => {
+    const response = await api.delete(`/api/pronunciation/audio-clips/${id}`);
+    return response.data;
   }
 };
 
@@ -268,32 +318,7 @@ export const reportsAPI = {
   }
 };
 
-// Settings API functions
-export const settingsAPI = {
-  // Get application settings
-  getSettings: async () => {
-    const response = await api.get('/api/settings');
-    return response.data;
-  },
-
-  // Update application settings
-  updateSettings: async (settings) => {
-    const response = await api.put('/api/settings', settings);
-    return response.data;
-  },
-
-  // Get user preferences
-  getPreferences: async () => {
-    const response = await api.get('/api/settings/preferences');
-    return response.data;
-  },
-
-  // Update user preferences
-  updatePreferences: async (preferences) => {
-    const response = await api.put('/api/settings/preferences', preferences);
-    return response.data;
-  }
-};
+// REMOVED: settingsAPI (commented out or removed since not used)
 
 // Utility functions
 export const apiUtils = {
@@ -327,14 +352,9 @@ export const apiUtils = {
 
   // Validate email format
   validateEmail: (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  },
-
-  // Format date for API
-  formatDateForAPI: (date) => {
-    return date.toISOString().split('T')[0];
+    // Simple email regex validation
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
   }
 };
-
 export default api;
