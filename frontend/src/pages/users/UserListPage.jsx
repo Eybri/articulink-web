@@ -35,6 +35,7 @@ import {
   FormControlLabel,
   Radio,
   Tooltip,
+  TablePagination,
 } from "@mui/material"
 import { Edit, Delete, Visibility, Refresh, People, AdminPanelSettings, Person, MoreVert, Info, Schedule, AutoMode } from "@mui/icons-material"
 import { userAPI } from "../../api/api"
@@ -44,6 +45,9 @@ export default function UserList({ user }) {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState(null)
+  const [totalUsers, setTotalUsers] = useState(0)
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -70,9 +74,26 @@ export default function UserList({ user }) {
       setLoading(true)
       setError("")
       
-      // Fetch users with filters
-      const usersData = await userAPI.getUsers(filters)
-      setUsers(usersData)
+      // Fetch users with filters and pagination
+      const response = await userAPI.getUsers({
+        ...filters,
+        skip: page * rowsPerPage,
+        limit: rowsPerPage
+      })
+
+      // Backend returns { users: [...], total: 123 }
+      // We handle the case where it might return just a list (backward compatibility)
+      if (response && response.users) {
+        setUsers(Array.isArray(response.users) ? response.users : [])
+        setTotalUsers(typeof response.total === 'number' ? response.total : 0)
+      } else if (Array.isArray(response)) {
+        setUsers(response)
+        setTotalUsers(response.length)
+      } else {
+        console.error("Unexpected API response format:", response)
+        setUsers([])
+        setTotalUsers(0)
+      }
       
       // Fetch statistics
       const statsData = await userAPI.getUserStats()
@@ -86,9 +107,18 @@ export default function UserList({ user }) {
     }
   }
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage)
+  }
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
   useEffect(() => {
     fetchData()
-  }, [filters])
+  }, [filters, page, rowsPerPage])
 
   const handleDeactivateUser = async () => {
     try {
@@ -175,6 +205,7 @@ export default function UserList({ user }) {
       ...prev,
       [filterType]: value
     }))
+    setPage(0) // Reset to first page when filtering
   }
 
   const handleTriggerAutoReactivate = async () => {
@@ -213,22 +244,34 @@ export default function UserList({ user }) {
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A"
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return "N/A"
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    } catch {
+      return "N/A"
+    }
   }
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "N/A"
-    return new Date(dateString).toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    })
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return "N/A"
+      return date.toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    } catch {
+      return "N/A"
+    }
   }
 
   const getRemainingTime = (endDate) => {
@@ -561,6 +604,20 @@ export default function UserList({ user }) {
             </TableBody>
           </Table>
         </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          component="div"
+          count={totalUsers}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            color: "rgba(255, 255, 255, 0.7)",
+            ".MuiTablePagination-selectIcon": { color: "white" },
+            ".MuiTablePagination-actions": { color: "white" },
+          }}
+        />
         
         {users.length === 0 && !loading && (
           <Box sx={{ py: 8, textAlign: "center" }}>

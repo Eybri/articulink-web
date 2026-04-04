@@ -122,10 +122,10 @@ export const authAPI = {
 
 // User management API functions
 export const userAPI = {
-  // Get all users
+  // Get all users with pagination and filtering
   getUsers: async (params = {}) => {
     const response = await api.get('/api/users/', { params });
-    return response.data;
+    return response.data; // Now returns { users: [...], total: 123 }
   },
 
   // Get user statistics

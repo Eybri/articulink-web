@@ -30,6 +30,11 @@ class UserOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class UserListOut(BaseModel):
+    users: List[UserOut]
+    total: int
+
 # Helper function to convert datetime to string
 def format_datetime_for_response(dt):
     if dt is None:
@@ -39,11 +44,11 @@ def format_datetime_for_response(dt):
     return dt
 
 # GET /api/users/ - Get all users from database
-@router.get("/users/", response_model=List[UserOut])
+@router.get("/users/", response_model=UserListOut)
 async def get_all_users(
     # user_id: str = Depends(get_current_admin_user_id),  # Uncomment if you want auth
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(10, ge=1, le=1000),
     role: Optional[str] = Query(None),
     status: Optional[str] = Query(None)
 ):
@@ -60,6 +65,8 @@ async def get_all_users(
             query["role"] = role
         if status:
             query["status"] = status
+        # Calculate total count for the query
+        total_count = await db.users.count_documents(query)
         
         # Get users from MongoDB
         cursor = db.users.find(query).skip(skip).limit(limit)
@@ -84,8 +91,11 @@ async def get_all_users(
                 "created_at": format_datetime_for_response(user.get("created_at"))  # Use created_at instead of join_date
             })
         
-        logger.info(f"Retrieved {len(users_response)} users from database")
-        return users_response
+        logger.info(f"Retrieved {len(users_response)} users out of total {total_count} from database")
+        return {
+            "users": users_response,
+            "total": total_count
+        }
         
     except Exception as e:
         logger.error(f"Error fetching users from database: {str(e)}")

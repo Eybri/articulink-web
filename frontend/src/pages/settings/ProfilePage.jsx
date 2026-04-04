@@ -19,19 +19,26 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Divider,
+  Stack,
 } from "@mui/material"
-import { 
-  Edit, 
-  CameraAlt, 
-  Delete, 
-  Save, 
+import {
+  Edit,
+  CameraAlt,
+  Delete,
+  Save,
   Cancel,
   Person,
   Email,
   Cake,
   Male,
   Female,
-  Transgender
+  Transgender,
+  Lock,
+  Visibility,
+  VisibilityOff,
+  AdminPanelSettings,
+  Schedule,
 } from "@mui/icons-material"
 import { authAPI } from "../../api/api"
 
@@ -42,6 +49,23 @@ export default function Profile({ user: initialUser }) {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  
+  // Password state
+  const [passwordData, setPasswordData] = useState({
+    current_password: "",
+    new_password: "",
+    confirm_password: ""
+  })
+  const [showPassword, setShowPassword] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  })
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [passwordError, setPasswordError] = useState("")
+  const [passwordSuccess, setPasswordSuccess] = useState("")
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false)
+
   const [profileData, setProfileData] = useState({
     first_name: "",
     last_name: "",
@@ -56,9 +80,7 @@ export default function Profile({ user: initialUser }) {
   useEffect(() => {
     if (user) {
       // Format birthdate for input field (YYYY-MM-DD)
-      const formattedBirthdate = user.birthdate 
-        ? new Date(user.birthdate).toISOString().split('T')[0]
-        : ""
+      const formattedBirthdate = safeFormatDateForInput(user.birthdate)
       
       setProfileData({
         first_name: user.first_name || "",
@@ -76,9 +98,7 @@ export default function Profile({ user: initialUser }) {
       setUser(profile)
       
       // Format birthdate for input field
-      const formattedBirthdate = profile.birthdate 
-        ? new Date(profile.birthdate).toISOString().split('T')[0]
-        : ""
+      const formattedBirthdate = safeFormatDateForInput(profile.birthdate)
       
       setProfileData({
         first_name: profile.first_name || "",
@@ -103,9 +123,7 @@ export default function Profile({ user: initialUser }) {
   const handleCancel = () => {
     setEditModalOpen(false)
     // Format birthdate for input field when canceling
-    const formattedBirthdate = user.birthdate 
-      ? new Date(user.birthdate).toISOString().split('T')[0]
-      : ""
+    const formattedBirthdate = safeFormatDateForInput(user.birthdate)
     
     setProfileData({
       first_name: user.first_name || "",
@@ -144,11 +162,7 @@ export default function Profile({ user: initialUser }) {
         updateData.birthdate = null
       }
 
-      console.log('Sending update data:', updateData)
-
       const updatedUser = await authAPI.updateProfile(updateData)
-      console.log('Received updated user:', updatedUser)
-      
       setUser(updatedUser)
       setEditModalOpen(false)
       setSuccess("Profile updated successfully")
@@ -245,6 +259,77 @@ export default function Profile({ user: initialUser }) {
     }
   }
 
+  // ============= PASSWORD FUNCTIONS =============
+  const handlePasswordChange = async () => {
+    // Validate passwords
+    if (!passwordData.current_password || !passwordData.new_password || !passwordData.confirm_password) {
+      setPasswordError("All fields are required")
+      return
+    }
+
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      setPasswordError("New passwords do not match")
+      return
+    }
+
+    if (passwordData.new_password.length < 6) {
+      setPasswordError("Password must be at least 6 characters")
+      return
+    }
+
+    try {
+      setPasswordLoading(true)
+      setPasswordError("")
+      setPasswordSuccess("")
+
+      // Call API to change password
+      await authAPI.changePassword({
+        current_password: passwordData.current_password,
+        new_password: passwordData.new_password,
+        confirm_password: passwordData.confirm_password
+      })
+
+      setPasswordSuccess("Password changed successfully")
+      
+      // Clear password fields
+      setPasswordData({
+        current_password: "",
+        new_password: "",
+        confirm_password: ""
+      })
+
+    } catch (err) {
+      console.error('Password change error:', err)
+      setPasswordError(err.response?.data?.detail || "Failed to change password")
+    } finally {
+      setPasswordLoading(false)
+    }
+  }
+
+  const handleOpenPasswordModal = () => {
+    setPasswordModalOpen(true)
+    setPasswordError("")
+    setPasswordSuccess("")
+    setPasswordData({
+      current_password: "",
+      new_password: "",
+      confirm_password: ""
+    })
+  }
+
+  const handleClosePasswordModal = () => {
+    if (!passwordLoading) {
+      setPasswordModalOpen(false)
+    }
+  }
+
+  const handleTogglePasswordVisibility = (field) => {
+    setShowPassword(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }))
+  }
+
   const getInitials = (firstName, lastName) => {
     return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase()
   }
@@ -262,10 +347,23 @@ export default function Profile({ user: initialUser }) {
     }
   }
 
+  const safeFormatDateForInput = (dateString) => {
+    if (!dateString) return ""
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return ""
+      return date.toISOString().split('T')[0]
+    } catch {
+      return ""
+    }
+  }
+
   const formatDisplayDate = (dateString) => {
     if (!dateString) return "Not set"
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return "Not set"
+      return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
@@ -275,16 +373,8 @@ export default function Profile({ user: initialUser }) {
     }
   }
 
-  if (loading && !user) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-        <LinearProgress sx={{ width: '60%' }} />
-      </Box>
-    )
-  }
-
   return (
-    <>
+    <Box sx={{ p: 3 }}>
       {/* Header Section */}
       <Box sx={{ mb: 4 }}>
         <Typography
@@ -300,7 +390,7 @@ export default function Profile({ user: initialUser }) {
             letterSpacing: "-0.02em",
           }}
         >
-          Profile Settings ⚙️
+          Settings
         </Typography>
         <Typography
           variant="body1"
@@ -310,7 +400,7 @@ export default function Profile({ user: initialUser }) {
             fontSize: "1.1rem",
           }}
         >
-          Manage your account settings and profile information.
+          Manage your account settings
         </Typography>
       </Box>
 
@@ -359,7 +449,7 @@ export default function Profile({ user: initialUser }) {
                   fontWeight: 600,
                   fontSize: "2rem",
                   border: "3px solid rgba(255, 255, 255, 0.1)",
-                  mb: 2
+                  mb: 2,
                 }}
                 src={user?.profile_pic}
               >
@@ -546,10 +636,211 @@ export default function Profile({ user: initialUser }) {
                   </Typography>
                 </Box>
               </Grid>
+
+              {/* Role */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="overline" sx={{ color: "rgba(255, 255, 255, 0.5)", fontWeight: 600 }}>
+                  Account Role
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1.5 }}>
+                  <AdminPanelSettings sx={{ color: '#646cff' }} />
+                  <Typography variant="body1" sx={{ color: 'white', textTransform: 'capitalize' }}>
+                    {user?.role || "user"}
+                  </Typography>
+                </Box>
+              </Grid>
+
+              {/* Joined Date */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="overline" sx={{ color: "rgba(255, 255, 255, 0.5)", fontWeight: 600 }}>
+                  Member Since
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1.5 }}>
+                  <Schedule sx={{ color: '#646cff' }} />
+                  <Typography variant="body1" sx={{ color: 'white' }}>
+                    {formatDisplayDate(user?.created_at)}
+                  </Typography>
+                </Box>
+              </Grid>
             </Grid>
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Password Management */}
+      <Box sx={{ mt: 4, textAlign: 'center' }}>
+        <Button
+          variant="outlined"
+          startIcon={<Lock />}
+          onClick={handleOpenPasswordModal}
+          sx={{
+            color: "rgba(255, 255, 255, 0.7)",
+            borderColor: "rgba(255, 255, 255, 0.2)",
+            px: 4,
+            py: 1.5,
+            borderRadius: 2,
+            "&:hover": {
+              borderColor: "#646cff",
+              background: "rgba(100, 108, 255, 0.05)",
+            }
+          }}
+        >
+          Change Security Password
+        </Button>
+      </Box>
+
+      {/* Change Password Dialog */}
+      <Dialog
+        open={passwordModalOpen}
+        onClose={handleClosePasswordModal}
+        PaperProps={{
+          sx: {
+            background: "rgba(20, 20, 30, 0.95)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
+            color: "white",
+            minWidth: { xs: '90%', sm: 450 },
+            borderRadius: 3,
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, fontFamily: "'Poppins', sans-serif", mt: 1 }}>
+          Update Password
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.6)", mb: 3 }}>
+            Please enter your current password and choose a new secure password.
+          </Typography>
+
+          {/* Password notifications */}
+          {passwordError && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {passwordError}
+            </Alert>
+          )}
+          {passwordSuccess && (
+            <Alert severity="success" sx={{ mb: 3 }}>
+              {passwordSuccess}
+            </Alert>
+          )}
+
+          <Stack spacing={3} sx={{ mt: 1 }}>
+            <TextField
+              fullWidth
+              type={showPassword.current ? 'text' : 'password'}
+              label="Current Password"
+              value={passwordData.current_password}
+              onChange={(e) => setPasswordData(prev => ({ ...prev, current_password: e.target.value }))}
+              disabled={passwordLoading}
+              InputProps={{
+                startAdornment: <Lock sx={{ color: "rgba(255, 255, 255, 0.5)", mr: 1 }} />,
+                endAdornment: (
+                  <IconButton
+                    onClick={() => handleTogglePasswordVisibility('current')}
+                    edge="end"
+                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                  >
+                    {showPassword.current ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                )
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  color: "white",
+                  "& fieldset": { borderColor: "rgba(255, 255, 255, 0.1)" },
+                  "&:hover fieldset": { borderColor: "rgba(255, 255, 255, 0.3)" },
+                  "&.Mui-focused fieldset": { borderColor: "#646cff" },
+                },
+                "& .MuiInputLabel-root": { color: "rgba(255, 255, 255, 0.7)" },
+              }}
+            />
+
+            <TextField
+              fullWidth
+              type={showPassword.new ? 'text' : 'password'}
+              label="New Password"
+              value={passwordData.new_password}
+              onChange={(e) => setPasswordData(prev => ({ ...prev, new_password: e.target.value }))}
+              disabled={passwordLoading}
+              InputProps={{
+                startAdornment: <Lock sx={{ color: "rgba(255, 255, 255, 0.5)", mr: 1 }} />,
+                endAdornment: (
+                  <IconButton
+                    onClick={() => handleTogglePasswordVisibility('new')}
+                    edge="end"
+                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                  >
+                    {showPassword.new ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                )
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  color: "white",
+                  "& fieldset": { borderColor: "rgba(255, 255, 255, 0.1)" },
+                  "&:hover fieldset": { borderColor: "rgba(255, 255, 255, 0.3)" },
+                  "&.Mui-focused fieldset": { borderColor: "#646cff" },
+                },
+                "& .MuiInputLabel-root": { color: "rgba(255, 255, 255, 0.7)" },
+              }}
+            />
+
+            <TextField
+              fullWidth
+              type={showPassword.confirm ? 'text' : 'password'}
+              label="Confirm New Password"
+              value={passwordData.confirm_password}
+              onChange={(e) => setPasswordData(prev => ({ ...prev, confirm_password: e.target.value }))}
+              disabled={passwordLoading}
+              InputProps={{
+                startAdornment: <Lock sx={{ color: "rgba(255, 255, 255, 0.5)", mr: 1 }} />,
+                endAdornment: (
+                  <IconButton
+                    onClick={() => handleTogglePasswordVisibility('confirm')}
+                    edge="end"
+                    sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                  >
+                    {showPassword.confirm ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                )
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  color: "white",
+                  "& fieldset": { borderColor: "rgba(255, 255, 255, 0.1)" },
+                  "&:hover fieldset": { borderColor: "rgba(255, 255, 255, 0.3)" },
+                  "&.Mui-focused fieldset": { borderColor: "#646cff" },
+                },
+                "& .MuiInputLabel-root": { color: "rgba(255, 255, 255, 0.7)" },
+              }}
+            />
+            
+            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', display: 'block', mt: 1 }}>
+              Password must be at least 6 characters long
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3, mt: 1 }}>
+          <Button onClick={handleClosePasswordModal} sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handlePasswordChange}
+            disabled={passwordLoading}
+            variant="contained"
+            sx={{
+              background: "linear-gradient(135deg, #646cff 0%, #535bf2 100%)",
+              color: 'white',
+              px: 3,
+              '&:hover': {
+                background: "linear-gradient(135deg, #535bf2 0%, #4c44e6 100%)",
+              }
+            }}
+          >
+            {passwordLoading ? "Updating..." : "Update Password"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Delete Profile Picture Dialog */}
       <Dialog
@@ -705,6 +996,6 @@ export default function Profile({ user: initialUser }) {
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+    </Box>
   )
 }
