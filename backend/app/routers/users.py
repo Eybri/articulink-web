@@ -8,6 +8,7 @@ from app.db import db
 from app.security import get_current_admin_user_id
 import logging
 from app.models.user import DeactivateRequest, auto_reactivate_users
+from app.utils.email import send_deactivation_email, send_activation_email
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -231,6 +232,17 @@ async def deactivate_user(
         # Get updated user
         updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
         
+        # Send deactivation email in background
+        if updated_user and updated_user.get("email"):
+            background_tasks.add_task(
+                send_deactivation_email,
+                email=updated_user["email"],
+                first_name=updated_user.get("first_name", "User"),
+                deactivation_type=deactivate_request.deactivation_type,
+                reason=deactivate_request.deactivation_reason,
+                end_date=end_date
+            )
+        
         response_message = f"User deactivated successfully"
         if deactivate_request.deactivation_type == "temporary":
             response_message += f" until {end_date.strftime('%Y-%m-%d %H:%M:%S')}"
@@ -265,6 +277,7 @@ async def deactivate_user(
 @router.put("/users/{user_id}/activate")
 async def activate_user(
     user_id: str,
+    background_tasks: BackgroundTasks,
     # admin_id: str = Depends(get_current_admin_user_id)  # Uncomment if using auth
 ):
     """
@@ -294,6 +307,14 @@ async def activate_user(
         
         # Get updated user
         updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
+        
+        # Send activation email in background
+        if updated_user and updated_user.get("email"):
+            background_tasks.add_task(
+                send_activation_email,
+                email=updated_user["email"],
+                first_name=updated_user.get("first_name", "User")
+            )
         
         return {
             "message": "User activated successfully",
