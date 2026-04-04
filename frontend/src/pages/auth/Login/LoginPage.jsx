@@ -12,7 +12,7 @@ import {
   SecurityOutlined,
   ArrowForward
 } from "@mui/icons-material"
-import api, { setToken, setUser } from "../api/api"
+import api, { setToken, setUser } from "../../../api/api"
 import { useNavigate, useSearchParams } from "react-router-dom"
 
 export default function Login() {

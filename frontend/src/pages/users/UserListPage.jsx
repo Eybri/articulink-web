@@ -37,8 +37,8 @@ import {
   Tooltip,
 } from "@mui/material"
 import { Edit, Delete, Visibility, Refresh, People, AdminPanelSettings, Person, MoreVert, Info, Schedule, AutoMode } from "@mui/icons-material"
-import { userAPI } from "../api/api"
-import StatsCards from "../components/StatsCards" // Import the cards component
+import { userAPI } from "../../api/api"
+import StatsCards from "../../components/StatsCards" // Import the cards component
 
 export default function UserList({ user }) {
   const [users, setUsers] = useState([])

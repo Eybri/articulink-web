@@ -1,11 +1,11 @@
 // src/pages/Dashboard.jsx
 import { useState, useEffect } from "react"
 import { Box, Typography, Grid } from "@mui/material"
-import StatsCards from "../components/StatsCards"
-import GenderDemographicsChart from "../components/charts/GenderDemographicsChart"
-import UserGrowthChart from "../components/charts/UserGrowthChart"
-import AgeDistributionChart from "../components/charts/AgeDistributionChart"
-import { userAPI } from "../api/api" // Use the same API as UserList
+import StatsCards from "../../components/StatsCards"
+import GenderDemographicsChart from "../../components/charts/GenderDemographicsChart"
+import UserGrowthChart from "../../components/charts/UserGrowthChart"
+import AgeDistributionChart from "../../components/charts/AgeDistributionChart"
+import { userAPI } from "../../api/api" // Use the same API as UserList
 
 export default function Dashboard({ user }) {
   const [stats, setStats] = useState({})

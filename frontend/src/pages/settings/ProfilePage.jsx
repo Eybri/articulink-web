@@ -33,12 +33,12 @@ import {
   Female,
   Transgender
 } from "@mui/icons-material"
-import { authAPI } from "../api/api"
+import { authAPI } from "../../api/api"
 
 export default function Profile({ user: initialUser }) {
   const [user, setUser] = useState(initialUser)
   const [loading, setLoading] = useState(false)
-  const [editing, setEditing] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -50,21 +50,24 @@ export default function Profile({ user: initialUser }) {
   })
 
   useEffect(() => {
-    if (initialUser) {
-      setUser(initialUser)
+    fetchProfile()
+  }, [])
+
+  useEffect(() => {
+    if (user) {
       // Format birthdate for input field (YYYY-MM-DD)
-      const formattedBirthdate = initialUser.birthdate 
-        ? new Date(initialUser.birthdate).toISOString().split('T')[0]
+      const formattedBirthdate = user.birthdate 
+        ? new Date(user.birthdate).toISOString().split('T')[0]
         : ""
       
       setProfileData({
-        first_name: initialUser.first_name || "",
-        last_name: initialUser.last_name || "",
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
         birthdate: formattedBirthdate,
-        gender: initialUser.gender || ""
+        gender: user.gender || ""
       })
     }
-  }, [initialUser])
+  }, [user])
 
   const fetchProfile = async () => {
     try {
@@ -92,13 +95,13 @@ export default function Profile({ user: initialUser }) {
   }
 
   const handleEdit = () => {
-    setEditing(true)
+    setEditModalOpen(true)
     setError("")
     setSuccess("")
   }
 
   const handleCancel = () => {
-    setEditing(false)
+    setEditModalOpen(false)
     // Format birthdate for input field when canceling
     const formattedBirthdate = user.birthdate 
       ? new Date(user.birthdate).toISOString().split('T')[0]
@@ -147,7 +150,7 @@ export default function Profile({ user: initialUser }) {
       console.log('Received updated user:', updatedUser)
       
       setUser(updatedUser)
-      setEditing(false)
+      setEditModalOpen(false)
       setSuccess("Profile updated successfully")
       
       // Update localStorage user data
@@ -474,195 +477,74 @@ export default function Profile({ user: initialUser }) {
                 Personal Information
               </Typography>
               
-              {!editing ? (
-                <Button
-                  startIcon={<Edit />}
-                  onClick={handleEdit}
-                  sx={{
-                    color: "#646cff",
-                    border: "1px solid rgba(100, 108, 255, 0.3)",
-                    background: "rgba(100, 108, 255, 0.1)",
-                  }}
-                >
-                  Edit Profile
-                </Button>
-              ) : (
-                <Box sx={{ display: "flex", gap: 1 }}>
-                  <Button
-                    startIcon={<Cancel />}
-                    onClick={handleCancel}
-                    sx={{
-                      color: "rgba(255, 255, 255, 0.7)",
-                      border: "1px solid rgba(255, 255, 255, 0.3)",
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    startIcon={<Save />}
-                    onClick={handleSave}
-                    disabled={loading}
-                    sx={{
-                      color: "#10b981",
-                      border: "1px solid rgba(16, 185, 129, 0.3)",
-                      background: "rgba(16, 185, 129, 0.1)",
-                    }}
-                  >
-                    {loading ? "Saving..." : "Save Changes"}
-                  </Button>
-                </Box>
-              )}
+              <Button
+                startIcon={<Edit />}
+                onClick={handleEdit}
+                sx={{
+                  color: "#646cff",
+                  border: "1px solid rgba(100, 108, 255, 0.3)",
+                  background: "rgba(100, 108, 255, 0.1)",
+                }}
+              >
+                Edit Profile
+              </Button>
             </Box>
 
             {loading && <LinearProgress sx={{ mb: 3 }} />}
 
-            <Grid container spacing={3}>
-              {/* Email (Read-only) */}
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Email Address"
-                  value={user?.email || ""}
-                  InputProps={{
-                    readOnly: true,
-                    startAdornment: <Email sx={{ color: "rgba(255, 255, 255, 0.5)", mr: 1 }} />
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      color: "rgba(255, 255, 255, 0.7)",
-                      "& fieldset": {
-                        borderColor: "rgba(255, 255, 255, 0.1)",
-                      },
-                    },
-                    "& .MuiInputLabel-root": {
-                      color: "rgba(255, 255, 255, 0.7)",
-                    },
-                  }}
-                />
+            <Grid container spacing={4}>
+              {/* Email */}
+              <Grid item xs={12} sm={6}>
+                <Typography variant="overline" sx={{ color: "rgba(255, 255, 255, 0.5)", fontWeight: 600 }}>
+                  Email Address
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1.5 }}>
+                  <Email sx={{ color: '#646cff' }} />
+                  <Typography variant="body1" sx={{ color: 'white' }}>
+                    {user?.email || "No email set"}
+                  </Typography>
+                </Box>
               </Grid>
 
-              {/* First Name */}
+              {/* Name */}
               <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="First Name"
-                  value={profileData.first_name}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, first_name: e.target.value }))}
-                  disabled={!editing || loading}
-                  InputProps={{
-                    startAdornment: <Person sx={{ color: "rgba(255, 255, 255, 0.5)", mr: 1 }} />
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      color: "white",
-                      "& fieldset": {
-                        borderColor: "rgba(255, 255, 255, 0.1)",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "rgba(255, 255, 255, 0.3)",
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: "#646cff",
-                      },
-                    },
-                    "& .MuiInputLabel-root": {
-                      color: "rgba(255, 255, 255, 0.7)",
-                    },
-                  }}
-                />
-              </Grid>
-
-              {/* Last Name */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Last Name"
-                  value={profileData.last_name}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, last_name: e.target.value }))}
-                  disabled={!editing || loading}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      color: "white",
-                      "& fieldset": {
-                        borderColor: "rgba(255, 255, 255, 0.1)",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "rgba(255, 255, 255, 0.3)",
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: "#646cff",
-                      },
-                    },
-                    "& .MuiInputLabel-root": {
-                      color: "rgba(255, 255, 255, 0.7)",
-                    },
-                  }}
-                />
+                <Typography variant="overline" sx={{ color: "rgba(255, 255, 255, 0.5)", fontWeight: 600 }}>
+                  Full Name
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1.5 }}>
+                  <Person sx={{ color: '#646cff' }} />
+                  <Typography variant="body1" sx={{ color: 'white' }}>
+                    {user?.first_name} {user?.last_name}
+                  </Typography>
+                </Box>
               </Grid>
 
               {/* Birthdate */}
               <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Birthdate"
-                  type="date"
-                  value={profileData.birthdate}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, birthdate: e.target.value }))}
-                  disabled={!editing || loading}
-                  InputLabelProps={{ shrink: true }}
-                  InputProps={{
-                    startAdornment: <Cake sx={{ color: "rgba(255, 255, 255, 0.5)", mr: 1 }} />
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      color: "white",
-                      "& fieldset": {
-                        borderColor: "rgba(255, 255, 255, 0.1)",
-                      },
-                      "&:hover fieldset": {
-                        borderColor: "rgba(255, 255, 255, 0.3)",
-                      },
-                      "&.Mui-focused fieldset": {
-                        borderColor: "#646cff",
-                      },
-                    },
-                    "& .MuiInputLabel-root": {
-                      color: "rgba(255, 255, 255, 0.7)",
-                    },
-                  }}
-                />
+                <Typography variant="overline" sx={{ color: "rgba(255, 255, 255, 0.5)", fontWeight: 600 }}>
+                  Birthdate
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1.5 }}>
+                  <Cake sx={{ color: '#646cff' }} />
+                  <Typography variant="body1" sx={{ color: 'white' }}>
+                    {formatDisplayDate(user?.birthdate)}
+                  </Typography>
+                </Box>
               </Grid>
 
               {/* Gender */}
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth disabled={!editing || loading}>
-                  <InputLabel sx={{ color: "rgba(255, 255, 255, 0.7)" }}>Gender</InputLabel>
-                  <Select
-                    value={profileData.gender}
-                    label="Gender"
-                    onChange={(e) => setProfileData(prev => ({ ...prev, gender: e.target.value }))}
-                    startAdornment={getGenderIcon(profileData.gender)}
-                    sx={{
-                      color: "white",
-                      "& .MuiOutlinedInput-notchedOutline": {
-                        borderColor: "rgba(255, 255, 255, 0.1)",
-                      },
-                      "&:hover .MuiOutlinedInput-notchedOutline": {
-                        borderColor: "rgba(255, 255, 255, 0.3)",
-                      },
-                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                        borderColor: "#646cff",
-                      },
-                    }}
-                  >
-                    <MenuItem value="">
-                      <em>Not specified</em>
-                    </MenuItem>
-                    <MenuItem value="male">Male</MenuItem>
-                    <MenuItem value="female">Female</MenuItem>
-                    <MenuItem value="other">Other</MenuItem>
-                  </Select>
-                </FormControl>
+                <Typography variant="overline" sx={{ color: "rgba(255, 255, 255, 0.5)", fontWeight: 600 }}>
+                  Gender
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1.5 }}>
+                  <Box sx={{ color: '#646cff', display: 'flex' }}>
+                    {getGenderIcon(user?.gender)}
+                  </Box>
+                  <Typography variant="body1" sx={{ color: 'white', textTransform: 'capitalize' }}>
+                    {user?.gender || "Not specified"}
+                  </Typography>
+                </Box>
               </Grid>
             </Grid>
           </Paper>
@@ -702,6 +584,124 @@ export default function Profile({ user: initialUser }) {
             disabled={loading}
           >
             Remove Picture
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Profile Dialog */}
+      <Dialog
+        open={editModalOpen}
+        onClose={handleCancel}
+        PaperProps={{
+          sx: {
+            bgcolor: "rgba(20, 20, 30, 0.9)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
+            color: "white",
+            minWidth: { xs: '90%', sm: 500 },
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, fontFamily: "'Poppins', sans-serif", mt: 1 }}>
+          Edit Personal Information
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={3} sx={{ mt: 0.5 }}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="First Name"
+                value={profileData.first_name}
+                onChange={(e) => setProfileData(prev => ({ ...prev, first_name: e.target.value }))}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    color: "white",
+                    "& fieldset": { borderColor: "rgba(255, 255, 255, 0.1)" },
+                    "&:hover fieldset": { borderColor: "rgba(255, 255, 255, 0.3)" },
+                    "&.Mui-focused fieldset": { borderColor: "#646cff" },
+                  },
+                  "& .MuiInputLabel-root": { color: "rgba(255, 255, 255, 0.7)" },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Last Name"
+                value={profileData.last_name}
+                onChange={(e) => setProfileData(prev => ({ ...prev, last_name: e.target.value }))}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    color: "white",
+                    "& fieldset": { borderColor: "rgba(255, 255, 255, 0.1)" },
+                    "&:hover fieldset": { borderColor: "rgba(255, 255, 255, 0.3)" },
+                    "&.Mui-focused fieldset": { borderColor: "#646cff" },
+                  },
+                  "& .MuiInputLabel-root": { color: "rgba(255, 255, 255, 0.7)" },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Birthdate"
+                type="date"
+                value={profileData.birthdate}
+                onChange={(e) => setProfileData(prev => ({ ...prev, birthdate: e.target.value }))}
+                InputLabelProps={{ shrink: true }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    color: "white",
+                    "& fieldset": { borderColor: "rgba(255, 255, 255, 0.1)" },
+                    "&:hover fieldset": { borderColor: "rgba(255, 255, 255, 0.3)" },
+                    "&.Mui-focused fieldset": { borderColor: "#646cff" },
+                  },
+                  "& .MuiInputLabel-root": { color: "rgba(255, 255, 255, 0.7)" },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ color: "rgba(255, 255, 255, 0.7)" }}>Gender</InputLabel>
+                <Select
+                  value={profileData.gender}
+                  label="Gender"
+                  onChange={(e) => setProfileData(prev => ({ ...prev, gender: e.target.value }))}
+                  sx={{
+                    color: "white",
+                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255, 255, 255, 0.1)" },
+                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255, 255, 255, 0.3)" },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#646cff" },
+                    "& .MuiSvgIcon-root": { color: "white" }
+                  }}
+                >
+                  <MenuItem value=""><em>Not specified</em></MenuItem>
+                  <MenuItem value="male">Male</MenuItem>
+                  <MenuItem value="female">Female</MenuItem>
+                  <MenuItem value="other">Other</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2, mt: 1 }}>
+          <Button onClick={handleCancel} sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={loading}
+            variant="contained"
+            sx={{
+              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+              color: 'white',
+              px: 3,
+              '&:hover': {
+                background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+              }
+            }}
+          >
+            {loading ? "Saving..." : "Save Changes"}
           </Button>
         </DialogActions>
       </Dialog>
