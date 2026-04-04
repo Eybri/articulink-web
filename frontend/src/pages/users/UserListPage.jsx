@@ -62,6 +62,7 @@ export default function UserList({ user }) {
   const [deactivationData, setDeactivationData] = useState({
     deactivation_type: 'temporary',
     duration: '1day',
+    reason_category: 'Spamming',
     deactivation_reason: ''
   })
 
@@ -122,7 +123,14 @@ export default function UserList({ user }) {
 
   const handleDeactivateUser = async () => {
     try {
-      await userAPI.deactivateUser(selectedUser.id, deactivationData)
+      const apiData = {
+        ...deactivationData,
+        deactivation_reason: deactivationData.deactivation_reason 
+          ? `[${deactivationData.reason_category}] ${deactivationData.deactivation_reason}`
+          : deactivationData.reason_category
+      }
+      
+      await userAPI.deactivateUser(selectedUser.id, apiData)
       
       let successMessage = `User deactivated successfully`
       if (deactivationData.deactivation_type === 'temporary') {
@@ -135,9 +143,11 @@ export default function UserList({ user }) {
       setDeactivationData({
         deactivation_type: 'temporary',
         duration: '1day',
+        reason_category: 'Spamming',
         deactivation_reason: ''
       })
     } catch (err) {
+      console.error('Deactivation error:', err)
       setError("Failed to deactivate user")
     }
   }
@@ -158,6 +168,7 @@ export default function UserList({ user }) {
     setDeactivationData({
       deactivation_type: 'temporary',
       duration: '1day',
+      reason_category: 'Spamming',
       deactivation_reason: ''
     })
     setDeactivateDialogOpen(true)
@@ -694,6 +705,7 @@ export default function UserList({ user }) {
           setDeactivationData({
             deactivation_type: 'temporary',
             duration: '1day',
+            reason_category: 'Spamming',
             deactivation_reason: ''
           })
         }}
@@ -776,8 +788,34 @@ export default function UserList({ user }) {
               </FormControl>
             )}
 
+            <FormControl fullWidth>
+              <InputLabel sx={{ color: "rgba(255, 255, 255, 0.7)" }}>Reason Category</InputLabel>
+              <Select
+                value={deactivationData.reason_category}
+                label="Reason Category"
+                onChange={(e) => setDeactivationData(prev => ({ 
+                  ...prev, 
+                  reason_category: e.target.value 
+                }))}
+                sx={{ 
+                  color: "white",
+                  "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255, 255, 255, 0.2)" },
+                  "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255, 255, 255, 0.4)" },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#646cff" }
+                }}
+              >
+                <MenuItem value="Spamming">Spamming (Translation Abuse)</MenuItem>
+                <MenuItem value="Inappropriate Language">Inappropriate Language (Cursing/Hate)</MenuItem>
+                <MenuItem value="Harassment">Harassment or Bullying</MenuItem>
+                <MenuItem value="Content Policy">Content Policy Violation</MenuItem>
+                <MenuItem value="Suspicious Activity">Suspicious/Bot Activity</MenuItem>
+                <MenuItem value="Account Security">Account Compromised/Security</MenuItem>
+                <MenuItem value="Other">Other (Specify Details Below)</MenuItem>
+              </Select>
+            </FormControl>
+
             <TextField
-              label="Deactivation Reason (Optional)"
+              label="Additional Details (Optional)"
               value={deactivationData.deactivation_reason}
               onChange={(e) => setDeactivationData(prev => ({ 
                 ...prev, 
@@ -785,7 +823,7 @@ export default function UserList({ user }) {
               }))}
               multiline
               rows={3}
-              placeholder="Enter reason for deactivation..."
+              placeholder="Provide more context for this enforcement action..."
               sx={{
                 "& .MuiOutlinedInput-root": {
                   color: "white",
@@ -813,6 +851,7 @@ export default function UserList({ user }) {
               setDeactivationData({
                 deactivation_type: 'temporary',
                 duration: '1day',
+                reason_category: 'Spamming',
                 deactivation_reason: ''
               })
             }} 
