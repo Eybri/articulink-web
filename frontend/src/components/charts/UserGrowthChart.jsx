@@ -69,7 +69,7 @@ const UserGrowthChart = () => {
       subtitle="Number of new users over time"
       icon={<TrendingUp />}
       gradient="linear-gradient(90deg, #10b981, #f59e0b, transparent)"
-      height={450}
+      height={420}
     >
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end' }}>
         <FormControl size="small" sx={{ minWidth: 120 }}>

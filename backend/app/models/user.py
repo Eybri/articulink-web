@@ -182,6 +182,18 @@ async def auto_reactivate_users():
                 }}
             )
             reactivated_count += 1
+            
+            # Send activation email
+            if user.get("email"):
+                try:
+                    from app.utils.email import send_activation_email
+                    send_activation_email(
+                        email=user["email"],
+                        first_name=user.get("first_name", "User")
+                    )
+                except Exception as email_err:
+                    logger.error(f"Failed to send auto-reactivation email: {str(email_err)}")
+                    
             logger.info(f"Auto-reactivated user {user.get('email', 'Unknown')}")
         
         if reactivated_count > 0:

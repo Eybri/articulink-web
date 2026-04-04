@@ -67,35 +67,26 @@ const StatsCards = ({
   return (
     <Grid container spacing={3} sx={{ mb: 3 }}>
       {cards.map((card, index) => (
-        <Grid item xs={12} sm={6} lg={3} key={card.key}>
+        <Grid item size={{ xs: 12, sm: 6, lg: 3 }} key={card.key}>
           <Card
             sx={{
-              height: 160, // Reduced height
+              height: 140, // More compact
               background: "rgba(255, 255, 255, 0.03)",
               backdropFilter: "blur(20px)",
               border: "1px solid rgba(255, 255, 255, 0.08)",
-              borderRadius: 3, // Slightly smaller border radius
+              borderRadius: 3,
               position: "relative",
               overflow: "hidden",
               transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
               "&:hover": {
-                transform: "translateY(-4px) scale(1.01)", // Reduced hover effect
-                boxShadow: `0 12px 40px rgba(0,0,0,0.3), 0 0 30px ${card.color}20`,
-                border: `1px solid ${card.color}40`,
-              },
-              "&::before": {
-                content: '""',
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: "2px",
-                background: `linear-gradient(90deg, ${card.color}, transparent)`,
+                transform: "translateY(-4px)",
+                boxShadow: `0 12px 40px rgba(0,0,0,0.3), 0 0 30px ${card.color}15`,
+                border: `1px solid ${card.color}30`,
               },
             }}
           >
             <CardContent sx={{ 
-              p: 3, // Reduced padding
+              p: 2.5,
               height: "100%", 
               display: "flex", 
               flexDirection: "column", 
@@ -109,6 +100,7 @@ const StatsCards = ({
                     top: 0, 
                     left: 0, 
                     right: 0,
+                    height: 2,
                     bgcolor: "rgba(255,255,255,0.1)",
                     "& .MuiLinearProgress-bar": { bgcolor: card.color }
                   }} 
@@ -119,33 +111,31 @@ const StatsCards = ({
                 display: "flex", 
                 alignItems: "flex-start", 
                 justifyContent: "space-between", 
-                mb: 1.5 // Reduced margin
+                mb: 1
               }}>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography
-                    variant="body2"
+                    variant="caption"
                     sx={{
-                      mb: 1, // Reduced margin
-                      fontWeight: 500,
-                      fontSize: "0.8rem", // Slightly smaller font
+                      mb: 0.5,
+                      fontWeight: 700,
+                      fontSize: "0.65rem",
                       fontFamily: "'Inter', sans-serif",
-                      color: "rgba(255, 255, 255, 0.7)",
+                      color: "rgba(255, 255, 255, 0.4)",
                       textTransform: "uppercase",
-                      letterSpacing: "0.5px",
+                      letterSpacing: "0.1em",
                     }}
                   >
                     {card.title}
                   </Typography>
                   <Typography
-                    variant="h4"
+                    variant="h5"
                     sx={{
                       fontWeight: 800,
-                      mb: 0.5, // Reduced margin
+                      mb: 0,
                       color: "white",
                       fontFamily: "'Poppins', sans-serif",
-                      lineHeight: 1,
-                      textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-                      fontSize: { xs: '1.5rem', sm: '1.75rem' } // Responsive font size
+                      lineHeight: 1.2,
                     }}
                   >
                     {loading ? "..." : card.value.toLocaleString()}
@@ -153,16 +143,16 @@ const StatsCards = ({
                 </Box>
                 <Box
                   sx={{
-                    p: 1.5, // Reduced padding
-                    borderRadius: 2, // Smaller border radius
-                    background: `linear-gradient(135deg, ${card.color}20, ${card.color}10)`,
+                    p: 1.25,
+                    borderRadius: 2,
+                    background: `linear-gradient(135deg, ${card.color}15, ${card.color}05)`,
                     color: card.color,
                     flexShrink: 0,
-                    ml: 1.5, // Reduced margin
-                    boxShadow: `0 4px 16px ${card.color}30`, // Reduced shadow
+                    ml: 1,
+                    boxShadow: `0 4px 12px ${card.color}20`,
                   }}
                 >
-                  <card.icon sx={{ fontSize: '1.25rem' }} /> {/* Smaller icon */}
+                  <card.icon sx={{ fontSize: '1.1rem' }} />
                 </Box>
               </Box>
               

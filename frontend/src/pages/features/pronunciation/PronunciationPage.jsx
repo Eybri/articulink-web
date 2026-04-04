@@ -46,7 +46,7 @@
                   Language,
                   Mic,
                 } from "@mui/icons-material"
-                import { pronunciationAPI } from "../api/api"
+                import { pronunciationAPI } from "../../../api/api"
 
                 export default function Pronunciation() {
                   const [clips, setClips] = useState([])

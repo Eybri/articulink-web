@@ -27,7 +27,6 @@ import {
   Assessment,
   ChevronLeft,
   ChevronRight,
-  AdminPanelSettings,
 } from "@mui/icons-material"
 import { useNavigate, useLocation } from "react-router-dom" // Add useLocation
 import { logout, getUser } from "../api/api"
@@ -136,46 +135,79 @@ export default function Sidebar({
       {/* Header Section */}
       <Box
         sx={{
-          p: sidebarMinimized ? 1.5 : 3,
+          p: sidebarMinimized ? 2 : 3,
           borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
           display: "flex",
+          flexDirection: sidebarMinimized ? "column" : "row",
           alignItems: "center",
           justifyContent: sidebarMinimized ? "center" : "space-between",
+          gap: sidebarMinimized ? 2 : 0,
           background: "rgba(255, 255, 255, 0.02)",
           backdropFilter: "blur(10px)",
         }}
       >
-        {!sidebarMinimized && (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: 2,
-                background: "linear-gradient(135deg, #646cff 0%, #535bf2 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 16px rgba(100, 108, 255, 0.3)",
-              }}
-            >
-              <AdminPanelSettings sx={{ fontSize: 20, color: "white" }} />
-            </Box>
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 800,
-                background: "linear-gradient(135deg, #fff 0%, #646cff 100%)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                fontFamily: "'Poppins', sans-serif",
-              }}
-            >
-              ArticuLink
-            </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: "12px",
+              background: "linear-gradient(135deg, #646cff 0%, #535bf2 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 8px 24px rgba(100, 108, 255, 0.25)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              overflow: "hidden",
+              transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+            }}
+          >
+            <Box 
+              component="img"
+              src="/images/whitelogo.png"
+              alt="Logo"
+              sx={{ 
+                width: "75%", 
+                height: "75%", 
+                objectFit: "contain",
+                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
+              }} 
+            />
           </Box>
-        )}
+          {!sidebarMinimized && (
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 900,
+                  fontSize: "1.3rem",
+                  letterSpacing: "-0.02em",
+                  background: "linear-gradient(135deg, #ffffff 0%, #a2a7ff 100%)",
+                  backgroundClip: "text",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  fontFamily: "'Poppins', sans-serif",
+                  lineHeight: 1,
+                  mb: 0.2
+                }}
+              >
+                ArticuLink
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "0.65rem",
+                  fontWeight: 600,
+                  color: "rgba(255, 255, 255, 0.4)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  fontFamily: "'Inter', sans-serif"
+                }}
+              >
+                Admin Platform
+              </Typography>
+            </Box>
+          )}
+        </Box>
         
         {!isMobile && (
           <Tooltip title={sidebarMinimized ? "Expand" : "Minimize"} placement="right">

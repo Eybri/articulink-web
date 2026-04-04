@@ -8,6 +8,7 @@ from app.db import db
 from app.security import get_current_admin_user_id
 import logging
 from app.models.user import DeactivateRequest, auto_reactivate_users
+from app.utils.email import send_deactivation_email, send_activation_email
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -30,6 +31,11 @@ class UserOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class UserListOut(BaseModel):
+    users: List[UserOut]
+    total: int
+
 # Helper function to convert datetime to string
 def format_datetime_for_response(dt):
     if dt is None:
@@ -39,13 +45,14 @@ def format_datetime_for_response(dt):
     return dt
 
 # GET /api/users/ - Get all users from database
-@router.get("/users/", response_model=List[UserOut])
+@router.get("/users/", response_model=UserListOut)
 async def get_all_users(
     # user_id: str = Depends(get_current_admin_user_id),  # Uncomment if you want auth
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(10, ge=1, le=1000),
     role: Optional[str] = Query(None),
-    status: Optional[str] = Query(None)
+    status: Optional[str] = Query(None),
+    search: Optional[str] = Query(None)
 ):
     """
     Get all users with pagination and filtering from database
@@ -60,6 +67,24 @@ async def get_all_users(
             query["role"] = role
         if status:
             query["status"] = status
+            
+        if search:
+            # Case-insensitive search on first_name, last_name, or email
+            search_query = {
+                "$or": [
+                    {"first_name": {"$regex": search, "$options": "i"}},
+                    {"last_name": {"$regex": search, "$options": "i"}},
+                    {"email": {"$regex": search, "$options": "i"}}
+                ]
+            }
+            # Combine with existing filters
+            if query:
+                query = {"$and": [query, search_query]}
+            else:
+                query = search_query
+
+        # Calculate total count for the query
+        total_count = await db.users.count_documents(query)
         
         # Get users from MongoDB
         cursor = db.users.find(query).skip(skip).limit(limit)
@@ -84,8 +109,11 @@ async def get_all_users(
                 "created_at": format_datetime_for_response(user.get("created_at"))  # Use created_at instead of join_date
             })
         
-        logger.info(f"Retrieved {len(users_response)} users from database")
-        return users_response
+        logger.info(f"Retrieved {len(users_response)} users out of total {total_count} from database")
+        return {
+            "users": users_response,
+            "total": total_count
+        }
         
     except Exception as e:
         logger.error(f"Error fetching users from database: {str(e)}")
@@ -221,6 +249,17 @@ async def deactivate_user(
         # Get updated user
         updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
         
+        # Send deactivation email in background
+        if updated_user and updated_user.get("email"):
+            background_tasks.add_task(
+                send_deactivation_email,
+                email=updated_user["email"],
+                first_name=updated_user.get("first_name", "User"),
+                deactivation_type=deactivate_request.deactivation_type,
+                reason=deactivate_request.deactivation_reason,
+                end_date=end_date
+            )
+        
         response_message = f"User deactivated successfully"
         if deactivate_request.deactivation_type == "temporary":
             response_message += f" until {end_date.strftime('%Y-%m-%d %H:%M:%S')}"
@@ -255,6 +294,7 @@ async def deactivate_user(
 @router.put("/users/{user_id}/activate")
 async def activate_user(
     user_id: str,
+    background_tasks: BackgroundTasks,
     # admin_id: str = Depends(get_current_admin_user_id)  # Uncomment if using auth
 ):
     """
@@ -284,6 +324,14 @@ async def activate_user(
         
         # Get updated user
         updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
+        
+        # Send activation email in background
+        if updated_user and updated_user.get("email"):
+            background_tasks.add_task(
+                send_activation_email,
+                email=updated_user["email"],
+                first_name=updated_user.get("first_name", "User")
+            )
         
         return {
             "message": "User activated successfully",

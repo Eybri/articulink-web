@@ -35,15 +35,19 @@ import {
   FormControlLabel,
   Radio,
   Tooltip,
+  TablePagination,
 } from "@mui/material"
 import { Edit, Delete, Visibility, Refresh, People, AdminPanelSettings, Person, MoreVert, Info, Schedule, AutoMode } from "@mui/icons-material"
-import { userAPI } from "../api/api"
-import StatsCards from "../components/StatsCards" // Import the cards component
+import { userAPI } from "../../api/api"
+import StatsCards from "../../components/StatsCards" // Import the cards component
 
 export default function UserList({ user }) {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState(null)
+  const [totalUsers, setTotalUsers] = useState(0)
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -58,6 +62,7 @@ export default function UserList({ user }) {
   const [deactivationData, setDeactivationData] = useState({
     deactivation_type: 'temporary',
     duration: '1day',
+    reason_category: 'Spamming',
     deactivation_reason: ''
   })
 
@@ -70,9 +75,26 @@ export default function UserList({ user }) {
       setLoading(true)
       setError("")
       
-      // Fetch users with filters
-      const usersData = await userAPI.getUsers(filters)
-      setUsers(usersData)
+      // Fetch users with filters and pagination
+      const response = await userAPI.getUsers({
+        ...filters,
+        skip: page * rowsPerPage,
+        limit: rowsPerPage
+      })
+
+      // Backend returns { users: [...], total: 123 }
+      // We handle the case where it might return just a list (backward compatibility)
+      if (response && response.users) {
+        setUsers(Array.isArray(response.users) ? response.users : [])
+        setTotalUsers(typeof response.total === 'number' ? response.total : 0)
+      } else if (Array.isArray(response)) {
+        setUsers(response)
+        setTotalUsers(response.length)
+      } else {
+        console.error("Unexpected API response format:", response)
+        setUsers([])
+        setTotalUsers(0)
+      }
       
       // Fetch statistics
       const statsData = await userAPI.getUserStats()
@@ -86,13 +108,29 @@ export default function UserList({ user }) {
     }
   }
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage)
+  }
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
   useEffect(() => {
     fetchData()
-  }, [filters])
+  }, [filters, page, rowsPerPage])
 
   const handleDeactivateUser = async () => {
     try {
-      await userAPI.deactivateUser(selectedUser.id, deactivationData)
+      const apiData = {
+        ...deactivationData,
+        deactivation_reason: deactivationData.deactivation_reason 
+          ? `[${deactivationData.reason_category}] ${deactivationData.deactivation_reason}`
+          : deactivationData.reason_category
+      }
+      
+      await userAPI.deactivateUser(selectedUser.id, apiData)
       
       let successMessage = `User deactivated successfully`
       if (deactivationData.deactivation_type === 'temporary') {
@@ -105,9 +143,11 @@ export default function UserList({ user }) {
       setDeactivationData({
         deactivation_type: 'temporary',
         duration: '1day',
+        reason_category: 'Spamming',
         deactivation_reason: ''
       })
     } catch (err) {
+      console.error('Deactivation error:', err)
       setError("Failed to deactivate user")
     }
   }
@@ -128,6 +168,7 @@ export default function UserList({ user }) {
     setDeactivationData({
       deactivation_type: 'temporary',
       duration: '1day',
+      reason_category: 'Spamming',
       deactivation_reason: ''
     })
     setDeactivateDialogOpen(true)
@@ -175,6 +216,7 @@ export default function UserList({ user }) {
       ...prev,
       [filterType]: value
     }))
+    setPage(0) // Reset to first page when filtering
   }
 
   const handleTriggerAutoReactivate = async () => {
@@ -213,22 +255,34 @@ export default function UserList({ user }) {
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A"
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return "N/A"
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    } catch {
+      return "N/A"
+    }
   }
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "N/A"
-    return new Date(dateString).toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    })
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return "N/A"
+      return date.toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    } catch {
+      return "N/A"
+    }
   }
 
   const getRemainingTime = (endDate) => {
@@ -561,6 +615,20 @@ export default function UserList({ user }) {
             </TableBody>
           </Table>
         </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          component="div"
+          count={totalUsers}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            color: "rgba(255, 255, 255, 0.7)",
+            ".MuiTablePagination-selectIcon": { color: "white" },
+            ".MuiTablePagination-actions": { color: "white" },
+          }}
+        />
         
         {users.length === 0 && !loading && (
           <Box sx={{ py: 8, textAlign: "center" }}>
@@ -586,30 +654,32 @@ export default function UserList({ user }) {
           }
         }}
       >
-        {selectedUserForMenu?.status === "active" ? (
-          <MenuItem 
-            onClick={() => handleDeactivateClick(selectedUserForMenu)}
-            sx={{
-              color: "#f59e0b",
-              "&:hover": {
-                bgcolor: "rgba(245, 158, 11, 0.1)",
-              }
-            }}
-          >
-            Deactivate User
-          </MenuItem>
-        ) : (
-          <MenuItem 
-            onClick={() => handleActivateUser(selectedUserForMenu.id)}
-            sx={{
-              color: "#10b981",
-              "&:hover": {
-                bgcolor: "rgba(16, 185, 129, 0.1)",
-              }
-            }}
-          >
-            Activate User
-          </MenuItem>
+        {selectedUserForMenu?.role !== "admin" && (
+          selectedUserForMenu?.status === "active" ? (
+            <MenuItem 
+              onClick={() => handleDeactivateClick(selectedUserForMenu)}
+              sx={{
+                color: "#f59e0b",
+                "&:hover": {
+                  bgcolor: "rgba(245, 158, 11, 0.1)",
+                }
+              }}
+            >
+              Deactivate User
+            </MenuItem>
+          ) : (
+            <MenuItem 
+              onClick={() => handleActivateUser(selectedUserForMenu.id)}
+              sx={{
+                color: "#10b981",
+                "&:hover": {
+                  bgcolor: "rgba(16, 185, 129, 0.1)",
+                }
+              }}
+            >
+              Activate User
+            </MenuItem>
+          )
         )}
         <MenuItem 
           onClick={() => {
@@ -635,6 +705,7 @@ export default function UserList({ user }) {
           setDeactivationData({
             deactivation_type: 'temporary',
             duration: '1day',
+            reason_category: 'Spamming',
             deactivation_reason: ''
           })
         }}
@@ -717,8 +788,34 @@ export default function UserList({ user }) {
               </FormControl>
             )}
 
+            <FormControl fullWidth>
+              <InputLabel sx={{ color: "rgba(255, 255, 255, 0.7)" }}>Reason Category</InputLabel>
+              <Select
+                value={deactivationData.reason_category}
+                label="Reason Category"
+                onChange={(e) => setDeactivationData(prev => ({ 
+                  ...prev, 
+                  reason_category: e.target.value 
+                }))}
+                sx={{ 
+                  color: "white",
+                  "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255, 255, 255, 0.2)" },
+                  "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255, 255, 255, 0.4)" },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#646cff" }
+                }}
+              >
+                <MenuItem value="Spamming">Spamming (Translation Abuse)</MenuItem>
+                <MenuItem value="Inappropriate Language">Inappropriate Language (Cursing/Hate)</MenuItem>
+                <MenuItem value="Harassment">Harassment or Bullying</MenuItem>
+                <MenuItem value="Content Policy">Content Policy Violation</MenuItem>
+                <MenuItem value="Suspicious Activity">Suspicious/Bot Activity</MenuItem>
+                <MenuItem value="Account Security">Account Compromised/Security</MenuItem>
+                <MenuItem value="Other">Other (Specify Details Below)</MenuItem>
+              </Select>
+            </FormControl>
+
             <TextField
-              label="Deactivation Reason (Optional)"
+              label="Additional Details (Optional)"
               value={deactivationData.deactivation_reason}
               onChange={(e) => setDeactivationData(prev => ({ 
                 ...prev, 
@@ -726,7 +823,7 @@ export default function UserList({ user }) {
               }))}
               multiline
               rows={3}
-              placeholder="Enter reason for deactivation..."
+              placeholder="Provide more context for this enforcement action..."
               sx={{
                 "& .MuiOutlinedInput-root": {
                   color: "white",
@@ -754,6 +851,7 @@ export default function UserList({ user }) {
               setDeactivationData({
                 deactivation_type: 'temporary',
                 duration: '1day',
+                reason_category: 'Spamming',
                 deactivation_reason: ''
               })
             }} 
