@@ -643,30 +643,32 @@ export default function UserList({ user }) {
           }
         }}
       >
-        {selectedUserForMenu?.status === "active" ? (
-          <MenuItem 
-            onClick={() => handleDeactivateClick(selectedUserForMenu)}
-            sx={{
-              color: "#f59e0b",
-              "&:hover": {
-                bgcolor: "rgba(245, 158, 11, 0.1)",
-              }
-            }}
-          >
-            Deactivate User
-          </MenuItem>
-        ) : (
-          <MenuItem 
-            onClick={() => handleActivateUser(selectedUserForMenu.id)}
-            sx={{
-              color: "#10b981",
-              "&:hover": {
-                bgcolor: "rgba(16, 185, 129, 0.1)",
-              }
-            }}
-          >
-            Activate User
-          </MenuItem>
+        {selectedUserForMenu?.role !== "admin" && (
+          selectedUserForMenu?.status === "active" ? (
+            <MenuItem 
+              onClick={() => handleDeactivateClick(selectedUserForMenu)}
+              sx={{
+                color: "#f59e0b",
+                "&:hover": {
+                  bgcolor: "rgba(245, 158, 11, 0.1)",
+                }
+              }}
+            >
+              Deactivate User
+            </MenuItem>
+          ) : (
+            <MenuItem 
+              onClick={() => handleActivateUser(selectedUserForMenu.id)}
+              sx={{
+                color: "#10b981",
+                "&:hover": {
+                  bgcolor: "rgba(16, 185, 129, 0.1)",
+                }
+              }}
+            >
+              Activate User
+            </MenuItem>
+          )
         )}
         <MenuItem 
           onClick={() => {

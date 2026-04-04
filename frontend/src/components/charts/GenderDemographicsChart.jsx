@@ -36,7 +36,7 @@ const GenderDemographicsChart = () => {
         title="Gender Demographics" 
         subtitle="Distribution of users by gender"
         icon={<People />}
-        height={420}
+        height={500}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '80%' }}>
           <LinearProgress sx={{ width: '60%', bgcolor: 'rgba(255,255,255,0.1)' }} />
@@ -51,7 +51,7 @@ const GenderDemographicsChart = () => {
         title="Gender Demographics" 
         subtitle="Distribution of users by gender"
         icon={<People />}
-        height={420}
+        height={500}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '80%' }}>
           <Typography color="error">{error}</Typography>
@@ -66,9 +66,9 @@ const GenderDemographicsChart = () => {
       subtitle="Distribution of users by gender"
       icon={<People />}
       gradient="linear-gradient(90deg, #646cff, #10b981, transparent)"
-      height={420}
+      height={500}
     >
-      <ResponsiveContainer width="100%" height={200}>
+      <ResponsiveContainer width="100%" height={280}>
         <PieChart>
           <Pie
             data={data}

@@ -21,6 +21,7 @@ import {
   DialogActions,
   Divider,
   Stack,
+  Chip,
 } from "@mui/material"
 import {
   Edit,
@@ -379,60 +380,62 @@ export default function Settings({ user: initialUser }) {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
       {/* Header Section */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: { xs: 3, md: 4 } }}>
         <Typography
           variant="h4"
           sx={{
             fontFamily: "'Inter', sans-serif",
             fontWeight: 800,
+            fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' },
             background: "linear-gradient(135deg, #fff 0%, #646cff 100%)",
             backgroundClip: "text",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
-            mb: 1,
+            mb: 0.5,
             letterSpacing: "-0.02em",
           }}
         >
-          Settings
+          Account Settings
         </Typography>
         <Typography
           variant="body1"
           sx={{
-            color: "rgba(255, 255, 255, 0.7)",
+            color: "rgba(255, 255, 255, 0.5)",
             fontFamily: "'Inter', sans-serif",
-            fontSize: "1.1rem",
+            fontSize: { xs: '0.875rem', md: '1rem' },
           }}
         >
-          Manage your account settings
+          Manage your personal information and security
         </Typography>
       </Box>
 
       {/* Notifications */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
           {error}
         </Alert>
       )}
       {success && (
-        <Alert severity="success" sx={{ mb: 3 }}>
+        <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
           {success}
         </Alert>
       )}
 
-      <Grid container spacing={4}>
+      <Grid container spacing={{ xs: 3, md: 4 }}>
         {/* Profile Picture Section */}
-        <Grid item xs={12} md={4}>
+        <Grid item size={{ xs: 12, md: 4 }}>
           <Paper
             sx={{
-              p: 4,
+              p: { xs: 3, md: 4 },
               background: "rgba(255, 255, 255, 0.03)",
               backdropFilter: "blur(20px)",
               border: "1px solid rgba(255, 255, 255, 0.08)",
               borderRadius: 4,
               textAlign: "center",
               position: "relative",
+              overflow: "hidden",
               "&::before": {
                 content: '""',
                 position: "absolute",
@@ -444,17 +447,16 @@ export default function Settings({ user: initialUser }) {
               },
             }}
           >
-            <Box sx={{ position: "relative", display: "inline-block" }}>
+            <Box sx={{ position: "relative", display: "inline-block", mb: 3 }}>
               <Avatar
                 sx={{
-                  width: 120,
-                  height: 120,
+                  width: { xs: 100, sm: 120 },
+                  height: { xs: 100, sm: 120 },
                   bgcolor: "rgba(100, 108, 255, 0.2)",
                   color: "#646cff",
-                  fontWeight: 600,
-                  fontSize: "2rem",
+                  fontWeight: 700,
+                  fontSize: { xs: "1.5rem", sm: "2rem" },
                   border: "3px solid rgba(255, 255, 255, 0.1)",
-                  mb: 2,
                 }}
                 src={user?.profile_pic}
               >
@@ -464,18 +466,21 @@ export default function Settings({ user: initialUser }) {
               {/* Upload Button */}
               <IconButton
                 component="label"
+                size="small"
                 sx={{
                   position: "absolute",
-                  bottom: 10,
-                  right: 10,
-                  bgcolor: "rgba(100, 108, 255, 0.9)",
+                  bottom: 5,
+                  right: 5,
+                  bgcolor: "#646cff",
                   color: "white",
+                  p: 1,
+                  boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
                   "&:hover": {
-                    bgcolor: "#646cff",
+                    bgcolor: "#5058e5",
                   },
                 }}
               >
-                <CameraAlt />
+                <CameraAlt fontSize="small" />
                 <input
                   type="file"
                   hidden
@@ -490,60 +495,80 @@ export default function Settings({ user: initialUser }) {
               sx={{
                 fontWeight: 700,
                 color: "white",
-                fontFamily: "'Poppins', sans-serif",
-                mb: 1,
+                fontSize: "1.1rem",
+                mb: 0.5,
               }}
             >
               {user?.first_name} {user?.last_name}
             </Typography>
             
-            <Typography
-              variant="body2"
-              sx={{
-                color: "rgba(255, 255, 255, 0.7)",
-                fontFamily: "'Inter', sans-serif",
-                mb: 1,
+            <Chip 
+              label={user?.role === 'admin' ? 'Administrator' : 'User'} 
+              size="small"
+              sx={{ 
+                bgcolor: user?.role === 'admin' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(100, 108, 255, 0.1)',
+                color: user?.role === 'admin' ? '#ef4444' : '#646cff',
+                fontWeight: 700,
+                fontSize: '0.65rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                mb: 3
               }}
-            >
-              {user?.role === 'admin' ? 'Administrator' : 'User'}
-            </Typography>
+            />
 
-            <Typography
-              variant="body2"
-              sx={{
-                color: "rgba(255, 255, 255, 0.5)",
-                fontFamily: "'Inter', sans-serif",
-                fontSize: "0.8rem",
-                mb: 3,
-              }}
-            >
-              Birthdate: {formatDisplayDate(user?.birthdate)}
-            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "rgba(255, 255, 255, 0.4)",
+                  fontSize: "0.75rem",
+                  fontWeight: 500
+                }}
+              >
+                Birthdate: {formatDisplayDate(user?.birthdate)}
+              </Typography>
+            </Box>
 
             {user?.profile_pic && (
               <Button
-                startIcon={<Delete />}
+                fullWidth
+                size="small"
+                startIcon={<Delete sx={{ fontSize: '1rem !important' }} />}
                 onClick={() => setDeleteDialogOpen(true)}
                 sx={{
-                  color: "#ef4444",
-                  border: "1px solid rgba(239, 68, 68, 0.3)",
-                  background: "rgba(239, 68, 68, 0.1)",
+                  color: "rgba(239, 68, 68, 0.6)",
+                  bgcolor: "transparent",
+                  border: "1px solid rgba(239, 68, 68, 0.12)",
+                  textTransform: 'uppercase',
+                  fontSize: '0.65rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.08em',
+                  borderRadius: 2,
+                  py: 1,
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                   "&:hover": {
-                    background: "rgba(239, 68, 68, 0.2)",
+                    color: "#ef4444",
+                    background: "rgba(239, 68, 68, 0.08)",
+                    borderColor: "rgba(239, 68, 68, 0.3)",
+                    transform: "translateY(-1px)",
+                    boxShadow: "0 4px 12px rgba(239, 68, 68, 0.1)",
                   },
+                  "&:active": {
+                    transform: "translateY(0)",
+                  }
                 }}
               >
-                Remove Photo
+                Remove Profile Photo
               </Button>
             )}
           </Paper>
         </Grid>
 
         {/* Profile Information Section */}
-        <Grid item xs={12} md={8}>
+        <Grid item size={{ xs: 12, md: 8 }}>
           <Paper
             sx={{
-              p: 4,
+              p: { xs: 3, md: 4 },
               background: "rgba(255, 255, 255, 0.03)",
               backdropFilter: "blur(20px)",
               border: "1px solid rgba(255, 255, 255, 0.08)",
@@ -560,109 +585,118 @@ export default function Settings({ user: initialUser }) {
               },
             }}
           >
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 700,
-                  color: "white",
-                  fontFamily: "'Poppins', sans-serif",
-                }}
-              >
-                Personal Information
-              </Typography>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4, flexWrap: 'wrap', gap: 2 }}>
+              <Box>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    color: "white",
+                  }}
+                >
+                  Personal Information
+                </Typography>
+                <Typography variant="caption" sx={{ color: "rgba(255, 255, 255, 0.3)", fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                  Base Profile Details
+                </Typography>
+              </Box>
               
               <Button
                 startIcon={<Edit />}
                 onClick={handleEdit}
+                size="small"
                 sx={{
                   color: "#646cff",
-                  border: "1px solid rgba(100, 108, 255, 0.3)",
-                  background: "rgba(100, 108, 255, 0.1)",
+                  px: 2,
+                  bgcolor: "rgba(100, 108, 255, 0.1)",
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  border: "1px solid rgba(100, 108, 255, 0.2)",
+                  "&:hover": { bgcolor: "rgba(100, 108, 255, 0.2)" }
                 }}
               >
-                Edit Profile
+                Update Details
               </Button>
             </Box>
 
-            {loading && <LinearProgress sx={{ mb: 3 }} />}
+            {loading && <LinearProgress sx={{ mb: 3, height: 2, bgcolor: 'rgba(255,255,255,0.05)', '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #646cff, #10b981)' } }} />}
 
-            <Grid container spacing={4}>
+            <Grid container spacing={{ xs: 3, md: 4 }}>
               {/* Email */}
-              <Grid item xs={12} sm={6}>
-                <Typography variant="overline" sx={{ color: "rgba(255, 255, 255, 0.5)", fontWeight: 600 }}>
+              <Grid item size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: "rgba(255, 255, 255, 0.3)", fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                   Email Address
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1.5 }}>
-                  <Email sx={{ color: '#646cff' }} />
-                  <Typography variant="body1" sx={{ color: 'white' }}>
+                  <Email sx={{ color: '#646cff', fontSize: '1.2rem' }} />
+                  <Typography sx={{ color: 'white', fontSize: '0.9rem', fontWeight: 500 }}>
                     {user?.email || "No email set"}
                   </Typography>
                 </Box>
               </Grid>
 
               {/* Name */}
-              <Grid item xs={12} sm={6}>
-                <Typography variant="overline" sx={{ color: "rgba(255, 255, 255, 0.5)", fontWeight: 600 }}>
+              <Grid item size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: "rgba(255, 255, 255, 0.3)", fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                   Full Name
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1.5 }}>
-                  <Person sx={{ color: '#646cff' }} />
-                  <Typography variant="body1" sx={{ color: 'white' }}>
+                  <Person sx={{ color: '#646cff', fontSize: '1.2rem' }} />
+                  <Typography sx={{ color: 'white', fontSize: '0.9rem', fontWeight: 500 }}>
                     {user?.first_name} {user?.last_name}
                   </Typography>
                 </Box>
               </Grid>
 
               {/* Birthdate */}
-              <Grid item xs={12} sm={6}>
-                <Typography variant="overline" sx={{ color: "rgba(255, 255, 255, 0.5)", fontWeight: 600 }}>
-                  Birthdate
+              <Grid item size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: "rgba(255, 255, 255, 0.3)", fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  Date of Birth
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1.5 }}>
-                  <Cake sx={{ color: '#646cff' }} />
-                  <Typography variant="body1" sx={{ color: 'white' }}>
+                  <Cake sx={{ color: '#10b981', fontSize: '1.2rem' }} />
+                  <Typography sx={{ color: 'white', fontSize: '0.9rem', fontWeight: 500 }}>
                     {formatDisplayDate(user?.birthdate)}
                   </Typography>
                 </Box>
               </Grid>
 
               {/* Gender */}
-              <Grid item xs={12} sm={6}>
-                <Typography variant="overline" sx={{ color: "rgba(255, 255, 255, 0.5)", fontWeight: 600 }}>
+              <Grid item size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: "rgba(255, 255, 255, 0.3)", fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                   Gender
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1.5 }}>
-                  <Box sx={{ color: '#646cff', display: 'flex' }}>
+                  <Box sx={{ color: '#f59e0b', display: 'flex' }}>
                     {getGenderIcon(user?.gender)}
                   </Box>
-                  <Typography variant="body1" sx={{ color: 'white', textTransform: 'capitalize' }}>
+                  <Typography sx={{ color: 'white', fontSize: '0.9rem', fontWeight: 500, textTransform: 'capitalize' }}>
                     {user?.gender || "Not specified"}
                   </Typography>
                 </Box>
               </Grid>
 
               {/* Role */}
-              <Grid item xs={12} sm={6}>
-                <Typography variant="overline" sx={{ color: "rgba(255, 255, 255, 0.5)", fontWeight: 600 }}>
-                  Account Role
+              <Grid item size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: "rgba(255, 255, 255, 0.3)", fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  Security Role
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1.5 }}>
-                  <AdminPanelSettings sx={{ color: '#646cff' }} />
-                  <Typography variant="body1" sx={{ color: 'white', textTransform: 'capitalize' }}>
+                  <AdminPanelSettings sx={{ color: '#ef4444', fontSize: '1.2rem' }} />
+                  <Typography sx={{ color: 'white', fontSize: '0.9rem', fontWeight: 500, textTransform: 'capitalize' }}>
                     {user?.role || "user"}
                   </Typography>
                 </Box>
               </Grid>
 
               {/* Joined Date */}
-              <Grid item xs={12} sm={6}>
-                <Typography variant="overline" sx={{ color: "rgba(255, 255, 255, 0.5)", fontWeight: 600 }}>
-                  Member Since
+              <Grid item size={{ xs: 12, sm: 6 }}>
+                <Typography variant="caption" sx={{ color: "rgba(255, 255, 255, 0.3)", fontWeight: 700, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  Registration
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, gap: 1.5 }}>
-                  <Schedule sx={{ color: '#646cff' }} />
-                  <Typography variant="body1" sx={{ color: 'white' }}>
+                  <Schedule sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.2rem' }} />
+                  <Typography sx={{ color: 'white', fontSize: '0.9rem', fontWeight: 500 }}>
                     {formatDisplayDate(user?.created_at)}
                   </Typography>
                 </Box>
@@ -673,24 +707,28 @@ export default function Settings({ user: initialUser }) {
       </Grid>
 
       {/* Password Management */}
-      <Box sx={{ mt: 4, textAlign: 'center' }}>
+      <Box sx={{ mt: 6, mb: 4, textAlign: 'center' }}>
         <Button
           variant="outlined"
           startIcon={<Lock />}
           onClick={handleOpenPasswordModal}
           sx={{
             color: "rgba(255, 255, 255, 0.7)",
-            borderColor: "rgba(255, 255, 255, 0.2)",
-            px: 4,
+            borderColor: "rgba(255, 255, 255, 0.08)",
+            px: { xs: 3, md: 5 },
             py: 1.5,
-            borderRadius: 2,
+            borderRadius: 3,
+            textTransform: 'none',
+            fontWeight: 600,
+            background: "rgba(255, 255, 255, 0.02)",
             "&:hover": {
               borderColor: "#646cff",
-              background: "rgba(100, 108, 255, 0.05)",
+              color: 'white',
+              background: "rgba(100, 108, 255, 0.08)",
             }
           }}
         >
-          Change Security Password
+          Manage Security Credentials
         </Button>
       </Box>
 

@@ -5,6 +5,7 @@ import StatsCards from "../../components/StatsCards"
 import GenderDemographicsChart from "../../components/charts/GenderDemographicsChart"
 import UserGrowthChart from "../../components/charts/UserGrowthChart"
 import AgeDistributionChart from "../../components/charts/AgeDistributionChart"
+import DashboardUserList from "../../components/DashboardUserList"
 import { userAPI } from "../../api/api" // Use the same API as UserList
 
 export default function Dashboard({ user }) {
@@ -73,13 +74,16 @@ export default function Dashboard({ user }) {
         </Grid>
       </Grid>
 
-      {/* Secondary Distribution (Balanced Row) */}
+      {/* Secondary Dynamic Row (Balanced Triple-Column View) */}
       <Grid container spacing={4}>
-        <Grid item size={{ xs: 12, lg: 6 }}>
+        <Grid item size={{ xs: 12, lg: 4 }}>
           <GenderDemographicsChart />
         </Grid>
-        <Grid item size={{ xs: 12, lg: 6 }}>
+        <Grid item size={{ xs: 12, lg: 4 }}>
           <AgeDistributionChart />
+        </Grid>
+        <Grid item size={{ xs: 12, lg: 4 }}>
+          <DashboardUserList />
         </Grid>
       </Grid>
     </>

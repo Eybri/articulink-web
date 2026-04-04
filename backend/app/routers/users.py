@@ -51,7 +51,8 @@ async def get_all_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=1000),
     role: Optional[str] = Query(None),
-    status: Optional[str] = Query(None)
+    status: Optional[str] = Query(None),
+    search: Optional[str] = Query(None)
 ):
     """
     Get all users with pagination and filtering from database
@@ -66,6 +67,22 @@ async def get_all_users(
             query["role"] = role
         if status:
             query["status"] = status
+            
+        if search:
+            # Case-insensitive search on first_name, last_name, or email
+            search_query = {
+                "$or": [
+                    {"first_name": {"$regex": search, "$options": "i"}},
+                    {"last_name": {"$regex": search, "$options": "i"}},
+                    {"email": {"$regex": search, "$options": "i"}}
+                ]
+            }
+            # Combine with existing filters
+            if query:
+                query = {"$and": [query, search_query]}
+            else:
+                query = search_query
+
         # Calculate total count for the query
         total_count = await db.users.count_documents(query)
         

@@ -7,7 +7,7 @@ const ChartContainer = ({
   icon, 
   gradient = "linear-gradient(90deg, #646cff, #10b981, transparent)",
   children,
-  height = 420 
+  height = 500 
 }) => {
   return (
     <Paper
