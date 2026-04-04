@@ -1,6 +1,7 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
 import os
 import logging
 from datetime import datetime
@@ -17,9 +18,12 @@ COLORS = {
     "sand_mid": "#DDD6C8"
 }
 
+# Path to local assets
+ASSETS_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets")
+
 def get_base_template(content_html, first_name, title):
     """
-    Returns a unified HTML template with brand colors.
+    Returns a unified HTML template with brand colors and embedded white logo.
     """
     return f"""
     <html>
@@ -29,17 +33,17 @@ def get_base_template(content_html, first_name, title):
                 body {{ margin: 0; padding: 0; background-color: {COLORS['cream']}; font-family: 'Inter', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }}
                 .container {{ max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid {COLORS['sand_mid']}; box-shadow: 0 4px 20px rgba(26, 68, 128, 0.05); }}
                 .header {{ background-color: {COLORS['royal_blue']}; padding: 40px 20px; text-align: center; }}
+                .logo {{ width: 140px; height: auto; margin-bottom: 10px; }}
                 .header h1 {{ color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }}
                 .content {{ padding: 40px 32px; color: {COLORS['text_dark']}; line-height: 1.6; }}
                 .footer {{ padding: 32px; font-size: 13px; color: {COLORS['text_mid']}; border-top: 1px solid {COLORS['sand_mid']}; background-color: {COLORS['cream']}; }}
                 .appeal-box {{ background-color: rgba(42, 143, 160, 0.05); border: 1px solid {COLORS['teal']}; padding: 15px; border-radius: 8px; margin-top: 24px; font-size: 14px; color: {COLORS['text_mid']}; }}
-                .button-container {{ text-align: center; margin-top: 32px; }}
-                .button {{ display: inline-block; padding: 14px 32px; background-color: {COLORS['royal_blue']}; color: #ffffff !important; text-decoration: none; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 6px rgba(26, 68, 128, 0.1); }}
             </style>
         </head>
         <body>
             <div class="container">
                 <div class="header">
+                    <img src="cid:logo" alt="Articulink Logo" class="logo">
                     <h1>{title}</h1>
                 </div>
                 <div class="content">
@@ -58,9 +62,22 @@ def get_base_template(content_html, first_name, title):
     </html>
     """
 
+def attach_logo(msg):
+    """Utility to attach the logo as an inline CID."""
+    try:
+        logo_path = os.path.join(ASSETS_PATH, "logo.png")
+        if os.path.exists(logo_path):
+            with open(logo_path, "rb") as f:
+                img = MIMEImage(f.read())
+                img.add_header("Content-ID", "<logo>")
+                img.add_header("Content-Disposition", "inline", filename="logo.png")
+                msg.attach(img)
+    except Exception as e:
+        logger.error(f"Failed to attach logo to email: {str(e)}")
+
 def send_deactivation_email(email: str, first_name: str, deactivation_type: str, reason: str, end_date: datetime = None):
     """
-    Send an email to a deactivated user using brand palette.
+    Send an email to a deactivated user using brand palette and embedded logo.
     """
     try:
         smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from = [os.getenv(k) for k in ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SMTP_FROM"]]
@@ -86,6 +103,9 @@ def send_deactivation_email(email: str, first_name: str, deactivation_type: str,
         msg["Subject"] = f"Account Notice: Articulink Deactivation"
         msg["From"], msg["To"] = smtp_from, email
         msg.attach(MIMEText(html, "html"))
+        
+        # Attach the brand logo
+        attach_logo(msg)
 
         with smtplib.SMTP(smtp_host, int(smtp_port)) as server:
             server.starttls()
@@ -98,7 +118,7 @@ def send_deactivation_email(email: str, first_name: str, deactivation_type: str,
 
 def send_activation_email(email: str, first_name: str):
     """
-    Send an email to a reactivated user using brand palette.
+    Send an email to a reactivated user using brand palette and embedded logo.
     """
     try:
         smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from = [os.getenv(k) for k in ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "SMTP_FROM"]]
@@ -111,8 +131,6 @@ def send_activation_email(email: str, first_name: str):
             <p style="color: #166534; font-weight: 600; margin-top: 0; margin-bottom: 8px; font-size: 14px; text-transform: uppercase;">Status: Active</p>
             <p style="color: {COLORS['text_dark']}; margin: 0;">Your access to all features and services has been restored. You can now log in and continue where you left off.</p>
         </div>
-        
-        </div>
         """
 
         html = get_base_template(content_html, first_name, "Account Reactivated")
@@ -121,6 +139,9 @@ def send_activation_email(email: str, first_name: str):
         msg["Subject"] = "Welcome Back! Your Articulink Account is Now Active"
         msg["From"], msg["To"] = smtp_from, email
         msg.attach(MIMEText(html, "html"))
+        
+        # Attach the brand logo
+        attach_logo(msg)
 
         with smtplib.SMTP(smtp_host, int(smtp_port)) as server:
             server.starttls()

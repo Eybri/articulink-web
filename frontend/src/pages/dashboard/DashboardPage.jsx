@@ -32,52 +32,53 @@ export default function Dashboard({ user }) {
 
   return (
     <>
-      {/* Welcome Section */}
+      {/* Minimalist Professional Header */}
       <Box sx={{ mb: 4 }}>
         <Typography
-          variant="h4"
           sx={{
             fontFamily: "'Inter', sans-serif",
             fontWeight: 800,
-            background: "linear-gradient(135deg, #fff 0%, #646cff 100%)",
-            backgroundClip: "text",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            mb: 1,
-            letterSpacing: "-0.02em",
+            fontSize: "1rem", // Minimalist cap
+            color: "#ffffff",
+            mb: 0.5,
+            letterSpacing: "-0.01em",
+            opacity: 0.9
           }}
         >
-          Welcome back, {user?.email?.split('@')[0] || 'Admin'}! 👋
+          Welcome, {user?.first_name || user?.email?.split('@')[0] || 'Admin'}! 👋
         </Typography>
         <Typography
-          variant="body1"
           sx={{
-            color: "rgba(255, 255, 255, 0.7)",
+            color: "rgba(255, 255, 255, 0.4)",
             fontFamily: "'Inter', sans-serif",
-            fontSize: "1.1rem",
+            fontSize: "0.65rem",
+            fontWeight: 600,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase"
           }}
         >
-          Here's what's happening with your user management system today.
+          System overview & analytics
         </Typography>
       </Box>
 
-      {/* Stats Cards Component */}
-      <StatsCards stats={stats} loading={loading} />
+      {/* KPI Section */}
+      <Box sx={{ mb: 4 }}>
+        <StatsCards stats={stats} loading={loading} />
+      </Box>
 
-      {/* Charts Grid */}
-      <Grid container spacing={3}>
-        {/* User Growth Chart */}
-        <Grid item xs={12} lg={8}>
+      {/* Primary Analytics (Hero Row) */}
+      <Grid container sx={{ mb: 4 }}>
+        <Grid item size={{ xs: 12 }}>
           <UserGrowthChart />
         </Grid>
+      </Grid>
 
-        {/* Gender Demographics Chart */}
-        <Grid item xs={12} lg={4}>
+      {/* Secondary Distribution (Balanced Row) */}
+      <Grid container spacing={4}>
+        <Grid item size={{ xs: 12, lg: 6 }}>
           <GenderDemographicsChart />
         </Grid>
-
-        {/* Age Distribution Chart */}
-        <Grid item xs={12}>
+        <Grid item size={{ xs: 12, lg: 6 }}>
           <AgeDistributionChart />
         </Grid>
       </Grid>

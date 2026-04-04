@@ -34,7 +34,7 @@ const AgeDistributionChart = () => {
         title="Age Distribution" 
         subtitle="Distribution of users by age range"
         icon={<Cake />}
-        height={400}
+        height={420}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '80%' }}>
           <LinearProgress sx={{ width: '60%', bgcolor: 'rgba(255,255,255,0.1)' }} />
@@ -49,7 +49,7 @@ const AgeDistributionChart = () => {
         title="Age Distribution" 
         subtitle="Distribution of users by age range"
         icon={<Cake />}
-        height={400}
+        height={420}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '80%' }}>
           <Typography color="error">{error}</Typography>
@@ -64,9 +64,9 @@ const AgeDistributionChart = () => {
       subtitle="Distribution of users by age range"
       icon={<Cake />}
       gradient="linear-gradient(90deg, #f59e0b, #ef4444, transparent)"
-      height={450}
+      height={420}
     >
-      <ResponsiveContainer width="100%" height={350}>
+      <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
           <XAxis 
