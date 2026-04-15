@@ -21,7 +21,7 @@ COLORS = {
 # Path to local assets
 ASSETS_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets")
 
-def get_base_template(content_html, first_name, title):
+def get_base_template(content_html, username, title):
     """
     Returns a unified HTML template with brand colors and embedded white logo.
     """
@@ -47,7 +47,7 @@ def get_base_template(content_html, first_name, title):
                     <h1>{title}</h1>
                 </div>
                 <div class="content">
-                    <p style="font-size: 16px;">Hello <strong>{first_name}</strong>,</p>
+                    <p style="font-size: 16px;">Hello <strong>{username}</strong>,</p>
                     {content_html}
                 </div>
                 <div class="footer">
@@ -75,7 +75,7 @@ def attach_logo(msg):
     except Exception as e:
         logger.error(f"Failed to attach logo to email: {str(e)}")
 
-def send_deactivation_email(email: str, first_name: str, deactivation_type: str, reason: str, end_date: datetime = None):
+def send_deactivation_email(email: str, username: str, deactivation_type: str, reason: str, end_date: datetime = None):
     """
     Send an email to a deactivated user using brand palette and embedded logo.
     """
@@ -97,7 +97,7 @@ def send_deactivation_email(email: str, first_name: str, deactivation_type: str,
         <p>We take our community guidelines and account security very seriously. If you have questions or wish to appeal this decision, please use the contact information provided below.</p>
         """
 
-        html = get_base_template(content_html, first_name, "Account Deactivated")
+        html = get_base_template(content_html, username, "Account Deactivated")
         
         msg = MIMEMultipart("alternative")
         msg["Subject"] = f"Account Notice: Articulink Deactivation"
@@ -116,7 +116,7 @@ def send_deactivation_email(email: str, first_name: str, deactivation_type: str,
     except Exception as e:
         logger.error(f"❌ Failed to deliver deactivation notice: {str(e)}")
 
-def send_activation_email(email: str, first_name: str):
+def send_activation_email(email: str, username: str):
     """
     Send an email to a reactivated user using brand palette and embedded logo.
     """
@@ -133,7 +133,7 @@ def send_activation_email(email: str, first_name: str):
         </div>
         """
 
-        html = get_base_template(content_html, first_name, "Account Reactivated")
+        html = get_base_template(content_html, username, "Account Reactivated")
 
         msg = MIMEMultipart("alternative")
         msg["Subject"] = "Welcome Back! Your Articulink Account is Now Active"

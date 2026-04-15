@@ -17,8 +17,7 @@ logger = logging.getLogger(__name__)
 class UserOut(BaseModel):
     id: str
     email: str
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    username: Optional[str] = None
     role: str
     profile_pic: Optional[str] = None
     birthdate: Optional[str] = None
@@ -69,11 +68,10 @@ async def get_all_users(
             query["status"] = status
             
         if search:
-            # Case-insensitive search on first_name, last_name, or email
+            # Case-insensitive search on username or email
             search_query = {
                 "$or": [
-                    {"first_name": {"$regex": search, "$options": "i"}},
-                    {"last_name": {"$regex": search, "$options": "i"}},
+                    {"username": {"$regex": search, "$options": "i"}},
                     {"email": {"$regex": search, "$options": "i"}}
                 ]
             }
@@ -96,8 +94,7 @@ async def get_all_users(
             users_response.append({
                 "id": str(user["_id"]),
                 "email": user.get("email", ""),
-                "first_name": user.get("first_name"),
-                "last_name": user.get("last_name"),
+                "username": user.get("username"),
                 "role": user.get("role", "user"),
                 "profile_pic": user.get("profile_pic"),
                 "birthdate": user.get("birthdate"),
@@ -254,7 +251,7 @@ async def deactivate_user(
             background_tasks.add_task(
                 send_deactivation_email,
                 email=updated_user["email"],
-                first_name=updated_user.get("first_name", "User"),
+                first_name=updated_user.get("username", "User"),
                 deactivation_type=deactivate_request.deactivation_type,
                 reason=deactivate_request.deactivation_reason,
                 end_date=end_date
@@ -273,8 +270,7 @@ async def deactivate_user(
             "user": {
                 "id": str(updated_user["_id"]),
                 "email": updated_user.get("email"),
-                "first_name": updated_user.get("first_name"),
-                "last_name": updated_user.get("last_name"),
+                "username": updated_user.get("username"),
                 "status": updated_user.get("status"),
                 "deactivation_type": updated_user.get("deactivation_type"),
                 "deactivation_end_date": format_datetime_for_response(updated_user.get("deactivation_end_date"))
@@ -330,7 +326,7 @@ async def activate_user(
             background_tasks.add_task(
                 send_activation_email,
                 email=updated_user["email"],
-                first_name=updated_user.get("first_name", "User")
+                first_name=updated_user.get("username", "User")
             )
         
         return {
@@ -339,8 +335,7 @@ async def activate_user(
             "user": {
                 "id": str(updated_user["_id"]),
                 "email": updated_user.get("email"),
-                "first_name": updated_user.get("first_name"),
-                "last_name": updated_user.get("last_name"),
+                "username": updated_user.get("username"),
                 "status": updated_user.get("status"),
                 "deactivation_type": updated_user.get("deactivation_type"),
                 "deactivation_end_date": format_datetime_for_response(updated_user.get("deactivation_end_date"))
@@ -433,8 +428,7 @@ async def update_user_status(
             "user": {
                 "id": str(updated_user["_id"]),
                 "email": updated_user.get("email"),
-                "first_name": updated_user.get("first_name"),
-                "last_name": updated_user.get("last_name"),
+                "username": updated_user.get("username"),
                 "role": updated_user.get("role"),
                 "status": updated_user.get("status"),
                 "deactivation_reason": updated_user.get("deactivation_reason")

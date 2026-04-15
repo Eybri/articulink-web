@@ -62,8 +62,9 @@ const DashboardUserList = () => {
     }
   }
 
-  const getInitials = (firstName, lastName) => {
-    return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase()
+  const getInitials = (username) => {
+    if (!username) return "?"
+    return username.slice(0, 2).toUpperCase()
   }
 
   return (
@@ -248,11 +249,11 @@ const DashboardUserList = () => {
                       }}
                       src={item.profile_pic}
                     >
-                      {getInitials(item.first_name, item.last_name)}
+                      {getInitials(item.username)}
                     </Avatar>
                     <Box>
                       <Typography sx={{ color: "white", fontSize: "0.75rem", fontWeight: 600 }}>
-                        {item.first_name} {item.last_name}
+                        {item.username || item.email}
                       </Typography>
                       <Typography sx={{ color: "rgba(255, 255, 255, 0.4)", fontSize: "0.65rem" }}>
                         {item.role}
