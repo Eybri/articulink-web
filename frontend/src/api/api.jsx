@@ -75,7 +75,7 @@ export const isAdmin = () => {
 export const authAPI = {
   // Login user
   login: async (email, password) => {
-    const response = await api.post('/api/auth/login', {
+    const response = await api.post('/api/admin/auth/login', {
       email,
       password
     });
@@ -84,13 +84,13 @@ export const authAPI = {
 
   // Get current user profile
   getProfile: async () => {
-    const response = await api.get('/api/auth/me');
+    const response = await api.get('/api/admin/auth/me');
     return response.data;
   },
 
   // Update user profile
   updateProfile: async (profileData) => {
-    const response = await api.put('/api/auth/profile', profileData);
+    const response = await api.put('/api/admin/auth/profile', profileData);
     return response.data;
   },
 
@@ -98,24 +98,21 @@ export const authAPI = {
   uploadProfilePicture: async (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    
-    const response = await api.post('/api/auth/profile/picture', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    const response = await api.post('/api/admin/auth/profile/picture', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   },
 
   // Delete profile picture
   deleteProfilePicture: async () => {
-    const response = await api.delete('/api/auth/profile/picture');
+    const response = await api.delete('/api/admin/auth/profile/picture');
     return response.data;
   },
 
-  // ADD THIS: Change password
+  // Change password
   changePassword: async (passwordData) => {
-    const response = await api.put('/api/auth/change-password', passwordData);
+    const response = await api.put('/api/admin/auth/change-password', passwordData);
     return response.data;
   }
 };
@@ -124,26 +121,26 @@ export const authAPI = {
 export const userAPI = {
   // Get all users with pagination and filtering
   getUsers: async (params = {}) => {
-    const response = await api.get('/api/users/', { params });
-    return response.data; // Now returns { users: [...], total: 123 }
+    const response = await api.get('/api/admin/users/', { params });
+    return response.data;
   },
 
   // Get user statistics
   getUserStats: async () => {
-    const response = await api.get('/api/users/stats/count');
+    const response = await api.get('/api/admin/users/stats/count');
     return response.data;
   },
 
   // Get single user
   getUser: async (userId) => {
-    const response = await api.get(`/api/users/${userId}`);
+    const response = await api.get(`/api/admin/users/${userId}`);
     return response.data;
   },
 
   // Update user status (legacy - for backward compatibility)
   updateUserStatus: async (userId, status, deactivationReason = null) => {
-    const response = await api.put(`/api/users/${userId}/status`, null, {
-      params: { 
+    const response = await api.put(`/api/admin/users/${userId}/status`, null, {
+      params: {
         status,
         ...(deactivationReason && { deactivation_reason: deactivationReason })
       }
@@ -153,7 +150,7 @@ export const userAPI = {
 
   // Update user role
   updateUserRole: async (userId, role) => {
-    const response = await api.put(`/api/users/${userId}/role`, null, {
+    const response = await api.put(`/api/admin/users/${userId}/role`, null, {
       params: { role }
     });
     return response.data;
@@ -161,33 +158,33 @@ export const userAPI = {
 
   // Delete user
   deleteUser: async (userId) => {
-    const response = await api.delete(`/api/users/${userId}`);
+    const response = await api.delete(`/api/admin/users/${userId}`);
     return response.data;
   },
 
   // Deactivate user with type and duration
   deactivateUser: async (userId, deactivationData) => {
-    const response = await api.put(`/api/users/${userId}/deactivate`, deactivationData);
+    const response = await api.put(`/api/admin/users/${userId}/deactivate`, deactivationData);
     return response.data;
   },
 
   // Activate user (clear all deactivation fields)
   activateUser: async (userId) => {
-    const response = await api.put(`/api/users/${userId}/activate`);
+    const response = await api.put(`/api/admin/users/${userId}/activate`);
     return response.data;
   },
 
   // Trigger auto-reactivation manually
   triggerAutoReactivate: async () => {
-    const response = await api.post('/api/users/auto-reactivate');
+    const response = await api.post('/api/admin/users/auto-reactivate');
     return response.data;
   },
 
   // Bulk update user statuses
   bulkUpdateUserStatus: async (userIds, status, deactivationReason = null) => {
-    const response = await api.put('/api/users/bulk/status', null, {
-      params: { 
-        status, 
+    const response = await api.put('/api/admin/users/bulk/status', null, {
+      params: {
+        status,
         user_ids: userIds,
         ...(deactivationReason && { deactivation_reason: deactivationReason })
       }
@@ -197,13 +194,13 @@ export const userAPI = {
 
   // Get gender demographics
   getGenderDemographics: async () => {
-    const response = await api.get('/api/dashboard/gender-demographics');
+    const response = await api.get('/api/admin/dashboard/gender-demographics');
     return response.data;
   },
 
   // Get user growth over time
   getUserGrowth: async (timeframe = 'monthly') => {
-    const response = await api.get('/api/dashboard/user-growth', {
+    const response = await api.get('/api/admin/dashboard/user-growth', {
       params: { timeframe }
     });
     return response.data;
@@ -211,7 +208,7 @@ export const userAPI = {
 
   // Get age distribution
   getAgeDistribution: async () => {
-    const response = await api.get('/api/dashboard/age-distribution');
+    const response = await api.get('/api/admin/dashboard/age-distribution');
     return response.data;
   }
 };
@@ -220,13 +217,13 @@ export const userAPI = {
 export const dashboardAPI = {
   // Get dashboard statistics
   getStats: async () => {
-    const response = await api.get('/api/dashboard/stats');
+    const response = await api.get('/api/admin/dashboard/stats');
     return response.data;
   },
 
   // Get analytics data
   getAnalytics: async (period = 'monthly') => {
-    const response = await api.get('/api/dashboard/analytics', {
+    const response = await api.get('/api/admin/dashboard/analytics', {
       params: { period }
     });
     return response.data;
@@ -234,7 +231,7 @@ export const dashboardAPI = {
 
   // Get recent activities
   getRecentActivities: async (limit = 10) => {
-    const response = await api.get('/api/dashboard/activities', {
+    const response = await api.get('/api/admin/dashboard/activities', {
       params: { limit }
     });
     return response.data;
@@ -295,7 +292,7 @@ export const pronunciationAPI = {
 export const reportsAPI = {
   // Generate report
   generateReport: async (reportType, startDate, endDate) => {
-    const response = await api.post('/api/reports/generate', {
+    const response = await api.post('/api/admin/reports/generate', {
       reportType,
       startDate,
       endDate
@@ -305,13 +302,13 @@ export const reportsAPI = {
 
   // Get report history
   getReportHistory: async () => {
-    const response = await api.get('/api/reports/history');
+    const response = await api.get('/api/admin/reports/history');
     return response.data;
   },
 
   // Download report
   downloadReport: async (reportId) => {
-    const response = await api.get(`/api/reports/download/${reportId}`, {
+    const response = await api.get(`/api/admin/reports/download/${reportId}`, {
       responseType: 'blob'
     });
     return response.data;
