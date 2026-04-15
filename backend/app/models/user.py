@@ -8,8 +8,7 @@ from app.db import db
 class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(min_length=6)
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    username: Optional[str] = None
     role: Optional[str] = "admin"
     profile_pic: Optional[str] = None
     birthdate: Optional[date] = None
@@ -26,8 +25,7 @@ class UserCreate(BaseModel):
 class UserOut(BaseModel):
     id: str
     email: EmailStr
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    username: Optional[str] = None
     role: Optional[str] = None
     profile_pic: Optional[str] = None
     birthdate: Optional[date] = None
@@ -56,8 +54,7 @@ class LoginRequest(BaseModel):
         return v.lower()
 
 class UserUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    username: Optional[str] = None
     birthdate: Optional[str] = None  # Change from date to str
     gender: Optional[str] = None
     status: Optional[str] = None
@@ -85,8 +82,7 @@ class UserUpdate(BaseModel):
 class UserUpdateResponse(BaseModel):
     id: str
     email: EmailStr
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
+    username: Optional[str] = None
     role: Optional[str] = None
     profile_pic: Optional[str] = None
     birthdate: Optional[date] = None
@@ -189,7 +185,7 @@ async def auto_reactivate_users():
                     from app.utils.email import send_activation_email
                     send_activation_email(
                         email=user["email"],
-                        first_name=user.get("first_name", "User")
+                        username=user.get("username", "User")
                     )
                 except Exception as email_err:
                     logger.error(f"Failed to send auto-reactivation email: {str(email_err)}")

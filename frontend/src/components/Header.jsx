@@ -66,8 +66,8 @@ export default function Header({
   // Get user initials for avatar
   const getUserInitials = () => {
     if (!user) return "A"
-    if (user.first_name && user.last_name) {
-      return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+    if (user.username) {
+      return user.username.slice(0, 2).toUpperCase()
     }
     if (user.email) {
       return user.email[0].toUpperCase()
@@ -78,8 +78,8 @@ export default function Header({
   // Get user display name
   const getUserDisplayName = () => {
     if (!user) return "Admin User"
-    if (user.first_name && user.last_name) {
-      return `${user.first_name} ${user.last_name}`
+    if (user.username) {
+      return user.username
     }
     if (user.email) {
       return user.email.split('@')[0]
