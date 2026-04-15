@@ -79,8 +79,7 @@ async def login(payload: LoginRequest):
         user_response = {
             "id": str(user["_id"]),
             "email": user["email"],
-            "first_name": user.get("first_name"),
-            "last_name": user.get("last_name"),
+            "username": user.get("username"),
             "role": user.get("role"),
             "profile_pic": user.get("profile_pic"),
             "birthdate": user.get("birthdate"),
@@ -128,8 +127,7 @@ async def get_current_user_profile(user_id: str = Depends(get_current_user_id)):
     return {
         "id": str(user["_id"]),
         "email": user["email"],
-        "first_name": user.get("first_name"),
-        "last_name": user.get("last_name"),
+        "username": user.get("username"),
         "role": user.get("role"),
         "profile_pic": user.get("profile_pic"),
         "birthdate": user.get("birthdate"),
@@ -170,8 +168,7 @@ async def update_profile(
     return UserUpdateResponse(
         id=str(updated_user["_id"]),
         email=updated_user["email"],
-        first_name=updated_user.get("first_name"),
-        last_name=updated_user.get("last_name"),
+        username=updated_user.get("username"),
         role=updated_user.get("role"),
         profile_pic=updated_user.get("profile_pic"),
         birthdate=updated_user.get("birthdate"),
@@ -213,8 +210,7 @@ async def upload_profile_pic(
     return UserUpdateResponse(
         id=str(updated_user["_id"]),
         email=updated_user["email"],
-        first_name=updated_user.get("first_name"),
-        last_name=updated_user.get("last_name"),
+        username=updated_user.get("username"),
         role=updated_user.get("role"),
         profile_pic=updated_user.get("profile_pic"),
         birthdate=updated_user.get("birthdate"),

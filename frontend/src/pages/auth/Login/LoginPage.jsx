@@ -68,12 +68,13 @@ export default function Login() {
       sx={{
         minHeight: "100vh",
         position: "relative",
-        background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 25%, #16213e 50%, #0f3460 100%)",
+        background: "#050505",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: 2,
         overflow: "hidden",
+        fontFamily: "'Inter', sans-serif",
         "&::before": {
           content: '""',
           position: "absolute",
@@ -81,56 +82,72 @@ export default function Login() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: `
-            radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%)
+          backgroundImage: `
+            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)
           `,
+          backgroundSize: "40px 40px",
+          maskImage: "radial-gradient(ellipse at center, black, transparent 80%)",
           zIndex: 1,
         },
+        "&::after": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `
+            radial-gradient(circle at 20% 30%, rgba(100, 108, 255, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 70%, rgba(16, 185, 129, 0.1) 0%, transparent 50%)
+          `,
+          zIndex: 1,
+        }
       }}
     >
-      {/* Animated background elements */}
+      {/* Animated Glowing Orbs */}
       <Box
         sx={{
           position: "absolute",
-          top: "10%",
-          left: "10%",
-          width: "300px",
-          height: "300px",
-          background: "radial-gradient(circle, rgba(100, 108, 255, 0.1) 0%, transparent 70%)",
+          top: "20%",
+          left: "15%",
+          width: "400px",
+          height: "400px",
+          background: "radial-gradient(circle, rgba(100, 108, 255, 0.08) 0%, transparent 70%)",
           borderRadius: "50%",
-          animation: "float 6s ease-in-out infinite",
+          animation: "floatSlow 15s ease-in-out infinite",
           zIndex: 1,
-          "@keyframes float": {
-            "0%, 100%": { transform: "translateY(0px)" },
-            "50%": { transform: "translateY(-20px)" },
+          "@keyframes floatSlow": {
+            "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+            "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+            "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
           },
         }}
       />
       
-      <Container maxWidth="sm" sx={{ position: "relative", zIndex: 2 }}>
+      <Container maxWidth="sm" sx={{ position: "relative", zIndex: 10 }}>
         <Paper
           elevation={0}
           sx={{
-            padding: { xs: 3, sm: 5 },
-            borderRadius: 4,
-            background: "rgba(255, 255, 255, 0.03)",
-            backdropFilter: "blur(20px)",
+            padding: { xs: 4, sm: 6 },
+            borderRadius: 6,
+            background: "rgba(255, 255, 255, 0.02)",
+            backdropFilter: "blur(40px)",
             border: "1px solid rgba(255, 255, 255, 0.08)",
-            boxShadow: `
-              0 8px 32px rgba(0, 0, 0, 0.3),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1)
-            `,
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
             position: "relative",
+            overflow: "hidden",
             "&::before": {
               content: '""',
               position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: "1px",
-              background: "linear-gradient(90deg, transparent, rgba(100, 108, 255, 0.8), transparent)",
+              inset: 0,
+              padding: "1px",
+              borderRadius: 6,
+              background: "linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02), rgba(100,108,255,0.1))",
+              WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+              WebkitMaskComposite: "xor",
+              maskComposite: "exclude",
+              pointerEvents: "none",
             },
           }}
         >
@@ -140,296 +157,236 @@ export default function Login() {
               sx={{
                 position: "relative",
                 display: "inline-block",
-                mb: 3,
+                mb: 4,
+                animation: "floatLogo 6s ease-in-out infinite",
+                "@keyframes floatLogo": {
+                  "0%, 100%": { transform: "translateY(0px) rotate(0deg)" },
+                  "50%": { transform: "translateY(-15px) rotate(2deg)" },
+                },
               }}
             >
               <Box
+                component="img"
+                src="/images/whitelogo.png"
+                alt="ArticuLink Logo"
                 sx={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: "50%",
-                  background: "linear-gradient(135deg, #646cff 0%, #535bf2 50%, #ff6b9d 100%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  margin: "0 auto",
-                  boxShadow: `
-                    0 20px 40px rgba(100, 108, 255, 0.3),
-                    0 0 80px rgba(100, 108, 255, 0.1),
-                    inset 0 0 0 1px rgba(255, 255, 255, 0.1)
-                  `,
-                  position: "relative",
-                  "&::before": {
-                    content: '""',
-                    position: "absolute",
-                    top: -2,
-                    left: -2,
-                    right: -2,
-                    bottom: -2,
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, #646cff, #ff6b9d, #535bf2)",
-                    opacity: 0.3,
-                    zIndex: -1,
-                    filter: "blur(8px)",
-                  },
+                  width: 120,
+                  height: "auto",
+                  filter: "drop-shadow(0 0 15px rgba(255, 255, 255, 0.2))",
                 }}
-              >
-                <SecurityOutlined sx={{ fontSize: 48, color: "white" }} />
-              </Box>
+              />
             </Box>
             
             <Typography
-              variant="h3"
+              variant="h2"
               sx={{
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 800,
-                background: "linear-gradient(135deg, #fff 0%, #646cff 100%)",
+                fontFamily: "'Outfit', sans-serif",
+                fontWeight: 900,
+                fontSize: { xs: '2.5rem', sm: '3.5rem' },
+                background: "linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.6) 100%)",
                 backgroundClip: "text",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 mb: 1,
-                letterSpacing: "-0.02em",
+                letterSpacing: "-0.04em",
+                lineHeight: 1,
               }}
             >
               ArticuLink
             </Typography>
             
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 1 }}>
-              <SecurityOutlined sx={{ color: "#646cff", fontSize: 20 }} />
-              <Typography
-                variant="h6"
-                sx={{
-                  color: "rgba(255, 255, 255, 0.9)",
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 600,
-                }}
-              >
-                Admin Portal
-              </Typography>
-            </Box>
-            
-            <Typography
-              variant="body2"
-              sx={{
-                color: "rgba(255, 255, 255, 0.6)",
-                fontFamily: "'Inter', sans-serif",
-                maxWidth: "300px",
-                margin: "0 auto",
+            <Box 
+              sx={{ 
+                display: "inline-flex", 
+                alignItems: "center", 
+                gap: 1, 
+                px: 2, 
+                py: 0.5, 
+                borderRadius: "20px", 
+                bgcolor: "rgba(100, 108, 255, 0.1)",
+                border: "1px solid rgba(100, 108, 255, 0.2)",
+                mb: 2
               }}
             >
-              Restricted access - Admin credentials required
-            </Typography>
+              <SecurityOutlined sx={{ color: "#646cff", fontSize: 14 }} />
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "#646cff",
+                  fontFamily: "'Inter', sans-serif",
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  fontSize: '0.65rem'
+                }}
+              >
+                Secured Admin Portal
+              </Typography>
+            </Box>
           </Box>
 
           {/* Form Section */}
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: "grid", gap: 3.5 }}>
+          <Box component="form" onSubmit={handleSubmit} sx={{ display: "grid", gap: 3 }}>
             {err && (
               <Alert
                 severity="error"
                 sx={{
                   borderRadius: 3,
-                  backgroundColor: "rgba(244, 67, 54, 0.08)",
-                  border: "1px solid rgba(244, 67, 54, 0.2)",
-                  color: "#ff8a80",
+                  backgroundColor: "rgba(239, 68, 68, 0.1)",
+                  border: "1px solid rgba(239, 68, 68, 0.2)",
+                  color: "#fca5a5",
                   backdropFilter: "blur(10px)",
-                  "& .MuiAlert-icon": {
-                    color: "#ff6b6b",
-                  },
                 }}
               >
                 {err}
               </Alert>
             )}
 
-            <Box sx={{ position: "relative" }}>
-              <TextField
-                label="Admin Email"
-                type="email"
-                required
-                fullWidth
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailIcon sx={{ color: "#646cff" }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "rgba(255, 255, 255, 0.02)",
-                    borderRadius: 3,
-                    backdropFilter: "blur(10px)",
-                    transition: "all 0.3s ease",
-                    "& fieldset": {
-                      borderColor: "rgba(255, 255, 255, 0.15)",
-                      borderWidth: "1px",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#646cff",
-                      borderWidth: "1px",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#646cff",
-                      borderWidth: "2px",
-                      boxShadow: "0 0 20px rgba(100, 108, 255, 0.2)",
-                    },
+            <TextField
+              label="ADMIN ACCOUNT"
+              type="email"
+              required
+              fullWidth
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  color: "white",
+                  backgroundColor: "rgba(255, 255, 255, 0.02)",
+                  borderRadius: 2,
+                  transition: "all 0.3s ease",
+                  "& fieldset": {
+                    borderColor: "rgba(255, 255, 255, 0.1)",
+                    borderWidth: "1px",
                   },
-                  "& .MuiInputLabel-root": {
-                    color: "rgba(255, 255, 255, 0.7)",
-                    fontFamily: "'Inter', sans-serif",
-                    "&.Mui-focused": {
-                      color: "#646cff",
-                    },
+                  "&:hover fieldset": {
+                    borderColor: "rgba(255, 255, 255, 0.2)",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#646cff",
+                    borderWidth: "2px",
+                    boxShadow: "0 0 25px rgba(100, 108, 255, 0.15)",
                   },
                   "& .MuiOutlinedInput-input": {
-                    color: "white",
-                    fontFamily: "'Inter', sans-serif",
-                    fontSize: "1rem",
-                    padding: "16px 14px",
+                    py: 1.5,
+                  }
+                },
+                "& .MuiInputLabel-root": {
+                  color: "rgba(255, 255, 255, 0.4)",
+                  fontWeight: 800,
+                  fontSize: '0.72rem',
+                  letterSpacing: '0.1em',
+                  "&.Mui-focused": {
+                    color: "#646cff",
                   },
-                }}
-              />
-            </Box>
+                  "&.MuiInputLabel-shrink": {
+                    transform: 'translate(14px, -9px) scale(0.9)',
+                  }
+                },
+              }}
+            />
 
-            <Box sx={{ position: "relative" }}>
-              <TextField
-                label="Admin Password"
-                type={showPassword ? "text" : "password"}
-                required
-                fullWidth
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon sx={{ color: "#646cff" }} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                        sx={{ 
-                          color: "rgba(255, 255, 255, 0.7)",
-                          "&:hover": {
-                            color: "#646cff",
-                            backgroundColor: "rgba(100, 108, 255, 0.1)",
-                          },
-                        }}
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "rgba(255, 255, 255, 0.02)",
-                    borderRadius: 3,
-                    backdropFilter: "blur(10px)",
-                    transition: "all 0.3s ease",
-                    "& fieldset": {
-                      borderColor: "rgba(255, 255, 255, 0.15)",
-                      borderWidth: "1px",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#646cff",
-                      borderWidth: "1px",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#646cff",
-                      borderWidth: "2px",
-                      boxShadow: "0 0 20px rgba(100, 108, 255, 0.2)",
-                    },
+            <TextField
+              label="PASSWORD ACCESS"
+              type={showPassword ? "text" : "password"}
+              required
+              fullWidth
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      sx={{ color: "rgba(255, 255, 255, 0.3)" }}
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  color: "white",
+                  backgroundColor: "rgba(255, 255, 255, 0.02)",
+                  borderRadius: 2,
+                  transition: "all 0.3s ease",
+                  "& fieldset": {
+                    borderColor: "rgba(255, 255, 255, 0.1)",
                   },
-                  "& .MuiInputLabel-root": {
-                    color: "rgba(255, 255, 255, 0.7)",
-                    fontFamily: "'Inter', sans-serif",
-                    "&.Mui-focused": {
-                      color: "#646cff",
-                    },
+                  "&:hover fieldset": {
+                    borderColor: "rgba(255, 255, 255, 0.2)",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#646cff",
+                    borderWidth: "2px",
+                    boxShadow: "0 0 25px rgba(100, 108, 255, 0.15)",
                   },
                   "& .MuiOutlinedInput-input": {
-                    color: "white",
-                    fontFamily: "'Inter', sans-serif",
-                    fontSize: "1rem",
-                    padding: "16px 14px",
+                    py: 1.5,
+                  }
+                },
+                "& .MuiInputLabel-root": {
+                  color: "rgba(255, 255, 255, 0.4)",
+                  fontWeight: 800,
+                  fontSize: '0.72rem',
+                  letterSpacing: '0.1em',
+                  "&.Mui-focused": {
+                    color: "#646cff",
                   },
-                }}
-              />
-            </Box>
+                  "&.MuiInputLabel-shrink": {
+                    transform: 'translate(14px, -9px) scale(0.9)',
+                  }
+                },
+              }}
+            />
 
             <Button
               variant="contained"
               type="submit"
-              size="large"
               disabled={isLoading}
               fullWidth
               sx={{
-                mt: 2,
+                mt: 1,
                 py: 2,
                 borderRadius: 3,
-                background: "linear-gradient(135deg, #646cff 0%, #535bf2 100%)",
-                boxShadow: "0 8px 32px rgba(100, 108, 255, 0.3)",
-                fontSize: "1.1rem",
-                fontWeight: 700,
-                fontFamily: "'Inter', sans-serif",
-                textTransform: "none",
-                position: "relative",
-                overflow: "hidden",
+                background: "linear-gradient(135deg, #646cff 0%, #4c44e6 100%)",
+                boxShadow: "0 10px 40px -10px rgba(100, 108, 255, 0.5)",
+                fontSize: "0.9rem",
+                fontWeight: 800,
+                letterSpacing: '0.05em',
+                textTransform: "uppercase",
+                transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
                 "&:hover": {
-                  background: "linear-gradient(135deg, #535bf2 0%, #4c44e6 100%)",
-                  boxShadow: "0 12px 40px rgba(100, 108, 255, 0.4)",
-                  transform: "translateY(-2px)",
+                  background: "linear-gradient(135deg, #4c44e6 0%, #3f36d4 100%)",
+                  boxShadow: "0 15px 45px -10px rgba(100, 108, 255, 0.6)",
+                  transform: "scale(1.02) translateY(-2px)",
                 },
-                "&:disabled": {
-                  background: "rgba(100, 108, 255, 0.3)",
-                  color: "rgba(255, 255, 255, 0.5)",
-                },
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                "&::before": {
-                  content: '""',
-                  position: "absolute",
-                  top: 0,
-                  left: -100,
-                  width: "100%",
-                  height: "100%",
-                  background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)",
-                  transition: "left 0.6s",
-                },
-                "&:hover::before": {
-                  left: "100%",
-                },
+                "&:active": { transform: "scale(0.98)" },
               }}
-              endIcon={!isLoading && <ArrowForward sx={{ ml: 1 }} />}
             >
-              {isLoading ? "Authenticating..." : "Admin Login"}
+              {isLoading ? "Validating..." : "Enter Portal"}
             </Button>
           </Box>
 
-          {/* Footer Section */}
-          <Box sx={{ textAlign: "center", mt: 4, pt: 3, borderTop: "1px solid rgba(255, 255, 255, 0.05)" }}>
+          <Box sx={{ textAlign: "center", mt: 6 }}>
             <Typography
               variant="caption"
               sx={{
-                color: "rgba(255, 255, 255, 0.4)",
+                color: "rgba(255, 255, 255, 0.2)",
                 fontFamily: "'Inter', sans-serif",
-                fontSize: "0.85rem",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 1,
+                fontSize: "0.7rem",
+                fontWeight: 600,
+                letterSpacing: '0.05em'
               }}
             >
-              <SecurityOutlined sx={{ fontSize: 16 }} />
-              Restricted to authorized administrators only
+              SYSTEM VERSION 2.0.4 • ENCRYPTED SESSION
             </Typography>
           </Box>
         </Paper>
       </Container>
     </Box>
   )
-}
+}
