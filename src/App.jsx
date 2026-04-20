@@ -6,7 +6,6 @@ import Dashboard from "./pages/dashboard";
 import UserList from "./pages/users";
 import { SettingsPage as Settings } from "./pages/settings"; 
 import Pronunciation from "./pages/features/pronunciation";
-import Analytics from "./pages/analytics";
 import PrivateRoute from "./components/PrivateRoute";
 import AdminLayout from "./layouts/AdminLayout";
 import { getUser, isAdmin } from "./api/api";
@@ -51,7 +50,6 @@ export default function App() {
                 <Route path="/dashboard" element={
                   <Dashboard user={user} setUser={setUser} />
                 } />
-                <Route path="/analytics" element={<Analytics />} />
                 <Route path="/users" element={<UserList user={user} />} />
                 <Route path="/settings" element={<Settings user={user} />} />
                 <Route path="/pronunciation" element={<Pronunciation />} />
