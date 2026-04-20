@@ -68,6 +68,7 @@ export default function Settings({ user: initialUser }) {
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
 
   const [profileData, setProfileData] = useState({
+    username: "",
     first_name: "",
     last_name: "",
     birthdate: "",
@@ -84,6 +85,7 @@ export default function Settings({ user: initialUser }) {
       const formattedBirthdate = safeFormatDateForInput(user.birthdate)
       
       setProfileData({
+        username: user.username || "",
         first_name: user.first_name || "",
         last_name: user.last_name || "",
         birthdate: formattedBirthdate,
@@ -102,6 +104,7 @@ export default function Settings({ user: initialUser }) {
       const formattedBirthdate = safeFormatDateForInput(profile.birthdate)
       
       setProfileData({
+        username: profile.username || "",
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
         birthdate: formattedBirthdate,
@@ -127,6 +130,7 @@ export default function Settings({ user: initialUser }) {
     const formattedBirthdate = safeFormatDateForInput(user.birthdate)
     
     setProfileData({
+      username: user.username || "",
       first_name: user.first_name || "",
       last_name: user.last_name || "",
       birthdate: formattedBirthdate,
@@ -143,6 +147,7 @@ export default function Settings({ user: initialUser }) {
       
       // Prepare update data - handle empty strings by converting to null
       const updateData = {
+        username: profileData.username?.trim() || null,
         first_name: profileData.first_name?.trim() || null,
         last_name: profileData.last_name?.trim() || null,
         gender: profileData.gender || null,
@@ -176,6 +181,7 @@ export default function Settings({ user: initialUser }) {
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
       const updatedUserData = {
         ...currentUser,
+        username: updatedUser.username,
         first_name: updatedUser.first_name,
         last_name: updatedUser.last_name,
         profile_pic: updatedUser.profile_pic,
@@ -941,6 +947,23 @@ export default function Settings({ user: initialUser }) {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={3} sx={{ mt: 0.5 }}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Username"
+                value={profileData.username}
+                onChange={(e) => setProfileData(prev => ({ ...prev, username: e.target.value }))}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    color: "white",
+                    "& fieldset": { borderColor: "rgba(255, 255, 255, 0.1)" },
+                    "&:hover fieldset": { borderColor: "rgba(255, 255, 255, 0.3)" },
+                    "&.Mui-focused fieldset": { borderColor: "#646cff" },
+                  },
+                  "& .MuiInputLabel-root": { color: "rgba(255, 255, 255, 0.7)" },
+                }}
+              />
+            </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
