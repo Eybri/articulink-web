@@ -19,21 +19,99 @@ const ChartContainer = ({
     if (!containerRef.current) return;
 
     try {
+      // 1. Capture the chart canvas with a forced dark background for the chart itself
+      // (or we can use light if needed, but charts are designed for dark)
       const canvas = await html2canvas(containerRef.current, {
-        backgroundColor: "#050505", // Match dashboard theme
-        scale: 2, // Higher quality
+        backgroundColor: "#050505", 
+        scale: 2,
         logging: false,
         useCORS: true,
       });
 
       const imgData = canvas.toDataURL("image/png");
+      
+      // 2. Create PDF (A4 Format)
       const pdf = new jsPDF({
-        orientation: canvas.width > canvas.height ? "landscape" : "portrait",
-        unit: "px",
-        format: [canvas.width, canvas.height]
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
       });
 
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      const contentWidth = pageWidth - (margin * 2);
+
+      // --- HEADER SECTION ---
+      // Add a subtle header line
+      pdf.setDrawColor(230, 230, 230);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, margin + 20, pageWidth - margin, margin + 20);
+
+      // Add Logo
+      try {
+        const logoImg = new Image();
+        logoImg.src = "/images/logo2-nobg.png";
+        await new Promise((resolve) => {
+          logoImg.onload = resolve;
+          logoImg.onerror = resolve; // Continue even if logo fails
+        });
+        if (logoImg.complete && logoImg.naturalWidth !== 0) {
+          pdf.addImage(logoImg, "PNG", margin, margin, 12, 12);
+        }
+      } catch (e) {
+        console.warn("Logo failed to load for PDF");
+      }
+
+      // Add Title
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(18);
+      pdf.setTextColor(15, 15, 15);
+      pdf.text("ArticuLink", margin + 15, margin + 8);
+      
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text("Clinical Analytics Report", margin + 15, margin + 13);
+
+      // Add Date/Time
+      const timestamp = new Date().toLocaleString();
+      pdf.setFontSize(8);
+      pdf.text(`Generated: ${timestamp}`, pageWidth - margin, margin + 13, { align: "right" });
+
+      // --- CONTENT SECTION ---
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(14);
+      pdf.setTextColor(50, 50, 50);
+      pdf.text(title, margin, margin + 30);
+      
+      if (subtitle) {
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(9);
+        pdf.setTextColor(120, 120, 120);
+        pdf.text(subtitle, margin, margin + 35);
+      }
+
+      // Calculate chart dimensions to fit A4 while maintaining aspect ratio
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgRatio = imgProps.height / imgProps.width;
+      const displayHeight = contentWidth * imgRatio;
+      
+      // Draw a border for the chart to separate it from the white "paper"
+      pdf.setDrawColor(240, 240, 240);
+      pdf.setFillColor(5, 5, 5); // Chart background
+      pdf.rect(margin, margin + 40, contentWidth, displayHeight, "F");
+      
+      // Add the chart image
+      pdf.addImage(imgData, "PNG", margin, margin + 40, contentWidth, displayHeight);
+
+      // --- FOOTER SECTION ---
+      pdf.setFontSize(8);
+      pdf.setTextColor(180, 180, 180);
+      pdf.text("ArticuLink Clinical Monitoring System v2.0.4 • Confidential Property of Eybri", pageWidth / 2, pageHeight - 10, { align: "center" });
+      pdf.text(`Page 1/1`, pageWidth - margin, pageHeight - 10, { align: "right" });
+
+      // Save
       pdf.save(`${title.toLowerCase().replace(/\s+/g, "_")}_report.pdf`);
     } catch (error) {
       console.error("PDF Export failed:", error);
