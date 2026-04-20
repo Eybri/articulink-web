@@ -72,7 +72,6 @@ export default function Sidebar({
   // Updated menu items with navigation
   const menuItems = [
     { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
-    { text: "Analytics", icon: <Analytics />, path: "/analytics" },
     { text: "Users", icon: <People />, path: "/users" },
     { text: "Pronunciation", icon: <VolumeUp />, path: "/pronunciation" },
     { text: "Reports", icon: <Assessment />, path: "/reports" },
