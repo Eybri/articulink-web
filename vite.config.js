@@ -4,4 +4,25 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@mui')) {
+              return 'vendor_mui';
+            }
+            if (id.includes('recharts')) {
+              return 'vendor_recharts';
+            }
+            if (id.includes('jspdf') || id.includes('html2canvas')) {
+              return 'vendor_utils';
+            }
+            return 'vendor_core';
+          }
+        },
+      },
+    },
+  },
 })

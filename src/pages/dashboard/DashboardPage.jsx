@@ -6,6 +6,9 @@ import GenderDemographicsChart from "../../components/charts/GenderDemographicsC
 import UserGrowthChart from "../../components/charts/UserGrowthChart"
 import AgeDistributionChart from "../../components/charts/AgeDistributionChart"
 import DashboardUserList from "../../components/DashboardUserList"
+import PlatformEngagementChart from "../../components/charts/PlatformEngagementChart"
+import ChatActivityChart from "../../components/charts/ChatActivityChart"
+import SystemHealth from "../../components/SystemHealth"
 import { userAPI } from "../../api/api" // Use the same API as UserList
 
 export default function Dashboard({ user }) {
@@ -67,10 +70,23 @@ export default function Dashboard({ user }) {
         <StatsCards stats={stats} loading={loading} />
       </Box>
 
-      {/* Primary Analytics (Hero Row) */}
-      <Grid container sx={{ mb: 4 }}>
-        <Grid item size={{ xs: 12 }}>
+      {/* Engagement & Health Analytics */}
+      <Grid container spacing={4} sx={{ mb: 4 }}>
+        <Grid item size={{ xs: 12, lg: 8 }}>
+          <PlatformEngagementChart />
+        </Grid>
+        <Grid item size={{ xs: 12, lg: 4 }}>
+          <SystemHealth />
+        </Grid>
+      </Grid>
+
+      {/* Growth & Activity (Strategic Analytics) */}
+      <Grid container spacing={4} sx={{ mb: 4 }}>
+        <Grid item size={{ xs: 12, lg: 8 }}>
           <UserGrowthChart />
+        </Grid>
+        <Grid item size={{ xs: 12, lg: 4 }}>
+          <ChatActivityChart />
         </Grid>
       </Grid>
 
