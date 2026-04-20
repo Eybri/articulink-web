@@ -38,7 +38,7 @@ export default function Login() {
     setIsLoading(true)
     
     try {
-      const res = await api.post("/api/auth/login", { email, password })
+      const res = await api.post("/api/admin/auth/login", { email, password })
       
       // Store token and user data
       setToken(res.data.access_token)
@@ -389,4 +389,4 @@ export default function Login() {
       </Container>
     </Box>
   )
-}
+}

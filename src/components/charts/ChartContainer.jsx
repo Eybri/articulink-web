@@ -12,8 +12,10 @@ const ChartContainer = ({
   return (
     <Paper
       sx={{
-        p: 4,
+        p: { xs: 2, sm: 3, lg: 4 },
         height,
+        display: "flex",
+        flexDirection: "column",
         background: "rgba(255, 255, 255, 0.03)",
         backdropFilter: "blur(20px)",
         border: "1px solid rgba(255, 255, 255, 0.08)",
@@ -31,7 +33,7 @@ const ChartContainer = ({
         },
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3, flexShrink: 0 }}>
         <Box
           sx={{
             p: 1.5,
@@ -50,6 +52,7 @@ const ChartContainer = ({
               color: "white",
               fontFamily: "'Poppins', sans-serif",
               mb: 0.5,
+              fontSize: { xs: '1rem', md: '1.25rem' }
             }}
           >
             {title}
@@ -68,7 +71,9 @@ const ChartContainer = ({
         </Box>
       </Box>
       
-      {children}
+      <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, width: "100%", position: "relative" }}>
+        {children}
+      </Box>
     </Paper>
   );
 };
