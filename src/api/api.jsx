@@ -235,6 +235,12 @@ export const dashboardAPI = {
       params: { limit }
     });
     return response.data;
+  },
+
+  // Get system health (AI models & services)
+  getSystemHealth: async () => {
+    const response = await api.get('/api/admin/dashboard/health');
+    return response.data;
   }
 };
 
