@@ -74,7 +74,6 @@ export default function Sidebar({
     { text: "Dashboard", icon: <DashboardIcon />, path: "/dashboard" },
     { text: "Users", icon: <People />, path: "/users" },
     { text: "Pronunciation", icon: <VolumeUp />, path: "/pronunciation" },
-    { text: "Reports", icon: <Assessment />, path: "/reports" },
     { text: "Settings", icon: <Settings />, path: "/settings" },
   ]
 
@@ -121,11 +120,11 @@ export default function Sidebar({
   }
 
   const drawer = (
-    <Box 
-      sx={{ 
-        height: "100%", 
+    <Box
+      sx={{
+        height: "100%",
         background: "linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)",
-        color: "white", 
+        color: "white",
         position: "relative",
         display: "flex",
         flexDirection: "column",
@@ -161,16 +160,16 @@ export default function Sidebar({
               transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
             }}
           >
-            <Box 
+            <Box
               component="img"
               src="/images/whitelogo.png"
               alt="Logo"
-              sx={{ 
-                width: "75%", 
-                height: "75%", 
+              sx={{
+                width: "75%",
+                height: "75%",
                 objectFit: "contain",
                 filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))"
-              }} 
+              }}
             />
           </Box>
           {!sidebarMinimized && (
@@ -207,7 +206,7 @@ export default function Sidebar({
             </Box>
           )}
         </Box>
-        
+
         {!isMobile && (
           <Tooltip title={sidebarMinimized ? "Expand" : "Minimize"} placement="right">
             <IconButton
@@ -238,7 +237,7 @@ export default function Sidebar({
                 mb: 1,
                 borderRadius: 3,
                 background: isActive(item.path)
-                  ? "linear-gradient(135deg, #646cff 0%, #535bf2 100%)" 
+                  ? "linear-gradient(135deg, #646cff 0%, #535bf2 100%)"
                   : "transparent",
                 justifyContent: sidebarMinimized ? "center" : "flex-start",
                 px: sidebarMinimized ? 1 : 2.5,
@@ -247,7 +246,7 @@ export default function Sidebar({
                 transition: "all 0.3s ease",
                 "&:hover": {
                   background: isActive(item.path)
-                    ? "linear-gradient(135deg, #535bf2 0%, #4c44e6 100%)" 
+                    ? "linear-gradient(135deg, #535bf2 0%, #4c44e6 100%)"
                     : "rgba(255, 255, 255, 0.05)",
                   transform: sidebarMinimized ? "scale(1.1)" : "translateX(8px)",
                 },
@@ -262,7 +261,7 @@ export default function Sidebar({
               >
                 {item.icon}
               </ListItemIcon>
-              
+
               {!sidebarMinimized && (
                 <ListItemText
                   primary={
@@ -287,17 +286,17 @@ export default function Sidebar({
       {/* User & Logout Section */}
       <Box sx={{ p: sidebarMinimized ? 1 : 2 }}>
         <Divider sx={{ bgcolor: "rgba(255, 255, 255, 0.1)", mb: 2 }} />
-        
+
         {!sidebarMinimized ? (
           <Box>
             {/* User Info */}
             <Box sx={{ display: "flex", alignItems: "center", mb: 2, p: 2, borderRadius: 3, background: "rgba(255, 255, 255, 0.03)" }}>
-              <Avatar 
-                sx={{ 
-                  width: 42, 
-                  height: 42, 
-                  mr: 2, 
-                  background: user?.profile_pic 
+              <Avatar
+                sx={{
+                  width: 42,
+                  height: 42,
+                  mr: 2,
+                  background: user?.profile_pic
                     ? "transparent"
                     : "linear-gradient(135deg, #646cff 0%, #535bf2 100%)",
                   fontSize: "1.1rem",
@@ -316,7 +315,7 @@ export default function Sidebar({
                 </Typography>
               </Box>
             </Box>
-            
+
             {/* Logout Button */}
             <Button
               onClick={handleLogout}
@@ -345,11 +344,11 @@ export default function Sidebar({
           <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
             {/* User Avatar */}
             <Tooltip title={getUserDisplayName()} placement="right">
-              <Avatar 
-                sx={{ 
-                  width: 44, 
-                  height: 44, 
-                  background: user?.profile_pic 
+              <Avatar
+                sx={{
+                  width: 44,
+                  height: 44,
+                  background: user?.profile_pic
                     ? "transparent"
                     : "linear-gradient(135deg, #646cff 0%, #535bf2 100%)",
                   fontSize: "1.1rem",
@@ -360,7 +359,7 @@ export default function Sidebar({
                 {getUserInitials()}
               </Avatar>
             </Tooltip>
-            
+
             {/* Logout Button */}
             <Tooltip title="Sign Out" placement="right">
               <IconButton
