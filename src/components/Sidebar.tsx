@@ -62,10 +62,10 @@ export default function Sidebar({
   };
 
   const menuItems = [
-    { text: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/dashboard" },
-    { text: "Users", icon: <Users size={20} />, path: "/users" },
-    { text: "Pronunciation", icon: <Mic size={20} />, path: "/pronunciation" },
-    { text: "Settings", icon: <Settings size={20} />, path: "/settings" },
+    { text: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/admin/dashboard" },
+    { text: "Users", icon: <Users size={20} />, path: "/admin/users" },
+    { text: "Pronunciation", icon: <Mic size={20} />, path: "/admin/pronunciation" },
+    { text: "Settings", icon: <Settings size={20} />, path: "/admin/settings" },
   ];
 
   const currentDrawerWidth = sidebarMinimized ? miniDrawerWidth : drawerWidth;
