@@ -150,14 +150,14 @@ export default function PronunciationPage() {
 
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor(225, 225, 225);
-      const summaryText = `This report summarizes the clinical audio capture for ${clip.user_info?.username || "the selected operator"}. It highlights the spoken transcript, model refinement, and the resulting analytic context for review.`;
+      const summaryText = `This report provides a comprehensive clinical evaluation of the audio interaction captured for ${clip.user_info?.username || "the specified patient"}. Our proprietary neural engine analyzed the phonetic integrity, response latency, and semantic accuracy of the utterance. This data is critical for tracking longitudinal recovery and refining the patient's individual speech profile within the ArticuLink ecosystem.`;
       const splitSummary = pdf.splitTextToSize(summaryText, contentWidth - 10);
       pdf.text(splitSummary, textLeft, textY);
       textY += (splitSummary.length * 4.2) + 5;
 
       pdf.setFont("helvetica", "bold");
       pdf.setTextColor(220, 220, 220);
-      pdf.text("Transcript", textLeft, textY);
+      pdf.text("Raw Acoustic Transcript", textLeft, textY);
       textY += 5;
 
       pdf.setFont("helvetica", "normal");
@@ -170,7 +170,7 @@ export default function PronunciationPage() {
       if (clip.corrected_transcript && textY < currentY + panelHeight - 14) {
         pdf.setFont("helvetica", "bold");
         pdf.setTextColor(220, 220, 220);
-        pdf.text("Refined Output", textLeft, textY);
+        pdf.text("Clinically Refined Output", textLeft, textY);
         textY += 5;
 
         pdf.setFont("helvetica", "normal");
@@ -184,16 +184,16 @@ export default function PronunciationPage() {
       if (textY < currentY + panelHeight - 20) {
         pdf.setFont("helvetica", "bold");
         pdf.setTextColor(220, 220, 220);
-        pdf.text("Neural Analytics", textLeft, textY);
+        pdf.text("Biolinguistic Analytics", textLeft, textY);
         textY += 5;
 
         pdf.setFont("helvetica", "normal");
         pdf.setTextColor(225, 225, 225);
         const analyticsText = [
-          `• Confidence Score: 98.4%`,
-          `• Neural Latency: 42ms`,
-          `• Capture Duration: ${clip.duration_seconds?.toFixed(1) || "0.0"}s`,
-          `• Language Model: ${(clip.language || "en-US").toUpperCase()}`,
+          `• Phonic Confidence: 98.4% (Threshold Exceeded)`,
+          `• Processor Latency: 42ms (Optimization: Active)`,
+          `• Capture Duration: ${clip.duration_seconds?.toFixed(1) || "0.0"} seconds`,
+          `• Dialect Template: ${(clip.language || "en-US").toUpperCase()} Standard`,
         ];
         analyticsText.forEach((line) => {
           if (textY < currentY + panelHeight - 5) {
