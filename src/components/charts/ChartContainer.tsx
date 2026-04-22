@@ -31,7 +31,7 @@ const ChartContainer = ({
 
     const stripUnsupportedColorFunctions = (cssText: string) => {
       const declarationRegex = /([a-zA-Z-]+\s*:\s*)([^;{}]*(?:oklch|oklab|lch|lab)\([^;{}]*)(;?)/gi;
-      return cssText.replace(declarationRegex, "$1rgb(255,255,255); ");
+      return cssText.replace(declarationRegex, "$1rgb(0,0,0); ");
     };
 
     const inlineComputedStyles = (sourceRoot: HTMLElement, cloneRoot: HTMLElement) => {
@@ -49,11 +49,19 @@ const ChartContainer = ({
           const prop = computed[i];
           const value = computed.getPropertyValue(prop);
           if (!value) continue;
+          
           if (/(?:oklch|oklab|lch|lab)\(/i.test(value)) {
-            styleEntries.push(`${prop}: rgb(255,255,255);`);
+            styleEntries.push(`${prop}: rgb(0,0,0);`);
           } else {
             styleEntries.push(`${prop}: ${value};`);
           }
+        }
+
+        // Force black background for the root container in the clone
+        if (index === 0) {
+          styleEntries.push("background-color: #000000 !important;");
+          styleEntries.push("color: #ffffff !important;");
+          styleEntries.push("border-radius: 40px !important;");
         }
 
         cloneNode.setAttribute("style", styleEntries.join(" "));
@@ -64,7 +72,7 @@ const ChartContainer = ({
     const captureCanvas = async () => {
       try {
         return await html2canvas(containerRef.current!, {
-          backgroundColor: "#09090b",
+          backgroundColor: "#000000",
           scale: 2,
           logging: false,
           useCORS: true,
@@ -112,7 +120,7 @@ const ChartContainer = ({
         tempWrapper.style.left = "-10000px";
         tempWrapper.style.top = "0";
         tempWrapper.style.width = `${source.offsetWidth}px`;
-        tempWrapper.style.background = "#09090b";
+        tempWrapper.style.background = "#000000";
         tempWrapper.style.padding = "0";
         tempWrapper.style.margin = "0";
         tempWrapper.style.zIndex = "-1";
@@ -124,8 +132,8 @@ const ChartContainer = ({
 
         try {
           return await html2canvas(clonedNode, {
-            backgroundColor: "#09090b",
-            scale: 2,
+            backgroundColor: "#000000",
+            scale: 3, // Increased scale for better quality
             logging: false,
             useCORS: true,
             allowTaint: false,
@@ -144,7 +152,7 @@ const ChartContainer = ({
       const pdf = new jsPDF("p", "mm", "a4");
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 20;
+      const margin = 15;
       const contentWidth = pageWidth - (margin * 2);
       
       let currentY = margin;
@@ -159,124 +167,94 @@ const ChartContainer = ({
         });
         if (logoImg.complete && logoImg.naturalWidth !== 0) {
           const logoAspect = logoImg.naturalHeight / logoImg.naturalWidth;
-          const logoWidth = 15;
+          const logoWidth = 12;
           pdf.addImage(logoImg, "PNG", margin, currentY, logoWidth, logoWidth * logoAspect);
         }
       } catch (e) {}
 
       pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(22);
+      pdf.setFontSize(18);
       pdf.setTextColor(30, 30, 30);
-      pdf.text("ArticuLink", margin + 18, currentY + 8);
+      pdf.text("ArticuLink", margin + 15, currentY + 6);
       
       pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(8);
+      pdf.setFontSize(7);
       pdf.setTextColor(100, 100, 100);
-      pdf.text("ADVANCED CLINICAL SPEECH ANALYTICS PLATFORM", margin + 18, currentY + 13);
+      pdf.text("ADVANCED CLINICAL SPEECH ANALYTICS PLATFORM", margin + 15, currentY + 10);
 
       pdf.setDrawColor(220, 220, 220);
-      pdf.line(margin, currentY + 20, pageWidth - margin, currentY + 20);
-      currentY += 35;
+      pdf.line(margin, currentY + 15, pageWidth - margin, currentY + 15);
+      currentY += 25;
 
       // --- REPORT TITLE ---
       pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(16);
+      pdf.setFontSize(14);
       pdf.setTextColor(15, 15, 15);
-      pdf.text(`ANALYTICAL REPORT: ${title.toUpperCase()}`, margin, currentY);
-      currentY += 8;
-
-      pdf.setFont("helvetica", "italic");
-      pdf.setFontSize(10);
-      pdf.setTextColor(80, 80, 80);
-      pdf.text(subtitle || "Operational Intelligence Capture", margin, currentY);
-      currentY += 15;
-
-      // --- SECTION: EXECUTIVE SUMMARY ---
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(12);
-      pdf.setTextColor(79, 70, 229); // Indigo-600
-      pdf.text("1. EXECUTIVE SUMMARY", margin, currentY);
-      currentY += 7;
+      pdf.text("SYSTEM INTELLIGENCE OVERVIEW", margin, currentY);
 
       pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(10);
-      pdf.setTextColor(60, 60, 60);
-      const summaryText = description || `This report provides a comprehensive visualization of ${title.toLowerCase()} within the ArticuLink ecosystem. Data is collected from encrypted clinical sessions and processed through our neural analysis pipeline to provide real-time insights into patient progress and system engagement.`;
-      const splitSummary = pdf.splitTextToSize(summaryText, contentWidth);
-      pdf.text(splitSummary, margin, currentY);
-      currentY += (splitSummary.length * 5) + 10;
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`ISSUED TO: SYSTEM ADMINISTRATOR | NODE: ART-SYS-MAIN`, margin, currentY + 5);
+      currentY += 12;
 
       // --- THE VISUALIZATION ---
       const imgProps = pdf.getImageProperties(imgData);
       const imgRatio = imgProps.height / imgProps.width;
       const displayHeight = contentWidth * imgRatio;
-      
-      pdf.setFillColor(9, 9, 11);
-      pdf.roundedRect(margin - 1, currentY - 1, contentWidth + 2, displayHeight + 2, 2, 2, "F");
-      pdf.addImage(imgData, "PNG", margin, currentY, contentWidth, displayHeight);
-      
-      pdf.setFont("helvetica", "italic");
-      pdf.setFontSize(8);
-      pdf.setTextColor(150, 150, 150);
-      pdf.text(`Fig 1.0: Real-time graphical representation of ${title.toLowerCase()} data.`, margin, currentY + displayHeight + 5);
-      
-      currentY += displayHeight + 20;
+      const imageY = currentY;
 
-      // --- SECTION: DATA INTERPRETATION ---
+      pdf.setFillColor(0, 0, 0);
+      pdf.roundedRect(margin, imageY, contentWidth, displayHeight, 4, 4, "F");
+      pdf.addImage(imgData, "PNG", margin, imageY, contentWidth, displayHeight);
+
+      currentY = imageY + displayHeight + 10;
+
+      // --- CLEAN REPORT COPY ---
       pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(12);
-      pdf.setTextColor(79, 70, 229);
-      pdf.text("2. DATA INTERPRETATION & OBSERVATIONS", margin, currentY);
-      currentY += 7;
+      pdf.setFontSize(11);
+      pdf.setTextColor(30, 30, 30);
+      pdf.text(`ANALYTICAL REPORT: ${title.toUpperCase()}`, margin, currentY);
+      currentY += 6;
 
       pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(10);
-      pdf.setTextColor(60, 60, 60);
-      const observationText = "Current metrics indicate a steady progression in clinical engagement targets. The variance observed in the visualization above suggests localized peak activity consistent with scheduled therapeutic intervals. System administrators should continue monitoring these trends to optimize resource allocation across the neural transcription clusters.";
-      const splitObs = pdf.splitTextToSize(observationText, contentWidth);
-      pdf.text(splitObs, margin, currentY);
-      currentY += (splitObs.length * 5) + 12;
-
-      // --- SECTION: CLINICAL IMPLICATIONS ---
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(12);
-      pdf.setTextColor(79, 70, 229);
-      pdf.text("3. CLINICAL IMPLICATIONS", margin, currentY);
-      currentY += 7;
-
-      pdf.setFontSize(10);
-      const implications = [
-        "• Strategic adjustment of articulation feedback mechanisms may be required based on current trends.",
-        "• Data points suggest a strong correlation between session frequency and speech clarity improvement.",
-        "• Continued use of AI-driven reinforcement is recommended for the observed user cohort."
-      ];
-      implications.forEach(line => {
-        pdf.text(line, margin + 5, currentY);
-        currentY += 6;
-      });
-      currentY += 15;
-
-      // --- SIGNATURE BLOCK ---
-      if (currentY + 30 > pageHeight - 20) {
-        pdf.addPage();
-        currentY = 20;
-      }
-      pdf.setDrawColor(200, 200, 200);
-      pdf.line(margin, currentY, margin + 60, currentY);
-      pdf.line(pageWidth - margin - 60, currentY, pageWidth - margin, currentY);
-      
       pdf.setFontSize(8);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text("AUTHORIZING CLINICIAN", margin, currentY + 5);
-      pdf.text("SYSTEM ADMINISTRATOR", pageWidth - margin, currentY + 5, { align: "right" });
+      pdf.setTextColor(90, 90, 90);
+      pdf.text(subtitle || "Operational Intelligence Capture", margin, currentY);
+      currentY += 10;
+
+      const summaryText = description || `This report provides a concise operational view of ${title.toLowerCase()} within the ArticuLink dashboard. The visualization reflects live system activity, recent trends, and the current state of the monitored workflow.`;
+      const splitSummary = pdf.splitTextToSize(summaryText, contentWidth);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(45, 45, 45);
+      pdf.text("Executive Summary", margin, currentY);
+      currentY += 5;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(70, 70, 70);
+      pdf.text(splitSummary, margin, currentY);
+      currentY += (splitSummary.length * 4.2) + 6;
+
+      const analysisText = `The chart is presented first to emphasize the visual signal. The accompanying summary reinforces the operational context while keeping the design minimal, readable, and presentation-ready.`;
+      const splitAnalysis = pdf.splitTextToSize(analysisText, contentWidth);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(45, 45, 45);
+      pdf.text("Data Interpretation", margin, currentY);
+      currentY += 5;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(70, 70, 70);
+      pdf.text(splitAnalysis, margin, currentY);
+      currentY += (splitAnalysis.length * 4.2) + 4;
 
       // --- FOOTER ---
       const timestamp = new Date().toLocaleString();
+      pdf.setFontSize(7);
       pdf.setTextColor(180, 180, 180);
-      pdf.text(`Protocol: SECURE-CAPTURE-V3 | Node: ART-SYS-MAIN | Issued: ${timestamp}`, margin, pageHeight - 10);
-      pdf.text("Page 1 of 1", pageWidth - margin, pageHeight - 10, { align: "right" });
+      pdf.text(`Intelligence Report ID: AL-CHART-${Math.random().toString(36).substr(2, 6).toUpperCase()} | Generated: ${timestamp}`, margin, pageHeight - 10);
+      pdf.text("Proprietary System Data - Internal Use Only", pageWidth - margin, pageHeight - 10, { align: "right" });
 
-      pdf.save(`articulink_report_${title.toLowerCase().replace(/\s+/g, "_")}.pdf`);
+      pdf.save(`articulink_full_intelligence_${title.toLowerCase().replace(/\s+/g, "_")}_${Date.now()}.pdf`);
     } catch (error) {
       console.error("PDF Export failed:", error);
     }
@@ -285,7 +263,7 @@ const ChartContainer = ({
   return (
     <div
       ref={containerRef}
-      className="relative flex flex-col rounded-[2.5rem] border border-white/5 bg-zinc-950 p-8 backdrop-blur-3xl overflow-hidden group transition-all duration-500 hover:border-white/10 shadow-2xl"
+      className="relative flex flex-col rounded-[2.5rem] border border-white/5 bg-black p-8 backdrop-blur-3xl overflow-hidden group transition-all duration-500 hover:border-white/10 shadow-2xl"
       style={{ height }}
     >
       <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${gradient} opacity-40 group-hover:opacity-100 transition-opacity`} />
