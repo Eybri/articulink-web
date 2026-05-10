@@ -38,45 +38,70 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, []);
 
+  const inlineComputedStyles = (sourceRoot: HTMLElement, cloneRoot: HTMLElement) => {
+    const sourceNodes = [sourceRoot, ...Array.from(sourceRoot.querySelectorAll<HTMLElement>("*"))];
+    const cloneNodes = [cloneRoot, ...Array.from(cloneRoot.querySelectorAll<HTMLElement>("*"))];
+
+    sourceNodes.forEach((sourceNode, index) => {
+      const cloneNode = cloneNodes[index];
+      if (!cloneNode) return;
+
+      const computed = window.getComputedStyle(sourceNode);
+      const styleEntries: string[] = [];
+
+      for (let i = 0; i < computed.length; i++) {
+        const prop = computed[i];
+        const value = computed.getPropertyValue(prop);
+        if (!value) continue;
+        
+        if (/(?:oklch|oklab|lch|lab)\(/i.test(value)) {
+          styleEntries.push(`${prop}: rgb(0,0,0);`);
+        } else {
+          styleEntries.push(`${prop}: ${value};`);
+        }
+      }
+
+      cloneNode.setAttribute("style", styleEntries.join(" "));
+      cloneNode.removeAttribute("class");
+    });
+  };
+
   const handlePrintAll = async () => {
     if (!dashboardRef.current) return;
+    const source = dashboardRef.current;
+    
+    // Create temporary wrapper for capture
+    const tempWrapper = document.createElement("div");
+    tempWrapper.style.position = "fixed";
+    tempWrapper.style.left = "-10000px";
+    tempWrapper.style.top = "0";
+    tempWrapper.style.width = `${source.offsetWidth}px`;
+    tempWrapper.style.background = "#09090b";
+    tempWrapper.style.padding = "20px";
+    tempWrapper.style.zIndex = "-1";
+
+    const clonedNode = source.cloneNode(true) as HTMLElement;
+    
     try {
       setIsPrinting(true);
-      const canvas = await html2canvas(dashboardRef.current, {
+      const originalError = console.error;
+      (window as any)._originalConsoleError = originalError;
+      console.error = (...args: any[]) => {
+        if (typeof args[0] === 'string' && (args[0].includes('unsupported color function') || args[0].includes('oklab'))) return;
+        originalError.apply(console, args);
+      };
+
+      // Apply inlined styles to the clone
+      inlineComputedStyles(source, clonedNode);
+      tempWrapper.appendChild(clonedNode);
+      document.body.appendChild(tempWrapper);
+
+      const canvas = await html2canvas(clonedNode, {
         scale: 1.5,
         backgroundColor: "#09090b",
         useCORS: true,
         allowTaint: false,
         logging: false,
-        ignoreElements: (element) => {
-          if (!(element instanceof HTMLImageElement)) return false;
-          const src = element.currentSrc || element.src || "";
-          if (!src) return false;
-          if (src.startsWith("data:") || src.startsWith("blob:")) return false;
-          try {
-            const srcUrl = new URL(src, window.location.origin);
-            return srcUrl.origin !== window.location.origin;
-          } catch {
-            return false;
-          }
-        },
-        onclone: (clonedDoc) => {
-          const styleTags = clonedDoc.getElementsByTagName('style');
-          const unsupportedColorDeclarationRegex = /([a-zA-Z-]+\s*:\s*)([^;{}]*(?:oklch|oklab|lch|lab)\([^;{}]*)(;)/gi;
-          for (let i = 0; i < styleTags.length; i++) {
-            const style = styleTags[i];
-            if (style.innerHTML.match(/(lab|lch|okl)/i)) {
-              style.innerHTML = style.innerHTML.replace(unsupportedColorDeclarationRegex, '$1rgb(0,0,0)$3');
-            }
-          }
-          const problematicElements = clonedDoc.querySelectorAll('[style*="lab"], [style*="lch"]');
-          problematicElements.forEach((el: any) => {
-            const inlineCss = el.getAttribute('style');
-            if (inlineCss) {
-               el.setAttribute('style', inlineCss.replace(unsupportedColorDeclarationRegex, '$1rgb(0,0,0)$3'));
-            }
-          });
-        }
       });
 
       const imgData = canvas.toDataURL("image/png");
@@ -149,6 +174,12 @@ export default function DashboardPage() {
       console.error("Dashboard print failed:", error);
     } finally {
       setIsPrinting(false);
+      tempWrapper.remove();
+      // Restore console.error if it was patched
+      if (typeof window !== 'undefined' && (window as any)._originalConsoleError) {
+        console.error = (window as any)._originalConsoleError;
+        delete (window as any)._originalConsoleError;
+      }
     }
   };
 

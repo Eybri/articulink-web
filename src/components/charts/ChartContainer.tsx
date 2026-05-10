@@ -30,8 +30,8 @@ const ChartContainer = ({
     if (!containerRef.current) return;
 
     const stripUnsupportedColorFunctions = (cssText: string) => {
-      const declarationRegex = /([a-zA-Z-]+\s*:\s*)([^;{}]*(?:oklch|oklab|lch|lab)\([^;{}]*)(;?)/gi;
-      return cssText.replace(declarationRegex, "$1rgb(0,0,0); ");
+      const declarationRegex = /([a-zA-Z-]+\s*:\s*)([^;{}]*(?:oklch|oklab|lch|lab)\([^;{}]*\))(\s*;?)/gi;
+      return cssText.replace(declarationRegex, "$1rgb(0,0,0)$3");
     };
 
     const inlineComputedStyles = (sourceRoot: HTMLElement, cloneRoot: HTMLElement) => {
@@ -70,77 +70,100 @@ const ChartContainer = ({
     };
 
     const captureCanvas = async () => {
+      const originalError = console.error;
+      console.error = (...args: any[]) => {
+        if (typeof args[0] === 'string' && (args[0].includes('unsupported color function') || args[0].includes('oklab'))) return;
+        originalError.apply(console, args);
+      };
+
       try {
-        return await html2canvas(containerRef.current!, {
-          backgroundColor: "#000000",
-          scale: 2,
-          logging: false,
-          useCORS: true,
-          allowTaint: false,
-          ignoreElements: (element) => {
-            if (!(element instanceof HTMLImageElement)) return false;
-            const src = element.currentSrc || element.src || "";
-            if (!src) return false;
-            if (src.startsWith("data:") || src.startsWith("blob:")) return false;
-            try {
-              const srcUrl = new URL(src, window.location.origin);
-              return srcUrl.origin !== window.location.origin;
-            } catch {
-              return false;
-            }
-          },
-          onclone: (clonedDoc) => {
-            const styleTags = clonedDoc.getElementsByTagName("style");
-            for (let i = 0; i < styleTags.length; i++) {
-              const style = styleTags[i];
-              if (/(lab|lch|okl)/i.test(style.innerHTML)) {
-                style.innerHTML = stripUnsupportedColorFunctions(style.innerHTML);
-              }
-            }
-
-            const problematicElements = clonedDoc.querySelectorAll("[style*='lab'], [style*='lch'], [style*='oklab'], [style*='oklch']");
-            problematicElements.forEach((el: any) => {
-              const inlineCss = el.getAttribute("style");
-              if (inlineCss) {
-                el.setAttribute("style", stripUnsupportedColorFunctions(inlineCss));
-              }
-            });
-          }
-        });
-      } catch (error: any) {
-        const message = String(error?.message || "").toLowerCase();
-        if (!message.includes("unsupported color function")) {
-          throw error;
-        }
-
-        // Fallback: clone the chart subtree and inline computed styles to bypass stylesheet color parsing.
-        const source = containerRef.current!;
-        const tempWrapper = document.createElement("div");
-        tempWrapper.style.position = "fixed";
-        tempWrapper.style.left = "-10000px";
-        tempWrapper.style.top = "0";
-        tempWrapper.style.width = `${source.offsetWidth}px`;
-        tempWrapper.style.background = "#000000";
-        tempWrapper.style.padding = "0";
-        tempWrapper.style.margin = "0";
-        tempWrapper.style.zIndex = "-1";
-
-        const clonedNode = source.cloneNode(true) as HTMLElement;
-        inlineComputedStyles(source, clonedNode);
-        tempWrapper.appendChild(clonedNode);
-        document.body.appendChild(tempWrapper);
-
         try {
-          return await html2canvas(clonedNode, {
+          return await html2canvas(containerRef.current!, {
             backgroundColor: "#000000",
-            scale: 3, // Increased scale for better quality
+            scale: 2,
             logging: false,
             useCORS: true,
             allowTaint: false,
+            ignoreElements: (element) => {
+              if (!(element instanceof HTMLImageElement)) return false;
+              const src = element.currentSrc || element.src || "";
+              if (!src) return false;
+              if (src.startsWith("data:") || src.startsWith("blob:")) return false;
+              try {
+                const srcUrl = new URL(src, window.location.origin);
+                return srcUrl.origin !== window.location.origin;
+              } catch {
+                return false;
+              }
+            },
+            onclone: (clonedDoc) => {
+              // Remove all external stylesheets to prevent html2canvas from parsing them
+              const links = Array.from(clonedDoc.querySelectorAll('link[rel="stylesheet"]'));
+              links.forEach(link => link.remove());
+
+              const styleTags = clonedDoc.getElementsByTagName("style");
+              for (let i = 0; i < styleTags.length; i++) {
+                const style = styleTags[i];
+                if (/(lab|lch|okl)/i.test(style.innerHTML)) {
+                  style.innerHTML = stripUnsupportedColorFunctions(style.innerHTML);
+                }
+              }
+
+              const problematicElements = clonedDoc.querySelectorAll("[style*='lab'], [style*='lch'], [style*='oklab'], [style*='oklch']");
+              problematicElements.forEach((el: any) => {
+                const inlineCss = el.getAttribute("style");
+                if (inlineCss) {
+                  el.setAttribute("style", stripUnsupportedColorFunctions(inlineCss));
+                }
+              });
+
+              // Also check for CSS variables that might contain these colors
+              const allElements = clonedDoc.querySelectorAll("*");
+              allElements.forEach((el: any) => {
+                const inlineCss = el.getAttribute("style");
+                if (inlineCss && /(lab|lch|okl)/i.test(inlineCss)) {
+                  el.setAttribute("style", stripUnsupportedColorFunctions(inlineCss));
+                }
+              });
+            }
           });
-        } finally {
-          tempWrapper.remove();
+        } catch (error: any) {
+          const message = String(error?.message || "").toLowerCase();
+          if (!message.includes("unsupported color function")) {
+            throw error;
+          }
+
+          // Fallback: clone the chart subtree and inline computed styles to bypass stylesheet color parsing.
+          const source = containerRef.current!;
+          const tempWrapper = document.createElement("div");
+          tempWrapper.style.position = "fixed";
+          tempWrapper.style.left = "-10000px";
+          tempWrapper.style.top = "0";
+          tempWrapper.style.width = `${source.offsetWidth}px`;
+          tempWrapper.style.background = "#000000";
+          tempWrapper.style.padding = "0";
+          tempWrapper.style.margin = "0";
+          tempWrapper.style.zIndex = "-1";
+
+          const clonedNode = source.cloneNode(true) as HTMLElement;
+          inlineComputedStyles(source, clonedNode);
+          tempWrapper.appendChild(clonedNode);
+          document.body.appendChild(tempWrapper);
+
+          try {
+            return await html2canvas(clonedNode, {
+              backgroundColor: "#000000",
+              scale: 3, // Increased scale for better quality
+              logging: false,
+              useCORS: true,
+              allowTaint: false,
+            });
+          } finally {
+            tempWrapper.remove();
+          }
         }
+      } finally {
+        console.error = originalError;
       }
     };
 
