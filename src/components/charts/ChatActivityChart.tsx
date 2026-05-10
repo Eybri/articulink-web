@@ -77,7 +77,7 @@ const ChatActivityChart = () => {
             />
             <Tooltip
               contentStyle={{
-                borderRadius: 16,
+                borderRadius: 8,
                 border: "1px solid rgba(255, 255, 255, 0.1)",
                 background: "rgba(9, 9, 11, 0.9)",
                 backdropFilter: "blur(10px)",

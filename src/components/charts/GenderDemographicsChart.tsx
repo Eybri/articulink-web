@@ -76,7 +76,7 @@ const GenderDemographicsChart = () => {
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    borderRadius: 16,
+                    borderRadius: 8,
                     border: "1px solid rgba(255, 255, 255, 0.1)",
                     background: "rgba(9, 9, 11, 0.9)",
                     backdropFilter: "blur(10px)",
@@ -90,19 +90,19 @@ const GenderDemographicsChart = () => {
           
           <div className="mt-8 space-y-3">
             {data.map((item, index) => (
-              <div key={item.gender} className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.03] border border-white/5 transition-all hover:bg-white/[0.06]">
+              <div key={item.gender} className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02] border border-white/5 transition-all hover:bg-white/[0.04]">
                 <div className="flex items-center gap-3">
                   <div 
-                    className="h-2.5 w-2.5 rounded-full shadow-[0_0_10px]" 
-                    style={{ backgroundColor: COLORS[index % COLORS.length], boxShadow: `0 0 10px ${COLORS[index % COLORS.length]}80` }} 
+                    className="h-2 w-2 rounded-full" 
+                    style={{ backgroundColor: COLORS[index % COLORS.length] }} 
                   />
-                  <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">
+                  <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">
                     {item.gender}
                   </span>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-black text-white tracking-tight">{item.count.toLocaleString()}</p>
-                  <p className="text-[10px] font-bold text-white/20">{item.percentage}%</p>
+                  <p className="text-xs font-bold text-white tracking-tight">{item.count.toLocaleString()}</p>
+                  <p className="text-[9px] font-medium text-white/20">{item.percentage}%</p>
                 </div>
               </div>
             ))}

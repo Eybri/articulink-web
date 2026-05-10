@@ -309,22 +309,22 @@ const ChartContainer = ({
   return (
     <div
       ref={containerRef}
-      className="relative flex flex-col rounded-[2.5rem] border border-white/5 bg-black p-8 backdrop-blur-3xl overflow-hidden group transition-all duration-500 hover:border-white/10 shadow-2xl"
+      className="relative flex flex-col rounded-xl border border-white/5 bg-black p-6 backdrop-blur-3xl overflow-hidden group transition-all duration-500 hover:border-white/10 shadow-2xl"
       style={{ height }}
     >
       <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${gradient} opacity-40 group-hover:opacity-100 transition-opacity`} />
       
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-indigo-400 border border-white/5 shadow-lg group-hover:bg-indigo-500/10 transition-colors">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/5 text-indigo-400 border border-white/5 shadow-lg group-hover:bg-indigo-500/10 transition-colors">
             {icon || <FileText size={20} />}
           </div>
           <div>
-            <h3 className="text-xl font-black text-white tracking-tight uppercase">
+            <h3 className="text-lg font-bold text-white tracking-tight uppercase">
               {title}
             </h3>
             {subtitle && (
-              <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">
+              <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-1">
                 {subtitle}
               </p>
             )}
@@ -333,7 +333,7 @@ const ChartContainer = ({
 
         <button 
           onClick={exportToPDF}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/30 transition-all hover:text-indigo-400 hover:bg-white/10 hover:scale-110 active:scale-95"
+          className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/5 bg-white/5 text-white/30 transition-all hover:text-indigo-400 hover:bg-white/10 hover:scale-110 active:scale-95"
           title="Secure Capture"
         >
           <Download size={18} />

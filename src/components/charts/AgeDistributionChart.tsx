@@ -80,7 +80,7 @@ const AgeDistributionChart = () => {
             />
             <Tooltip
               contentStyle={{
-                borderRadius: 16,
+                borderRadius: 8,
                 border: "1px solid rgba(255, 255, 255, 0.1)",
                 background: "rgba(9, 9, 11, 0.9)",
                 backdropFilter: "blur(10px)",
@@ -92,8 +92,8 @@ const AgeDistributionChart = () => {
             <Bar 
               dataKey="count" 
               fill="url(#ageGradient)" 
-              radius={[10, 10, 0, 0]}
-              barSize={30}
+              radius={[4, 4, 0, 0]}
+              barSize={24}
             />
           </BarChart>
         </ResponsiveContainer>

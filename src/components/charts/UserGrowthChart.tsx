@@ -59,9 +59,9 @@ const UserGrowthChart = () => {
           <button
             key={t}
             onClick={() => setTimeframe(t)}
-            className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+            className={`px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${
               timeframe === t 
-                ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' 
+                ? 'bg-indigo-600 text-white' 
                 : 'bg-white/5 text-white/40 hover:text-white/60 hover:bg-white/10'
             }`}
           >
@@ -103,7 +103,7 @@ const UserGrowthChart = () => {
             />
             <Tooltip
               contentStyle={{
-                borderRadius: 16,
+                borderRadius: 8,
                 border: "1px solid rgba(255, 255, 255, 0.1)",
                 background: "rgba(9, 9, 11, 0.9)",
                 backdropFilter: "blur(10px)",
