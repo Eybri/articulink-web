@@ -15,6 +15,7 @@ import { logout, getUser } from "@/lib/api";
 import Link from "next/link";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { getImageUrl } from "@/lib/utils";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -166,8 +167,8 @@ export default function Sidebar({
           sidebarMinimized ? "flex-col gap-3" : "gap-3"
         )}>
           <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-white/10 ring-2 ring-indigo-500/20">
-            {user?.profile_pic ? (
-              <img src={user.profile_pic} alt="Profile" className="h-full w-full object-cover" />
+            {getImageUrl(user?.profile_pic) ? (
+              <img src={getImageUrl(user.profile_pic)} alt="Profile" className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-indigo-600 text-xs font-bold">
                 {getUserInitials()}

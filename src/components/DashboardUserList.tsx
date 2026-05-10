@@ -7,6 +7,7 @@ import { userAPI } from "@/lib/api";
 import ChartContainer from "./charts/ChartContainer";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { getImageUrl } from "@/lib/utils";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -119,8 +120,8 @@ const DashboardUserList = () => {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                        <div className="h-8 w-8 shrink-0 overflow-hidden rounded-xl border border-white/10 relative shadow-lg group-hover/row:scale-110 transition-transform">
-                          {item.profile_pic ? (
-                            <img src={item.profile_pic} alt="" className="h-full w-full object-cover" />
+                          {getImageUrl(item.profile_pic) ? (
+                            <img src={getImageUrl(item.profile_pic)} alt="" className="h-full w-full object-cover" />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center bg-indigo-500/10 text-[10px] font-black text-indigo-400">
                               {getInitials(item.username)}

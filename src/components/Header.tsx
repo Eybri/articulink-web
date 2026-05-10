@@ -5,6 +5,7 @@ import { Menu, Settings, User, LogOut, ChevronDown } from "lucide-react";
 import { getUser, logout } from "@/lib/api";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
+import { getImageUrl } from "@/lib/utils";
 
 interface HeaderProps {
   currentDrawerWidth: number;
@@ -101,9 +102,9 @@ export default function Header({
           <div className="group relative">
             <div className="flex items-center gap-2 cursor-pointer transition-all hover:scale-105">
               <div className="relative h-11 w-11 overflow-hidden rounded-xl border-2 border-white/10 bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20 transition-all group-hover:border-indigo-400/50 group-hover:shadow-indigo-500/40">
-                {user?.profile_pic ? (
+                {getImageUrl(user?.profile_pic) ? (
                   <img
-                    src={user.profile_pic}
+                    src={getImageUrl(user?.profile_pic)}
                     alt="Profile"
                     className="h-full w-full object-cover"
                   />
