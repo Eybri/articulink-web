@@ -56,71 +56,65 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden font-sans">
-      {/* Background Gradients */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-600/10 rounded-full blur-[120px] animate-pulse" />
-      </div>
-
-      <div className="w-full max-w-[1100px] flex flex-col-reverse md:flex-row rounded-[2.5rem] overflow-hidden border border-white/5 bg-white/[0.02] backdrop-blur-3xl z-10 shadow-2xl relative group">
+    <main className="min-h-screen bg-zinc-950 flex items-center justify-center p-4 relative overflow-hidden font-sans">
+      <div className="w-full max-w-[1000px] flex flex-col-reverse md:flex-row rounded-2xl overflow-hidden border border-white/5 bg-white/[0.02] backdrop-blur-3xl z-10 shadow-2xl relative">
         {/* Left Side: Form */}
         <div className="flex-1 p-8 md:p-16 flex flex-col justify-center relative bg-gradient-to-br from-white/[0.02] to-transparent">
           <div className="max-w-[400px] mx-auto w-full space-y-8">
-            <div className="space-y-2">
-              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter">
-                Welcome Back
+            <div className="space-y-1">
+              <h1 className="text-3xl font-bold text-white tracking-tight">
+                Authentication
               </h1>
-              <p className="text-white/40 text-sm font-medium uppercase tracking-widest leading-relaxed">
-                Vault entry required. Enter admin credentials to proceed.
+              <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest leading-relaxed">
+                Secure entry protocol required for access.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {err && (
-                <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider animate-shake">
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-widest animate-shake">
                   {err}
                 </div>
               )}
 
               <div className="space-y-6">
                 <div className="group relative">
-                  <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-4 mb-2 block transition-all group-focus-within:text-indigo-400">
-                    Administrator ID
+                  <label className="text-[9px] font-bold text-white/20 uppercase tracking-widest ml-4 mb-2 block">
+                    Identity
                   </label>
                   <div className="relative">
-                    <Mail size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 transition-all group-focus-within:text-indigo-500" />
+                    <Mail size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20" />
                     <input
                       type="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin@articulink.com"
-                      className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-4 pl-14 pr-6 text-white text-sm outline-none transition-all focus:bg-white/[0.05] focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10"
+                      placeholder="Email Address"
+                      className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-3.5 pl-14 pr-6 text-white text-xs outline-none focus:bg-white/[0.05] focus:border-indigo-500/50 transition-all"
                     />
                   </div>
                 </div>
 
                 <div className="group relative">
-                  <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-4 mb-2 block transition-all group-focus-within:text-indigo-400">
-                    Secret Key
+                  <label className="text-[9px] font-bold text-white/20 uppercase tracking-widest ml-4 mb-2 block">
+                    Security Key
                   </label>
                   <div className="relative">
-                    <Lock size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 transition-all group-focus-within:text-indigo-500" />
+                    <Lock size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20" />
                     <input
                       type={showPassword ? "text" : "password"}
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-4 pl-14 pr-14 text-white text-sm outline-none transition-all focus:bg-white/[0.05] focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10"
+                      className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-3.5 pl-14 pr-14 text-white text-xs outline-none focus:bg-white/[0.05] focus:border-indigo-500/50 transition-all"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white transition-colors"
                     >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>
@@ -129,11 +123,11 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-2xl py-5 text-sm font-black uppercase tracking-[0.2em] shadow-xl shadow-indigo-600/20 transition-all hover:scale-[1.02] hover:shadow-indigo-600/40 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group/btn"
+                className="w-full bg-indigo-600 text-white rounded-xl py-4 text-xs font-bold uppercase tracking-widest transition-all hover:bg-indigo-500 disabled:opacity-50 group/btn"
               >
                 <span className="flex items-center justify-center gap-2">
-                  {isLoading ? "Verifying Access..." : "Initialize Session"}
-                  {!isLoading && <ArrowRight size={18} className="transition-transform group-hover/btn:translate-x-1" />}
+                  {isLoading ? "Verifying..." : "Initialize Session"}
+                  {!isLoading && <ArrowRight size={16} className="transition-transform group-hover/btn:translate-x-1" />}
                 </span>
               </button>
             </form>
@@ -146,29 +140,23 @@ export default function LoginPage() {
         </div>
 
         {/* Right Side: Branding */}
-        <div className="flex-[1.2] p-12 md:p-24 bg-indigo-600/5 border-l border-white/5 flex flex-col items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]" />
+        <div className="flex-[1.2] p-12 md:p-24 bg-zinc-900 border-l border-white/5 flex flex-col items-center justify-center relative overflow-hidden">
+          <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:24px_24px]" />
           
-          <div className="relative z-10 text-center space-y-8">
-            <div className="flex justify-center">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] bg-gradient-to-br from-indigo-500 to-emerald-500 p-8 shadow-2xl shadow-indigo-500/40 animate-float">
-                <Cpu size="100%" className="text-white drop-shadow-lg" />
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-none">
+          <div className="relative z-10 text-center space-y-4">
+            <div className="space-y-2">
+              <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
                 ArticuLink
               </h2>
-              <p className="text-white/40 text-lg md:text-xl font-medium max-w-[320px] mx-auto leading-relaxed">
-                Precision clinical speech monitoring interface.
+              <p className="text-white/20 text-sm font-medium max-w-[280px] mx-auto leading-relaxed">
+                Advanced clinical speech monitor interface for professional practitioners.
               </p>
             </div>
           </div>
 
-          <div className="absolute bottom-12 right-12 flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]" />
-            <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Core Status: Stable</span>
+          <div className="absolute bottom-8 right-8 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest">Status: Operational</span>
           </div>
         </div>
       </div>
