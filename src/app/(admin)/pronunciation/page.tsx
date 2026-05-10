@@ -15,6 +15,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { pronunciationAPI } from "@/lib/api";
+import { getImageUrl } from "@/lib/utils";
 
 export default function PronunciationPage() {
   const [clips, setClips] = useState<any[]>([]);
@@ -262,8 +263,8 @@ export default function PronunciationPage() {
                 <div className="flex items-start justify-between mb-6">
                    <div className="flex items-center gap-3">
                       <div className="h-12 w-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 shadow-inner">
-                         {clip.user_info?.profile_pic ? (
-                           <img src={clip.user_info.profile_pic} alt="" className="w-full h-full object-cover rounded-2xl" />
+                         {getImageUrl(clip.user_info?.profile_pic) ? (
+                           <img src={getImageUrl(clip.user_info.profile_pic)} alt="" className="w-full h-full object-cover rounded-2xl" />
                          ) : (
                            <User size={20} />
                          )}
