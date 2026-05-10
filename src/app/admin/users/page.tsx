@@ -22,6 +22,7 @@ import { userAPI } from "@/lib/api";
 import StatsCards from "@/components/StatsCards";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { getImageUrl } from "@/lib/utils";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -250,8 +251,8 @@ export default function UsersPage() {
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
                            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center group-hover/row:scale-110 transition-transform overflow-hidden relative shadow-lg">
-                              {item.profile_pic ? (
-                                <img src={item.profile_pic} alt="" className="w-full h-full object-cover" />
+                              {getImageUrl(item.profile_pic) ? (
+                                <img src={getImageUrl(item.profile_pic)} alt="" className="w-full h-full object-cover" />
                               ) : (
                                 <span className="text-sm font-black text-indigo-400">
                                   {(item.first_name?.[0] || item.username?.[0] || '?').toUpperCase()}

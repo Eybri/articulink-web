@@ -15,6 +15,7 @@ import {
   Users
 } from "lucide-react";
 import { authAPI, getUser, setUser as setLocalUser } from "@/lib/api";
+import { getImageUrl } from "@/lib/utils";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
@@ -82,8 +83,8 @@ export default function SettingsPage() {
                  <div className="relative mb-8">
                     <div className="w-32 h-32 rounded-[2.5rem] bg-indigo-500/10 border-2 border-indigo-500/20 p-1">
                        <div className="w-full h-full rounded-[2.2rem] overflow-hidden bg-zinc-900 border border-white/10 flex items-center justify-center">
-                          {user?.profile_pic ? (
-                            <img src={user.profile_pic} alt="" className="w-full h-full object-cover" />
+                          {getImageUrl(user?.profile_pic) ? (
+                            <img src={getImageUrl(user.profile_pic)} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <User size={48} className="text-white/10" />
                           )}
