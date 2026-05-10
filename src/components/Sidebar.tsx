@@ -95,9 +95,7 @@ export default function Sidebar({
         sidebarMinimized ? "justify-center px-2" : "justify-between px-6"
       )}>
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1A4480] p-2">
-             <img src="/images/whitelogo.png" alt="Logo" className="w-6 h-6 object-contain" />
-          </div>
+          <img src="/images/icon-white.png" alt="Logo" className="w-8 h-8 object-contain" />
           {!sidebarMinimized && (
             <div className="flex flex-col">
                <span className="text-lg font-bold tracking-tight text-white">
