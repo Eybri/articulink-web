@@ -25,7 +25,18 @@ export const removeToken = () => {
 export const getUser = () => {
   if (typeof window === "undefined") return null;
   const user = localStorage.getItem("user");
-  return user ? JSON.parse(user) : null;
+  if (!user) return null;
+  try {
+    const parsed = JSON.parse(user);
+    if (parsed && typeof parsed === 'object') {
+      return parsed;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error parsing user from localStorage:", error);
+    localStorage.removeItem("user");
+    return null;
+  }
 };
 
 export const setUser = (user: any) => {
