@@ -51,7 +51,7 @@ const ChatActivityChart = () => {
       height={420}
     >
       {loading ? (
-        <div className="flex h-full items-center justify-center font-bold text-white/20 uppercase tracking-widest text-[10px]">
+        <div className="flex h-full items-center justify-center font-bold text-[#4A5A6A] uppercase tracking-widest text-[10px]">
            Calculating interactions...
         </div>
       ) : (
@@ -59,29 +59,28 @@ const ChatActivityChart = () => {
           <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="colorChat" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#1A4480" stopOpacity={0.4}/>
+                <stop offset="95%" stopColor="#1A4480" stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#DDD6C8" vertical={false} />
             <XAxis 
               dataKey="period" 
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "rgba(255, 255, 255, 0.4)", fontSize: 10, fontWeight: 700 }} 
+              tick={{ fill: "#4A5A6A", fontSize: 10, fontWeight: 700 }} 
             />
             <YAxis 
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "rgba(255, 255, 255, 0.4)", fontSize: 10, fontWeight: 700 }} 
+              tick={{ fill: "#4A5A6A", fontSize: 10, fontWeight: 700 }} 
             />
             <Tooltip
               contentStyle={{
-                borderRadius: 16,
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                background: "rgba(9, 9, 11, 0.9)",
-                backdropFilter: "blur(10px)",
-                color: "white",
+                borderRadius: 8,
+                border: "1px solid #DDD6C8",
+                background: "white",
+                color: "#1C2B3A",
                 fontSize: 12,
                 fontWeight: 600
               }}
@@ -90,7 +89,7 @@ const ChatActivityChart = () => {
               type="monotone" 
               dataKey="count" 
               name="Messages"
-              stroke="#3b82f6" 
+              stroke="#1A4480" 
               strokeWidth={3}
               fillOpacity={1} 
               fill="url(#colorChat)" 

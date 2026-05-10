@@ -30,8 +30,8 @@ const ChartContainer = ({
     if (!containerRef.current) return;
 
     const stripUnsupportedColorFunctions = (cssText: string) => {
-      const declarationRegex = /([a-zA-Z-]+\s*:\s*)([^;{}]*(?:oklch|oklab|lch|lab)\([^;{}]*)(;?)/gi;
-      return cssText.replace(declarationRegex, "$1rgb(0,0,0); ");
+      const declarationRegex = /([a-zA-Z-]+\s*:\s*)([^;{}]*(?:oklch|oklab|lch|lab)\([^;{}]*\))(\s*;?)/gi;
+      return cssText.replace(declarationRegex, "$1rgb(0,0,0)$3");
     };
 
     const inlineComputedStyles = (sourceRoot: HTMLElement, cloneRoot: HTMLElement) => {
@@ -70,77 +70,100 @@ const ChartContainer = ({
     };
 
     const captureCanvas = async () => {
+      const originalError = console.error;
+      console.error = (...args: any[]) => {
+        if (typeof args[0] === 'string' && (args[0].includes('unsupported color function') || args[0].includes('oklab'))) return;
+        originalError.apply(console, args);
+      };
+
       try {
-        return await html2canvas(containerRef.current!, {
-          backgroundColor: "#000000",
-          scale: 2,
-          logging: false,
-          useCORS: true,
-          allowTaint: false,
-          ignoreElements: (element) => {
-            if (!(element instanceof HTMLImageElement)) return false;
-            const src = element.currentSrc || element.src || "";
-            if (!src) return false;
-            if (src.startsWith("data:") || src.startsWith("blob:")) return false;
-            try {
-              const srcUrl = new URL(src, window.location.origin);
-              return srcUrl.origin !== window.location.origin;
-            } catch {
-              return false;
-            }
-          },
-          onclone: (clonedDoc) => {
-            const styleTags = clonedDoc.getElementsByTagName("style");
-            for (let i = 0; i < styleTags.length; i++) {
-              const style = styleTags[i];
-              if (/(lab|lch|okl)/i.test(style.innerHTML)) {
-                style.innerHTML = stripUnsupportedColorFunctions(style.innerHTML);
-              }
-            }
-
-            const problematicElements = clonedDoc.querySelectorAll("[style*='lab'], [style*='lch'], [style*='oklab'], [style*='oklch']");
-            problematicElements.forEach((el: any) => {
-              const inlineCss = el.getAttribute("style");
-              if (inlineCss) {
-                el.setAttribute("style", stripUnsupportedColorFunctions(inlineCss));
-              }
-            });
-          }
-        });
-      } catch (error: any) {
-        const message = String(error?.message || "").toLowerCase();
-        if (!message.includes("unsupported color function")) {
-          throw error;
-        }
-
-        // Fallback: clone the chart subtree and inline computed styles to bypass stylesheet color parsing.
-        const source = containerRef.current!;
-        const tempWrapper = document.createElement("div");
-        tempWrapper.style.position = "fixed";
-        tempWrapper.style.left = "-10000px";
-        tempWrapper.style.top = "0";
-        tempWrapper.style.width = `${source.offsetWidth}px`;
-        tempWrapper.style.background = "#000000";
-        tempWrapper.style.padding = "0";
-        tempWrapper.style.margin = "0";
-        tempWrapper.style.zIndex = "-1";
-
-        const clonedNode = source.cloneNode(true) as HTMLElement;
-        inlineComputedStyles(source, clonedNode);
-        tempWrapper.appendChild(clonedNode);
-        document.body.appendChild(tempWrapper);
-
         try {
-          return await html2canvas(clonedNode, {
+          return await html2canvas(containerRef.current!, {
             backgroundColor: "#000000",
-            scale: 3, // Increased scale for better quality
+            scale: 2,
             logging: false,
             useCORS: true,
             allowTaint: false,
+            ignoreElements: (element) => {
+              if (!(element instanceof HTMLImageElement)) return false;
+              const src = element.currentSrc || element.src || "";
+              if (!src) return false;
+              if (src.startsWith("data:") || src.startsWith("blob:")) return false;
+              try {
+                const srcUrl = new URL(src, window.location.origin);
+                return srcUrl.origin !== window.location.origin;
+              } catch {
+                return false;
+              }
+            },
+            onclone: (clonedDoc) => {
+              // Remove all external stylesheets to prevent html2canvas from parsing them
+              const links = Array.from(clonedDoc.querySelectorAll('link[rel="stylesheet"]'));
+              links.forEach(link => link.remove());
+
+              const styleTags = clonedDoc.getElementsByTagName("style");
+              for (let i = 0; i < styleTags.length; i++) {
+                const style = styleTags[i];
+                if (/(lab|lch|okl)/i.test(style.innerHTML)) {
+                  style.innerHTML = stripUnsupportedColorFunctions(style.innerHTML);
+                }
+              }
+
+              const problematicElements = clonedDoc.querySelectorAll("[style*='lab'], [style*='lch'], [style*='oklab'], [style*='oklch']");
+              problematicElements.forEach((el: any) => {
+                const inlineCss = el.getAttribute("style");
+                if (inlineCss) {
+                  el.setAttribute("style", stripUnsupportedColorFunctions(inlineCss));
+                }
+              });
+
+              // Also check for CSS variables that might contain these colors
+              const allElements = clonedDoc.querySelectorAll("*");
+              allElements.forEach((el: any) => {
+                const inlineCss = el.getAttribute("style");
+                if (inlineCss && /(lab|lch|okl)/i.test(inlineCss)) {
+                  el.setAttribute("style", stripUnsupportedColorFunctions(inlineCss));
+                }
+              });
+            }
           });
-        } finally {
-          tempWrapper.remove();
+        } catch (error: any) {
+          const message = String(error?.message || "").toLowerCase();
+          if (!message.includes("unsupported color function")) {
+            throw error;
+          }
+
+          // Fallback: clone the chart subtree and inline computed styles to bypass stylesheet color parsing.
+          const source = containerRef.current!;
+          const tempWrapper = document.createElement("div");
+          tempWrapper.style.position = "fixed";
+          tempWrapper.style.left = "-10000px";
+          tempWrapper.style.top = "0";
+          tempWrapper.style.width = `${source.offsetWidth}px`;
+          tempWrapper.style.background = "#FAF8F4";
+          tempWrapper.style.padding = "0";
+          tempWrapper.style.margin = "0";
+          tempWrapper.style.zIndex = "-1";
+
+          const clonedNode = source.cloneNode(true) as HTMLElement;
+          inlineComputedStyles(source, clonedNode);
+          tempWrapper.appendChild(clonedNode);
+          document.body.appendChild(tempWrapper);
+
+          try {
+            return await html2canvas(clonedNode, {
+              backgroundColor: "#000000",
+              scale: 3, // Increased scale for better quality
+              logging: false,
+              useCORS: true,
+              allowTaint: false,
+            });
+          } finally {
+            tempWrapper.remove();
+          }
         }
+      } finally {
+        console.error = originalError;
       }
     };
 
@@ -204,8 +227,8 @@ const ChartContainer = ({
       const displayHeight = contentWidth * imgRatio;
       const imageY = currentY;
 
-      pdf.setFillColor(0, 0, 0);
-      pdf.roundedRect(margin, imageY, contentWidth, displayHeight, 4, 4, "F");
+      pdf.setFillColor(250, 248, 244); // Cream
+      pdf.roundedRect(margin, imageY, contentWidth, displayHeight, 2, 2, "F");
       pdf.addImage(imgData, "PNG", margin, imageY, contentWidth, displayHeight);
 
       currentY = imageY + displayHeight + 10;
@@ -286,22 +309,22 @@ const ChartContainer = ({
   return (
     <div
       ref={containerRef}
-      className="relative flex flex-col rounded-[2.5rem] border border-white/5 bg-black p-8 backdrop-blur-3xl overflow-hidden group transition-all duration-500 hover:border-white/10 shadow-2xl"
+      className="relative flex flex-col rounded-xl border border-[#DDD6C8] bg-white p-6 shadow-sm overflow-hidden group transition-all duration-500 hover:border-[#2A8FA0]/30"
       style={{ height }}
     >
-      <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${gradient} opacity-40 group-hover:opacity-100 transition-opacity`} />
+      <div className={`absolute top-0 left-0 right-0 h-0.5 bg-[#2A8FA0] opacity-20 group-hover:opacity-100 transition-opacity`} />
       
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-indigo-400 border border-white/5 shadow-lg group-hover:bg-indigo-500/10 transition-colors">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#1A4480]/5 text-[#1A4480] border border-[#1A4480]/10 group-hover:bg-[#1A4480]/10 transition-colors">
             {icon || <FileText size={20} />}
           </div>
           <div>
-            <h3 className="text-xl font-black text-white tracking-tight uppercase">
+            <h3 className="text-lg font-bold text-[#1C2B3A] tracking-tight uppercase">
               {title}
             </h3>
             {subtitle && (
-              <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-1">
+              <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-1">
                 {subtitle}
               </p>
             )}
@@ -310,7 +333,7 @@ const ChartContainer = ({
 
         <button 
           onClick={exportToPDF}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/30 transition-all hover:text-indigo-400 hover:bg-white/10 hover:scale-110 active:scale-95"
+          className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#DDD6C8] bg-white text-[#4A5A6A] transition-all hover:text-[#1A4480] hover:bg-[#FAF8F4] hover:scale-110 active:scale-95"
           title="Secure Capture"
         >
           <Download size={18} />
