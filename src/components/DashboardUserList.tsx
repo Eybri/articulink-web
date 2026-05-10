@@ -64,7 +64,7 @@ const DashboardUserList = () => {
 
   return (
     <ChartContainer 
-      title="Access Points" 
+      title="Recent Activities" 
       subtitle="Recent operator activities"
       icon={<Users size={20} />}
       height={500}
@@ -78,7 +78,7 @@ const DashboardUserList = () => {
                 key={s}
                 onClick={() => setStatus(s)}
                 className={cn(
-                  "px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                  "px-4 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all",
                   status === s
                     ? (s === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-400/20 shadow-lg shadow-emerald-500/10' : 'bg-red-500/10 text-red-500 border border-red-500/20 shadow-lg shadow-red-500/10')
                     : 'text-white/20 hover:text-white/40'
@@ -96,7 +96,7 @@ const DashboardUserList = () => {
               placeholder="Filter..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-8 rounded-xl border border-white/5 bg-white/5 pl-8 pr-4 text-[10px] font-bold text-white outline-none transition-all focus:border-indigo-400/30 focus:bg-white/10"
+              className="w-full h-8 rounded-lg border border-white/5 bg-white/5 pl-8 pr-4 text-[10px] font-bold text-white outline-none transition-all focus:border-indigo-400/30 focus:bg-white/10"
             />
           </div>
         </div>
@@ -106,8 +106,8 @@ const DashboardUserList = () => {
           <table className="w-full text-left">
             <thead className="sticky top-0 bg-black/80 backdrop-blur-md z-10">
               <tr>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Node</th>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/20 text-right">Integrity</th>
+                <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-widest text-white/20">Operator</th>
+                <th className="px-4 py-3 text-[9px] font-bold uppercase tracking-widest text-white/20 text-right">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -119,18 +119,18 @@ const DashboardUserList = () => {
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                       <div className="h-8 w-8 shrink-0 overflow-hidden rounded-xl border border-white/10 relative shadow-lg group-hover/row:scale-110 transition-transform">
+                       <div className="h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-white/10 relative shadow-lg group-hover/row:scale-110 transition-transform">
                           {getImageUrl(item.profile_pic) ? (
                             <img src={getImageUrl(item.profile_pic)} alt="" className="h-full w-full object-cover" />
                           ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-indigo-500/10 text-[10px] font-black text-indigo-400">
+                            <div className="flex h-full w-full items-center justify-center bg-indigo-500/10 text-[9px] font-bold text-indigo-400">
                               {getInitials(item.username)}
                             </div>
                           )}
                        </div>
                        <div className="min-w-0">
                           <p className="truncate text-xs font-black text-white uppercase tracking-tight">{item.username || item.email.split('@')[0]}</p>
-                          <p className="truncate text-[9px] font-bold text-white/20 uppercase tracking-[0.2em] mt-0.5">{item.role}</p>
+                          <p className="truncate text-[9px] font-bold text-white/20 uppercase tracking-widest mt-0.5">{item.role}</p>
                        </div>
                     </div>
                   </td>
@@ -147,7 +147,7 @@ const DashboardUserList = () => {
               {users.length === 0 && !loading && (
                 <tr>
                    <td colSpan={2} className="px-4 py-16 text-center">
-                      <p className="text-[10px] font-black text-white/10 uppercase tracking-[0.3em]">No localized data found</p>
+                      <p className="text-[9px] font-bold text-white/10 uppercase tracking-widest">No localized data found</p>
                    </td>
                 </tr>
               )}

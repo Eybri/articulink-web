@@ -95,16 +95,16 @@ export default function Sidebar({
         sidebarMinimized ? "justify-center px-2" : "justify-between px-6"
       )}>
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-emerald-500 p-1 shadow-lg shadow-indigo-500/20">
-             <img src="/images/whitelogo.png" alt="Logo" className="w-8 h-8 object-contain" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-600 p-2 shadow-lg shadow-indigo-600/10">
+             <img src="/images/whitelogo.png" alt="Logo" className="w-6 h-6 object-contain" />
           </div>
           {!sidebarMinimized && (
             <div className="flex flex-col">
-              <span className="bg-gradient-to-br from-white to-indigo-400 bg-clip-text text-lg font-black tracking-tight text-transparent">
+              <span className="text-lg font-bold tracking-tight text-white">
                 ArticuLink
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">
-                Admin
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
+                Administration
               </span>
             </div>
           )}
@@ -129,21 +129,21 @@ export default function Sidebar({
               key={item.text}
               href={item.path}
               className={cn(
-                "group flex h-12 items-center rounded-xl transition-all duration-300",
+                "group flex h-10 items-center rounded-lg transition-all duration-200",
                 sidebarMinimized ? "justify-center px-0" : "px-4",
                 active 
-                  ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/30" 
-                  : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                   ? "bg-indigo-600 text-white" 
+                   : "text-zinc-400 hover:bg-white/5 hover:text-white"
               )}
             >
               <div className={cn(
-                "transition-transform duration-300 group-hover:scale-110",
+                "transition-colors duration-200",
                 active ? "text-white" : "text-indigo-400"
               )}>
                 {item.icon}
               </div>
               {!sidebarMinimized && (
-                <span className="ml-3 text-sm font-semibold tracking-wide">
+                <span className="ml-3 text-sm font-medium tracking-wide">
                   {item.text}
                 </span>
               )}
@@ -163,10 +163,10 @@ export default function Sidebar({
       {/* Footer */}
       <div className="border-t border-white/5 p-4">
         <div className={cn(
-          "flex items-center rounded-2xl bg-white/5 p-3 transition-all",
+          "flex items-center rounded-xl bg-white/5 p-3 transition-all",
           sidebarMinimized ? "flex-col gap-3" : "gap-3"
         )}>
-          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-white/10 ring-2 ring-indigo-500/20">
+          <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-white/10">
             {getImageUrl(user?.profile_pic) ? (
               <img src={getImageUrl(user.profile_pic)} alt="Profile" className="h-full w-full object-cover" />
             ) : (

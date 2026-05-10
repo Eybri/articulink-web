@@ -39,7 +39,7 @@ const SystemHealth = () => {
 
   if (loading) {
     return (
-      <div className="h-[200px] rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur-xl flex items-center justify-center">
+      <div className="h-[200px] rounded-lg border border-white/5 bg-white/5 p-5 backdrop-blur-xl flex items-center justify-center">
         <RotateCw size={24} className="text-indigo-500 animate-spin" />
       </div>
     );
@@ -81,11 +81,11 @@ const SystemHealth = () => {
   ];
 
   return (
-    <div className="rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur-xl">
+    <div className="rounded-lg border border-white/5 bg-white/5 p-5 backdrop-blur-xl">
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h3 className="text-sm font-black text-white uppercase tracking-tight">System Health</h3>
+            <h3 className="text-xs font-bold text-white uppercase tracking-tight">System Health</h3>
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getOverallStatusColor(healthData?.status)} uppercase tracking-wider`}>
               {healthData?.status || 'Active'}
             </span>
@@ -95,7 +95,7 @@ const SystemHealth = () => {
         <button 
           onClick={fetchHealth}
           disabled={refreshing}
-          className="h-9 w-9 flex items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white/40 transition-all hover:text-indigo-400 hover:bg-white/10"
+          className="h-9 w-9 flex items-center justify-center rounded-lg border border-white/5 bg-white/5 text-white/40 transition-all hover:text-indigo-400 hover:bg-white/10"
         >
           <RotateCw size={16} className={refreshing ? "animate-spin" : ""} />
         </button>
@@ -105,8 +105,8 @@ const SystemHealth = () => {
         {serviceItems.map((service) => {
           const statusEntry = healthData?.services[service.key];
           return (
-            <div key={service.key} className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 transition-all hover:bg-white/[0.05]">
-              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${service.color}`}>
+            <div key={service.key} className="flex items-center gap-4 p-4 rounded-lg bg-white/[0.03] border border-white/5 transition-all hover:bg-white/[0.05]">
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${service.color}`}>
                 {service.icon}
               </div>
               <div className="flex-1 min-w-0">
