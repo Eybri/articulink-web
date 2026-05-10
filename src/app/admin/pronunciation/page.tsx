@@ -57,7 +57,7 @@ export default function PronunciationPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Permanently delete this clinical audio recording?")) {
+    if (confirm("Permanently delete this communication audio recording?")) {
       try {
         await pronunciationAPI.deleteAudioClip(id);
         fetchClips();
@@ -105,7 +105,7 @@ export default function PronunciationPage() {
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(7);
       pdf.setTextColor(100, 100, 100);
-      pdf.text("ADVANCED CLINICAL SPEECH ANALYTICS PLATFORM", margin + 15, currentY + 10);
+      pdf.text("ADVANCED COMMUNICATION SPEECH ANALYTICS PLATFORM", margin + 15, currentY + 10);
 
       pdf.setDrawColor(220, 220, 220);
       pdf.line(margin, currentY + 15, pageWidth - margin, currentY + 15);
@@ -151,7 +151,7 @@ export default function PronunciationPage() {
 
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor(225, 225, 225);
-      const summaryText = `This report provides a comprehensive clinical evaluation of the audio interaction captured for ${clip.user_info?.username || "the specified patient"}. Our proprietary Processing engine analyzed the phonetic integrity, response latency, and semantic accuracy of the utterance. This data is critical for tracking longitudinal recovery and refining the patient's individual speech profile within the ArticuLink ecosystem.`;
+      const summaryText = `This report provides a comprehensive communication evaluation of the audio interaction captured for ${clip.user_info?.username || "the specified patient"}. Our proprietary Processing engine analyzed the phonetic integrity, response latency, and semantic accuracy of the utterance. This data is critical for tracking longitudinal recovery and refining the patient's individual speech profile within the ArticuLink ecosystem.`;
       const splitSummary = pdf.splitTextToSize(summaryText, contentWidth - 10);
       pdf.text(splitSummary, textLeft, textY);
       textY += (splitSummary.length * 4.2) + 5;
@@ -171,7 +171,7 @@ export default function PronunciationPage() {
       if (clip.corrected_transcript && textY < currentY + panelHeight - 14) {
         pdf.setFont("helvetica", "bold");
         pdf.setTextColor(220, 220, 220);
-        pdf.text("Clinically Refined Output", textLeft, textY);
+        pdf.text("Communication Refined Output", textLeft, textY);
         textY += 5;
 
         pdf.setFont("helvetica", "normal");
@@ -349,42 +349,44 @@ export default function PronunciationPage() {
 
       {/* DETAIL MODAL */}
       {selectedClip && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-           <div className="w-full max-w-2xl bg-zinc-950 border border-white/10 rounded-xl p-10 relative shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#1C2B3A]/40 backdrop-blur-sm animate-in fade-in duration-300">
+           <div className="w-full max-w-2xl bg-white border border-[#DDD6C8] rounded-2xl p-10 relative shadow-2xl overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1A4480] to-transparent opacity-20" />
+              
               <button 
                 onClick={() => setSelectedClip(null)}
-                className="absolute top-8 right-8 text-white/20 hover:text-white transition-colors"
+                className="absolute top-8 right-8 text-[#4A5A6A] hover:text-[#1C2B3A] transition-colors"
               >
                  <X size={24} />
               </button>
 
               <div className="space-y-8">
                  <div className="flex items-center gap-6">
-                    <div className="w-20 h-20 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                       <Mic size={32} className="text-indigo-400" />
+                    <div className="w-20 h-20 rounded-xl bg-[#1A4480]/5 border border-[#1A4480]/10 flex items-center justify-center">
+                       <Mic size={32} className="text-[#1A4480]" />
                     </div>
                     <div>
-                       <h3 className="text-2xl font-black text-white tracking-tight uppercase">Clip Analytics</h3>
-                       <p className="text-xs font-bold text-white/30 uppercase tracking-[0.3em] mt-1">ID: {selectedClip.id || selectedClip._id}</p>
+                       <h3 className="text-2xl font-bold text-[#1C2B3A] tracking-tight uppercase">Clip Analytics</h3>
+                       <p className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest mt-1">Registry ID: {selectedClip.id || selectedClip._id}</p>
                     </div>
                  </div>
 
                  <div className="space-y-4">
-                    <div className="p-6 rounded-xl bg-white/[0.02] border border-white/5">
-                       <span className="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em] block mb-4">Final Clinical Transcription</span>
-                       <p className="text-xl font-bold text-white leading-relaxed">
+                    <div className="p-8 rounded-2xl bg-[#FAF8F4] border border-[#DDD6C8] shadow-inner">
+                       <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest block mb-4">Communication Transcription</span>
+                       <p className="text-2xl font-bold text-[#1C2B3A] leading-relaxed italic">
                           "{selectedClip.corrected_transcript || selectedClip.transcript}"
                        </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                       <div className="p-4 rounded-lg bg-white/[0.01] border border-white/5 space-y-1">
-                          <span className="text-[8px] font-black text-white/20 uppercase tracking-widest">Confidence Score</span>
-                          <p className="text-lg font-black text-emerald-400">98.4%</p>
+                       <div className="p-6 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8] space-y-1">
+                          <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Confidence Score</span>
+                          <p className="text-xl font-bold text-emerald-600">98.4%</p>
                        </div>
-                       <div className="p-4 rounded-lg bg-white/[0.01] border border-white/5 space-y-1">
-                          <span className="text-[8px] font-black text-white/20 uppercase tracking-widest">Neural Latency</span>
-                          <p className="text-lg font-black text-indigo-400">42ms</p>
+                       <div className="p-6 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8] space-y-1">
+                          <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Neural Latency</span>
+                          <p className="text-xl font-bold text-[#1A4480]">42ms</p>
                        </div>
                     </div>
                  </div>
@@ -392,15 +394,15 @@ export default function PronunciationPage() {
                  <div className="flex justify-end gap-3 pt-4">
                     <button 
                       onClick={() => setSelectedClip(null)}
-                      className="px-8 py-4 rounded-lg bg-white/5 text-[9px] font-bold text-white/40 uppercase tracking-widest hover:text-white transition-all underline underline-offset-4"
+                      className="px-8 py-4 rounded-xl text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest hover:bg-[#FAF8F4] transition-all"
                     >
-                       Close Report
+                       Close Analytics
                     </button>
                     <button 
                       onClick={() => generatePDF(selectedClip)}
-                      className="px-8 py-4 rounded-lg bg-indigo-600 text-[9px] font-bold text-white uppercase tracking-[0.2rem] hover:scale-105 transition-all shadow-xl shadow-indigo-600/20"
+                      className="px-10 py-4 rounded-xl bg-[#1A4480] text-[10px] font-bold text-white uppercase tracking-widest hover:bg-[#0F2847] transition-all shadow-lg shadow-[#1A4480]/20"
                     >
-                       Print Analysis
+                       Export Report
                     </button>
                  </div>
               </div>

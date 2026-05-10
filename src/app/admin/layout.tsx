@@ -24,7 +24,7 @@ export default function AdminLayout({
     const storedUser = getUser();
 
     if (!token || !storedUser || !isAdmin()) {
-      router.push("/login");
+      router.replace("/login");
     } else {
       setUser(storedUser);
       setLoading(false);
@@ -41,8 +41,11 @@ export default function AdminLayout({
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-[#FAF8F4]">
+        <div className="flex flex-col items-center gap-4">
+           <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#1A4480]/10 border-t-[#1A4480]" />
+           <p className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest">Verifying Authority...</p>
+        </div>
       </div>
     );
   }
