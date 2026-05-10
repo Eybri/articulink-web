@@ -12,8 +12,9 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authAPI, setToken, setUser, logout } from "@/lib/api";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
@@ -70,24 +71,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FAF8F4] flex items-center justify-center p-4 relative overflow-hidden font-sans">
-      {/* Dynamic Background with bg.jpg */}
-      <div className="absolute inset-0 z-0">
-        <img 
-          src="/images/bg.jpg" 
-          alt="" 
-          className="w-full h-full object-cover opacity-[0.08]"
-        />
-        <div className="absolute inset-0 bg-[#FAF8F4]/60 backdrop-blur-[1px]" />
-      </div>
-
-      {/* Decorative Background Elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-10">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#1A4480]/10 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#2A8FA0]/10 blur-[120px]" />
-      </div>
-
-      <div className="w-full max-w-[950px] flex flex-col md:flex-row rounded-3xl overflow-hidden bg-white border border-[#DDD6C8] shadow-[0_32px_64px_-12px_rgba(28,43,58,0.15)] z-20 relative">
+    <div className="w-full max-w-[950px] flex flex-col md:flex-row rounded-3xl overflow-hidden bg-white border border-[#DDD6C8] shadow-[0_32px_64px_-12px_rgba(28,43,58,0.12)] z-20 relative">
         {/* Left Side: Branding/Visual */}
         <div className="hidden md:flex flex-1 bg-[#1A4480] p-16 flex-col justify-between relative overflow-hidden">
           {/* Subtle bg.jpg overlay for branding side */}
@@ -220,6 +204,35 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <main className="min-h-screen bg-[#FAF8F4] flex items-center justify-center p-4 relative overflow-hidden font-sans">
+      {/* Dynamic Background with bg.jpg */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="/images/bg.jpg" 
+          alt="" 
+          className="w-full h-full object-cover opacity-[0.08]"
+        />
+        <div className="absolute inset-0 bg-[#FAF8F4]/60 backdrop-blur-[1px]" />
+      </div>
+
+      {/* Decorative Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-10">
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#1A4480]/10 blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#2A8FA0]/10 blur-[120px]" />
+      </div>
+
+      <Suspense fallback={
+        <div className="w-full max-w-[950px] h-[600px] bg-white rounded-3xl border border-[#DDD6C8] flex items-center justify-center z-20">
+           <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#1A4480]/10 border-t-[#1A4480]" />
+        </div>
+      }>
+        <LoginForm />
+      </Suspense>
       
       <style jsx global>{`
         @keyframes shake {
