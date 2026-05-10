@@ -61,8 +61,8 @@ const UserGrowthChart = () => {
             onClick={() => setTimeframe(t)}
             className={`px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${
               timeframe === t 
-                ? 'bg-indigo-600 text-white' 
-                : 'bg-white/5 text-white/40 hover:text-white/60 hover:bg-white/10'
+                ? 'bg-[#1A4480] text-white' 
+                : 'bg-[#FAF8F4] text-[#4A5A6A] border border-[#DDD6C8] hover:bg-white'
             }`}
           >
             {t}
@@ -71,43 +71,42 @@ const UserGrowthChart = () => {
       </div>
 
       {loading ? (
-        <div className="flex h-full items-center justify-center">
-           <div className="h-1 w-48 bg-white/5 rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-500 animate-shimmer w-1/3" />
-           </div>
-        </div>
+         <div className="flex h-full items-center justify-center">
+            <div className="h-1 w-48 bg-[#FAF8F4] rounded-full overflow-hidden">
+               <div className="h-full bg-[#2A8FA0] animate-shimmer w-1/3" />
+            </div>
+         </div>
       ) : (
         <ResponsiveContainer width="100%" height="85%">
           <AreaChart data={data} margin={{ top: 20, right: 30, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="growthGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10b981" stopOpacity={0.6} />
-                <stop offset="100%" stopColor="#10b981" stopOpacity={0.0} />
+                <stop offset="0%" stopColor="#2A8FA0" stopOpacity={0.6} />
+                <stop offset="100%" stopColor="#2A8FA0" stopOpacity={0.0} />
               </linearGradient>
               <linearGradient id="cumulativeGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#6366f1" stopOpacity={0.2} />
-                <stop offset="100%" stopColor="#6366f1" stopOpacity={0.0} />
+                <stop offset="0%" stopColor="#1A4480" stopOpacity={0.2} />
+                <stop offset="100%" stopColor="#1A4480" stopOpacity={0.0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#DDD6C8" vertical={false} />
             <XAxis 
               dataKey="period" 
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "rgba(255, 255, 255, 0.4)", fontSize: 10, fontWeight: 700 }} 
+              tick={{ fill: "#4A5A6A", fontSize: 10, fontWeight: 700 }} 
             />
             <YAxis 
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "rgba(255, 255, 255, 0.4)", fontSize: 10, fontWeight: 700 }} 
+              tick={{ fill: "#4A5A6A", fontSize: 10, fontWeight: 700 }} 
             />
             <Tooltip
               contentStyle={{
                 borderRadius: 8,
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                background: "rgba(9, 9, 11, 0.9)",
-                backdropFilter: "blur(10px)",
-                color: "white",
+                border: "1px solid #DDD6C8",
+                background: "white",
+                color: "#1C2B3A",
                 fontSize: 12,
                 fontWeight: 600
               }}
@@ -115,17 +114,17 @@ const UserGrowthChart = () => {
             <Area
               type="monotone"
               dataKey="count"
-              stroke="#10b981"
+              stroke="#2A8FA0"
               strokeWidth={4}
               fill="url(#growthGradient)"
-              dot={{ fill: "#10b981", strokeWidth: 2, r: 4, stroke: '#09090b' }}
-              activeDot={{ r: 6, stroke: "#10b981", strokeWidth: 0, fill: "white" }}
+              dot={{ fill: "#2A8FA0", strokeWidth: 2, r: 4, stroke: '#FFFFFF' }}
+              activeDot={{ r: 6, stroke: "#2A8FA0", strokeWidth: 0, fill: "#1C2B3A" }}
               name="New Users"
             />
             <Area
               type="monotone"
               dataKey="cumulative"
-              stroke="#6366f1"
+              stroke="#1A4480"
               strokeWidth={2}
               fill="url(#cumulativeGradient)"
               strokeDasharray="8 8"

@@ -221,10 +221,10 @@ export default function PronunciationPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-[10px] font-bold text-white/20 uppercase tracking-widest mb-1">
+          <h2 className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest mb-1">
             Speech Analysis
           </h2>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-[#1C2B3A] tracking-tight">
             Audio Recordings
           </h1>
         </div>
@@ -238,47 +238,47 @@ export default function PronunciationPage() {
 
       {/* SEARCH/FILTERS */}
       <div className="relative group max-w-xl">
-         <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-white/20 transition-all group-focus-within:text-indigo-400" />
+         <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#4A5A6A] transition-all group-focus-within:text-[#1A4480]" />
          <input 
            type="text" 
            placeholder="Search by transcript content or operator ID..."
            value={searchTerm}
            onChange={(e) => setSearchTerm(e.target.value)}
-           className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-4 pl-14 pr-8 text-xs font-medium text-white outline-none focus:bg-white/[0.06] focus:border-indigo-500/50"
+           className="w-full bg-white border border-[#DDD6C8] rounded-xl py-4 pl-14 pr-8 text-xs font-medium text-[#1C2B3A] outline-none transition-all focus:border-[#1A4480]/30 shadow-sm"
          />
       </div>
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 space-y-4">
            <div className="relative">
-              <div className="w-16 h-16 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin" />
-              <Mic className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-indigo-400" size={24} />
+              <div className="w-16 h-16 rounded-full border-4 border-[#1A4480]/10 border-t-[#1A4480] animate-spin" />
+              <Mic className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#1A4480]/40" size={24} />
            </div>
-           <p className="text-xs font-black text-white/20 uppercase tracking-[0.4em]">Decoding Audio Stream...</p>
+           <p className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest">Decoding Audio Stream...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
            {filteredClips.map((clip) => (
              <div 
                key={clip.id || clip._id}
-               className="group relative flex flex-col rounded-xl bg-zinc-900 border border-white/5 p-6 backdrop-blur-3xl transition-all hover:border-white/10"
+               className="group relative flex flex-col rounded-xl bg-white border border-[#DDD6C8] p-6 shadow-sm transition-all hover:border-[#1A4480]/30"
              >
 
                 {/* USER HEAD */}
                 <div className="flex items-start justify-between mb-6">
                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shadow-inner">
+                      <div className="h-10 w-10 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden relative shadow-inner">
                          {getImageUrl(clip.user_info?.profile_pic) ? (
-                           <img src={getImageUrl(clip.user_info.profile_pic)} alt="" className="w-full h-full object-cover rounded-lg" />
+                           <img src={getImageUrl(clip.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
                          ) : (
-                           <User size={20} />
+                           <User size={16} />
                          )}
                       </div>
                       <div>
-                         <h4 className="text-xs font-black text-white uppercase tracking-tight truncate max-w-[120px]">
+                         <h4 className="text-xs font-bold text-[#1C2B3A] tracking-tight truncate max-w-[120px]">
                             {clip.user_info?.username || "ID Unknown"}
                          </h4>
-                         <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest mt-0.5">
+                         <p className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest mt-0.5">
                             {new Date(clip.created_at).toLocaleDateString()}
                          </p>
                       </div>
@@ -286,56 +286,62 @@ export default function PronunciationPage() {
 
                    <button 
                      onClick={() => handlePlayPause(clip)}
-                     className="h-10 w-10 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-lg hover:bg-indigo-500 transition-all"
+                     className="h-10 w-10 rounded-lg bg-[#1A4480] text-white flex items-center justify-center shadow-lg hover:bg-[#0F2847] transition-all"
                    >
                       {playingId === (clip.id || clip._id) ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
                    </button>
                 </div>
 
                 {/* TRANSCRIPT AREA */}
-                <div className="flex-1 bg-black/20 rounded-xl p-5 mb-6 border border-white/5 min-h-[100px] group-hover:bg-black/40 transition-colors">
-                   <div className="flex items-center gap-2 mb-3">
-                      <div className="w-1 h-1 rounded-full bg-indigo-500 animate-pulse" />
-                      <span className="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em]">Transcription</span>
+                <div className="flex-1 bg-[#FAF8F4] rounded-xl p-4 mb-4 border border-[#DDD6C8] min-h-[80px] group-hover:bg-[#FAF8F4]/80 transition-colors">
+                   <div className="flex items-center gap-2 mb-2">
+                      <div className="w-1 h-1 rounded-full bg-[#1A4480]" />
+                      <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Transcription</span>
                    </div>
-                   <p className="text-sm font-medium text-white/80 leading-relaxed italic">
+                   <p className="text-xs font-medium text-[#1C2B3A] line-clamp-3 italic leading-relaxed">
                       "{clip.transcript || "No neural output detected..."}"
                    </p>
                    {clip.corrected_transcript && (
-                     <div className="mt-4 pt-4 border-t border-white/5">
-                        <span className="text-[9px] font-bold text-emerald-400/60 uppercase tracking-[0.2em] block mb-2">Refined Model</span>
-                        <p className="text-sm font-bold text-emerald-400">"{clip.corrected_transcript}"</p>
+                     <div className="mt-4 pt-4 border-t border-[#DDD6C8]">
+                        <span className="text-[9px] font-bold text-[#1A4480] uppercase tracking-[0.2em] block mb-2">Refined Model</span>
+                        <p className="text-xs font-bold text-[#1A4480]">"{clip.corrected_transcript}"</p>
                      </div>
                    )}
                 </div>
 
                 {/* METADATA FOOTER */}
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="flex items-center gap-2 text-white/30">
-                      <Clock size={12} className="text-indigo-500/60" />
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                   <div className="flex items-center gap-2 text-[#4A5A6A]">
+                      <Clock size={12} className="text-[#1A4480]/60" />
                       <span className="text-[9px] font-bold uppercase tracking-widest">{clip.duration_seconds?.toFixed(1)}s Length</span>
                    </div>
-                   <div className="flex items-center gap-2 text-white/30 justify-end">
-                      <Globe size={12} className="text-emerald-500/60" />
+                   <div className="flex items-center gap-2 text-[#4A5A6A] justify-end">
+                      <Globe size={12} className="text-[#2A8FA0]/60" />
                       <span className="text-[9px] font-bold uppercase tracking-widest">{clip.language?.toUpperCase() || "EN"} Local</span>
                    </div>
                 </div>
 
-                {/* OVERLAY ACTIONS */}
-                <div className="absolute top-4 right-16 opacity-0 group-hover:opacity-100 transition-all flex gap-2">
-                   <button 
-                     onClick={() => setSelectedClip(clip)}
-                     className="p-2 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-white transition-all shadow-xl backdrop-blur-md"
-                   >
-                      <ExternalLink size={14} />
-                   </button>
-                   <button 
-                     onClick={() => handleDelete(clip.id || clip._id)}
-                     className="p-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500/60 hover:text-red-500 transition-all shadow-xl backdrop-blur-md"
-                   >
-                      <Trash2 size={14} />
-                   </button>
-                </div>
+                <div className="flex items-center justify-between pt-4 border-t border-[#DDD6C8]">
+                    <div className="flex gap-2">
+                       <button 
+                         onClick={() => generatePDF(clip)}
+                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest hover:bg-white hover:border-[#1A4480]/30 transition-all"
+                       >
+                          <ExternalLink size={12} />
+                          Report
+                       </button>
+                       <button 
+                         onClick={() => handleDelete(clip.id || clip._id)}
+                         className="p-1.5 rounded-lg text-[#4A5A6A] hover:bg-red-50 hover:text-red-500 transition-all"
+                       >
+                          <Trash2 size={14} />
+                       </button>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100">
+                       <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                       <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">Verified</span>
+                    </div>
+                 </div>
              </div>
            ))}
         </div>

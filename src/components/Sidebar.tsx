@@ -88,22 +88,22 @@ export default function Sidebar({
   };
 
   const sidebarContent = (
-    <div className="flex h-full flex-col bg-zinc-950 text-white">
+    <div className="flex h-full flex-col bg-[#0F2847] text-white">
       {/* Header */}
       <div className={cn(
         "flex h-[75px] items-center border-b border-white/5 bg-white/5 backdrop-blur-xl transition-all duration-300",
         sidebarMinimized ? "justify-center px-2" : "justify-between px-6"
       )}>
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-600 p-2 shadow-lg shadow-indigo-600/10">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1A4480] p-2">
              <img src="/images/whitelogo.png" alt="Logo" className="w-6 h-6 object-contain" />
           </div>
           {!sidebarMinimized && (
             <div className="flex flex-col">
-              <span className="text-lg font-bold tracking-tight text-white">
+               <span className="text-lg font-bold tracking-tight text-white">
                 ArticuLink
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#BEE4EC]">
                 Administration
               </span>
             </div>
@@ -113,7 +113,7 @@ export default function Sidebar({
         {!sidebarMinimized && (
           <button
             onClick={handleSidebarToggle}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10 text-indigo-400 transition-all hover:bg-indigo-500/20"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60 transition-all hover:bg-white/10"
           >
             <ChevronLeft size={16} />
           </button>
@@ -132,13 +132,13 @@ export default function Sidebar({
                 "group flex h-10 items-center rounded-lg transition-all duration-200",
                 sidebarMinimized ? "justify-center px-0" : "px-4",
                 active 
-                   ? "bg-indigo-600 text-white" 
-                   : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                   ? "bg-[#1A4480] text-white shadow-lg shadow-black/20" 
+                   : "text-[#C8D8EE] hover:bg-white/5 hover:text-white"
               )}
             >
               <div className={cn(
                 "transition-colors duration-200",
-                active ? "text-white" : "text-indigo-400"
+                active ? "text-white" : "text-[#3DAFC4]"
               )}>
                 {item.icon}
               </div>
@@ -153,7 +153,7 @@ export default function Sidebar({
         {sidebarMinimized && (
           <button
             onClick={handleSidebarToggle}
-            className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400 transition-all hover:bg-indigo-500/20 mt-4"
+            className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white/40 transition-all hover:bg-white/10 mt-4"
           >
             <ChevronRight size={16} />
           </button>

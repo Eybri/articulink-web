@@ -10,7 +10,7 @@ const GenderDemographicsChart = () => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const COLORS = ['#1A4480', '#2A8FA0', '#f59e0b', '#ef4444', '#154D57'];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,11 +48,11 @@ const GenderDemographicsChart = () => {
       title="Gender Demographics" 
       subtitle="User distribution by gender"
       icon={<Users size={20} />}
-      gradient="bg-gradient-to-r from-indigo-500 to-emerald-500"
+      gradient="bg-gradient-to-r from-[#D4AF37] to-[#A68966]"
       height={520}
     >
       {loading ? (
-        <div className="flex h-full items-center justify-center font-bold text-white/20 uppercase tracking-widest">
+        <div className="flex h-full items-center justify-center font-bold text-[#4A5A6A] uppercase tracking-widest">
            Segmenting data...
         </div>
       ) : (
@@ -77,12 +77,11 @@ const GenderDemographicsChart = () => {
                 <Tooltip
                   contentStyle={{
                     borderRadius: 8,
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                    background: "rgba(9, 9, 11, 0.9)",
-                    backdropFilter: "blur(10px)",
-                    color: "white",
+                    border: "1px solid #DDD6C8",
+                    background: "white",
+                    color: "#1C2B3A",
                   }}
-                  itemStyle={{ color: "white", fontSize: 12, fontWeight: 700 }}
+                  itemStyle={{ color: "#1C2B3A", fontSize: 12, fontWeight: 700 }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -90,19 +89,19 @@ const GenderDemographicsChart = () => {
           
           <div className="mt-8 space-y-3">
             {data.map((item, index) => (
-              <div key={item.gender} className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02] border border-white/5 transition-all hover:bg-white/[0.04]">
+              <div key={item.gender} className="flex items-center justify-between p-2.5 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8]/50 transition-all hover:bg-white hover:border-[#DDD6C8] hover:shadow-sm">
                 <div className="flex items-center gap-3">
                   <div 
                     className="h-2 w-2 rounded-full" 
                     style={{ backgroundColor: COLORS[index % COLORS.length] }} 
                   />
-                  <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">
+                  <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">
                     {item.gender}
                   </span>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs font-bold text-white tracking-tight">{item.count.toLocaleString()}</p>
-                  <p className="text-[9px] font-medium text-white/20">{item.percentage}%</p>
+                  <p className="text-xs font-bold text-[#1C2B3A] tracking-tight">{item.count.toLocaleString()}</p>
+                  <p className="text-[9px] font-medium text-[#4A5A6A]/60">{item.percentage}%</p>
                 </div>
               </div>
             ))}

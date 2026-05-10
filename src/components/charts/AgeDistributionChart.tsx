@@ -62,29 +62,28 @@ const AgeDistributionChart = () => {
           <BarChart data={data} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="ageGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#f59e0b" />
-                <stop offset="100%" stopColor="#ef4444" />
+                <stop offset="0%" stopColor="#2A8FA0" />
+                <stop offset="100%" stopColor="#1A4480" />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-            <XAxis 
+             <CartesianGrid strokeDasharray="3 3" stroke="#DDD6C8" vertical={false} />
+             <XAxis 
               dataKey="age_range" 
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "rgba(255, 255, 255, 0.4)", fontSize: 10, fontWeight: 700 }} 
+              tick={{ fill: "#4A5A6A", fontSize: 10, fontWeight: 700 }} 
             />
-            <YAxis 
+             <YAxis 
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "rgba(255, 255, 255, 0.4)", fontSize: 10, fontWeight: 700 }} 
+              tick={{ fill: "#4A5A6A", fontSize: 10, fontWeight: 700 }} 
             />
-            <Tooltip
+             <Tooltip
               contentStyle={{
                 borderRadius: 8,
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                background: "rgba(9, 9, 11, 0.9)",
-                backdropFilter: "blur(10px)",
-                color: "white",
+                border: "1px solid #DDD6C8",
+                background: "white",
+                color: "#1C2B3A",
                 fontSize: 12,
                 fontWeight: 600
               }}

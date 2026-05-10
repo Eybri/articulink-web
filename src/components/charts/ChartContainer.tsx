@@ -140,7 +140,7 @@ const ChartContainer = ({
           tempWrapper.style.left = "-10000px";
           tempWrapper.style.top = "0";
           tempWrapper.style.width = `${source.offsetWidth}px`;
-          tempWrapper.style.background = "#000000";
+          tempWrapper.style.background = "#FAF8F4";
           tempWrapper.style.padding = "0";
           tempWrapper.style.margin = "0";
           tempWrapper.style.zIndex = "-1";
@@ -227,8 +227,8 @@ const ChartContainer = ({
       const displayHeight = contentWidth * imgRatio;
       const imageY = currentY;
 
-      pdf.setFillColor(0, 0, 0);
-      pdf.roundedRect(margin, imageY, contentWidth, displayHeight, 4, 4, "F");
+      pdf.setFillColor(250, 248, 244); // Cream
+      pdf.roundedRect(margin, imageY, contentWidth, displayHeight, 2, 2, "F");
       pdf.addImage(imgData, "PNG", margin, imageY, contentWidth, displayHeight);
 
       currentY = imageY + displayHeight + 10;
@@ -309,18 +309,18 @@ const ChartContainer = ({
   return (
     <div
       ref={containerRef}
-      className="relative flex flex-col rounded-xl border border-white/5 bg-black p-6 backdrop-blur-3xl overflow-hidden group transition-all duration-500 hover:border-white/10 shadow-2xl"
+      className="relative flex flex-col rounded-xl border border-[#DDD6C8] bg-white p-6 shadow-sm overflow-hidden group transition-all duration-500 hover:border-[#2A8FA0]/30"
       style={{ height }}
     >
-      <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${gradient} opacity-40 group-hover:opacity-100 transition-opacity`} />
+      <div className={`absolute top-0 left-0 right-0 h-0.5 bg-[#2A8FA0] opacity-20 group-hover:opacity-100 transition-opacity`} />
       
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/5 text-indigo-400 border border-white/5 shadow-lg group-hover:bg-indigo-500/10 transition-colors">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#1A4480]/5 text-[#1A4480] border border-[#1A4480]/10 group-hover:bg-[#1A4480]/10 transition-colors">
             {icon || <FileText size={20} />}
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white tracking-tight uppercase">
+            <h3 className="text-lg font-bold text-[#1C2B3A] tracking-tight uppercase">
               {title}
             </h3>
             {subtitle && (
@@ -333,7 +333,7 @@ const ChartContainer = ({
 
         <button 
           onClick={exportToPDF}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/5 bg-white/5 text-white/30 transition-all hover:text-indigo-400 hover:bg-white/10 hover:scale-110 active:scale-95"
+          className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#DDD6C8] bg-white text-[#4A5A6A] transition-all hover:text-[#1A4480] hover:bg-[#FAF8F4] hover:scale-110 active:scale-95"
           title="Secure Capture"
         >
           <Download size={18} />

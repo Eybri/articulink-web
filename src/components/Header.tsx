@@ -57,27 +57,27 @@ export default function Header({
 
   return (
     <header
-      className="fixed top-0 right-0 z-40 flex h-[64px] w-full items-center border-b border-white/5 bg-zinc-950/80 backdrop-blur-xl transition-all duration-300 ease-in-out md:px-6 px-4"
+      className="fixed top-0 right-0 z-40 flex h-[64px] w-full items-center border-b border-[#DDD6C8] bg-[#FAF8F4]/80 backdrop-blur-xl transition-all duration-300 ease-in-out md:px-6 px-4"
     >
       <div className="flex w-full items-center justify-between">
         {/* Mobile Menu Button */}
         <button
           onClick={handleDrawerToggle}
-          className="mr-4 flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/80 transition-all hover:bg-white/10 md:hidden"
+          className="mr-4 flex h-9 w-9 items-center justify-center rounded-lg border border-black/5 bg-black/5 text-[#1C2B3A] transition-all hover:bg-black/10 md:hidden"
         >
           <Menu size={18} />
         </button>
 
         {/* Title Section */}
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="hidden h-9 w-9 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 sm:flex">
+          <div className="hidden h-9 w-9 items-center justify-center rounded-lg bg-[#1A4480]/10 text-[#1A4480] sm:flex">
             <User size={18} />
           </div>
           <div className="flex flex-col">
-            <h1 className="truncate text-lg font-bold text-white md:text-xl tracking-tight">
+            <h1 className="truncate text-lg font-bold text-[#1C2B3A] md:text-xl tracking-tight">
               {title}
             </h1>
-            <span className="hidden text-[10px] font-semibold uppercase tracking-widest text-white/40 sm:block">
+            <span className="hidden text-[10px] font-semibold uppercase tracking-widest text-[#4A5A6A] sm:block">
               Welcome, {getUserDisplayName()}
             </span>
           </div>
@@ -87,7 +87,7 @@ export default function Header({
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/settings")}
-            className="hidden h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/80 transition-all hover:bg-white/10 hover:text-white md:flex"
+            className="hidden h-10 w-10 items-center justify-center rounded-lg border border-black/5 bg-black/5 text-[#1C2B3A] transition-all hover:bg-black/10 md:flex"
             title="Settings"
           >
             <Settings size={18} className="transition-transform duration-500 hover:rotate-45" />
@@ -95,7 +95,7 @@ export default function Header({
 
           <div className="group relative">
             <div className="flex items-center gap-2 cursor-pointer transition-all">
-              <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-white/10 bg-zinc-900 transition-all group-hover:border-indigo-500/50">
+              <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-black/10 bg-white transition-all group-hover:border-[#1A4480]/50">
                 {getImageUrl(user?.profile_pic) ? (
                   <img
                     src={getImageUrl(user?.profile_pic)}
@@ -103,7 +103,7 @@ export default function Header({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-sm font-bold text-white">
+                  <div className="flex h-full w-full items-center justify-center text-sm font-bold text-[#1A4480]">
                     {getUserInitials()}
                   </div>
                 )}

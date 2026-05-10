@@ -184,35 +184,36 @@ export default function DashboardPage() {
   };
 
   return (
-    <div ref={dashboardRef} className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
-      {/* Welcome Header */}
+    <div ref={dashboardRef} className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
+      {/* HEADER SECTION */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-sm font-black text-white/40 uppercase tracking-[0.3em] mb-1">
-            System Intelligence
+          <h2 className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest mb-1">
+            System Overview
           </h2>
-          <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">
-            Welcome back, <span className="bg-gradient-to-br from-indigo-400 to-emerald-400 bg-clip-text text-transparent">{user?.first_name || user?.email?.split('@')[0] || 'Admin'}</span> 👋
+          <h1 className="text-2xl font-bold text-[#1C2B3A] tracking-tight">
+            Welcome back, {user?.first_name || user?.email?.split('@')[0] || 'Admin'}
           </h1>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-[#DDD6C8] shadow-sm">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">System: Operational</span>
+           </div>
+
            <button 
              onClick={handlePrintAll}
              disabled={isPrinting}
-             className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/10 transition-all active:scale-95 shadow-xl shadow-black/20"
+             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1A4480] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#0F2847] transition-all shadow-lg shadow-[#1A4480]/20 disabled:opacity-50"
            >
               {isPrinting ? (
-                <div className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                <div className="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
               ) : (
-                <Printer size={16} />
+                <Printer size={14} />
               )}
-              {isPrinting ? "Neutralizing Data..." : "Intelligence Report"}
+              {isPrinting ? "Processing..." : "Export Report"}
            </button>
-           <div className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/[0.03] border border-white/5">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]" />
-              <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Neural Link: Online</span>
-           </div>
         </div>
       </div>
 

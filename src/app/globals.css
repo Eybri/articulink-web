@@ -6,8 +6,17 @@
 }
 
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
+  --background: #FAF8F4;
+  --foreground: #1C2B3A;
+  --surface: #FFFFFF;
+  --primary: #1A4480;
+  --primary-foreground: #FFFFFF;
+  --secondary: #2A8FA0;
+  --secondary-foreground: #FFFFFF;
+  --muted: #F5F1EA;
+  --muted-foreground: #4A5A6A;
+  --border: #DDD6C8;
+  --navy: #0F2847;
 }
 
 body {

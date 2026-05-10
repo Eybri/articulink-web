@@ -50,7 +50,7 @@ export default function AdminLayout({
   const currentDrawerWidth = sidebarMinimized ? miniDrawerWidth : drawerWidth;
 
   return (
-    <div className="flex min-h-screen bg-zinc-950">
+    <div className="flex min-h-screen bg-[#FAF8F4] text-[#1C2B3A]">
       <Sidebar
         user={user}
         mobileOpen={mobileOpen}

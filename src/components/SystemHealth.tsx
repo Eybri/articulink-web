@@ -39,8 +39,8 @@ const SystemHealth = () => {
 
   if (loading) {
     return (
-      <div className="h-[200px] rounded-lg border border-white/5 bg-white/5 p-5 backdrop-blur-xl flex items-center justify-center">
-        <RotateCw size={24} className="text-indigo-500 animate-spin" />
+      <div className="h-[200px] rounded-lg border border-[#DDD6C8] bg-white p-5 flex items-center justify-center">
+        <RotateCw size={24} className="text-[#1A4480] animate-spin" />
       </div>
     );
   }
@@ -66,36 +66,36 @@ const SystemHealth = () => {
 
   const getOverallStatusColor = (status: string) => {
     switch (status) {
-      case "optimal": return "text-emerald-400 bg-emerald-400/10 border-emerald-400/20";
-      case "degraded": return "text-amber-400 bg-amber-400/10 border-amber-400/20";
-      case "down": return "text-red-400 bg-red-400/10 border-red-400/20";
-      default: return "text-amber-400 bg-amber-400/10 border-amber-400/20";
+      case "optimal": return "text-emerald-600 bg-emerald-50 border-emerald-100";
+      case "degraded": return "text-amber-600 bg-amber-50 border-amber-100";
+      case "down": return "text-red-600 bg-red-50 border-red-100";
+      default: return "text-amber-600 bg-amber-50 border-amber-100";
     }
   };
 
   const serviceItems = [
-    { name: "Main Database", key: "database", icon: <Database size={18} />, color: "text-indigo-400 bg-indigo-400/10" },
-    { name: "Gemini AI", key: "gemini", icon: <Sparkles size={18} />, color: "text-emerald-400 bg-emerald-400/10" },
-    { name: "Whisper ASR", key: "whisper", icon: <Mic2 size={18} />, color: "text-amber-400 bg-amber-400/10" },
-    { name: "Storage", key: "storage", icon: <HardDrive size={18} />, color: "text-red-400 bg-red-400/10" },
+    { name: "Main Database", key: "database", icon: <Database size={18} />, color: "text-[#1A4480] bg-[#1A4480]/10" },
+    { name: "Gemini AI", key: "gemini", icon: <Sparkles size={18} />, color: "text-[#2A8FA0] bg-[#2A8FA0]/10" },
+    { name: "Whisper ASR", key: "whisper", icon: <Mic2 size={18} />, color: "text-[#f59e0b] bg-[#f59e0b]/10" },
+    { name: "Storage", key: "storage", icon: <HardDrive size={18} />, color: "text-[#ef4444] bg-[#ef4444]/10" },
   ];
 
   return (
-    <div className="rounded-lg border border-white/5 bg-white/5 p-5 backdrop-blur-xl">
+    <div className="rounded-xl border border-[#DDD6C8] bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h3 className="text-xs font-bold text-white uppercase tracking-tight">System Health</h3>
+            <h3 className="text-xs font-bold text-[#1C2B3A] uppercase tracking-tight">System Health</h3>
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getOverallStatusColor(healthData?.status)} uppercase tracking-wider`}>
               {healthData?.status || 'Active'}
             </span>
           </div>
-          <p className="text-[10px] font-medium text-white/40 uppercase tracking-widest">Real-time infrastructure status</p>
+          <p className="text-[10px] font-medium text-[#4A5A6A] uppercase tracking-widest">Real-time infrastructure status</p>
         </div>
         <button 
           onClick={fetchHealth}
           disabled={refreshing}
-          className="h-9 w-9 flex items-center justify-center rounded-lg border border-white/5 bg-white/5 text-white/40 transition-all hover:text-indigo-400 hover:bg-white/10"
+          className="h-9 w-9 flex items-center justify-center rounded-lg border border-[#DDD6C8] bg-[#FAF8F4] text-[#4A5A6A] transition-all hover:text-[#1A4480] hover:bg-white shadow-sm"
         >
           <RotateCw size={16} className={refreshing ? "animate-spin" : ""} />
         </button>
@@ -105,13 +105,13 @@ const SystemHealth = () => {
         {serviceItems.map((service) => {
           const statusEntry = healthData?.services[service.key];
           return (
-            <div key={service.key} className="flex items-center gap-4 p-4 rounded-lg bg-white/[0.03] border border-white/5 transition-all hover:bg-white/[0.05]">
+            <div key={service.key} className="flex items-center gap-4 p-4 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8]/50 transition-all hover:bg-white hover:border-[#DDD6C8] hover:shadow-sm">
               <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${service.color}`}>
                 {service.icon}
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-bold text-white truncate">{service.name}</h4>
-                <p className="text-[10px] text-white/40 truncate">
+                <h4 className="text-xs font-bold text-[#1C2B3A] truncate">{service.name}</h4>
+                <p className="text-[10px] text-[#4A5A6A] truncate">
                   {statusEntry?.status === "connected" || statusEntry?.status === "online" || statusEntry?.status === "configured"
                     ? statusEntry?.mode || statusEntry?.model || "Operational"
                     : statusEntry?.detail || "Configuring..."}

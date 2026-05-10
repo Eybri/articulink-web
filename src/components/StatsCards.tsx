@@ -40,8 +40,8 @@ const StatsCards = ({
       change: '+12%',
       trend: 'up',
       icon: Users,
-      color: 'bg-indigo-600',
-      textColor: 'text-indigo-400',
+      color: 'bg-[#1A4480]',
+      textColor: 'text-[#1A4480]',
       progress: 100
     },
     {
@@ -51,8 +51,8 @@ const StatsCards = ({
       change: '+5%',
       trend: 'up',
       icon: ShieldCheck,
-      color: 'bg-zinc-700',
-      textColor: 'text-zinc-400',
+      color: 'bg-[#154D57]',
+      textColor: 'text-[#154D57]',
       progress: stats?.total_users ? Math.round((stats.by_role?.admin / stats.total_users) * 100) : 0
     },
     {
@@ -62,8 +62,8 @@ const StatsCards = ({
       change: '+8%',
       trend: 'up',
       icon: UserCheck,
-      color: 'bg-indigo-500',
-      textColor: 'text-indigo-400',
+      color: 'bg-[#2A8FA0]',
+      textColor: 'text-[#2A8FA0]',
       progress: stats?.total_users ? Math.round((stats.by_status?.active / stats.total_users) * 100) : 0
     },
     {
@@ -73,8 +73,8 @@ const StatsCards = ({
       change: '-3%',
       trend: 'down',
       icon: Clock,
-      color: 'bg-zinc-800',
-      textColor: 'text-zinc-500',
+      color: 'bg-[#1E6B78]',
+      textColor: 'text-[#1E6B78]',
       progress: stats?.total_users ? Math.round((stats.by_deactivation_type?.temporary / stats.total_users) * 100) : 0
     }
   ]
@@ -82,12 +82,12 @@ const StatsCards = ({
   return (
     <div className="space-y-4 mb-8">
       <div className="flex items-center justify-between">
-         <h4 className="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em]">Network Metrics</h4>
+         <h4 className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Network Metrics</h4>
          <div className="flex gap-2">
             {onAutoReactivate && (
               <button 
                 onClick={onAutoReactivate}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-[9px] font-bold text-white/40 uppercase tracking-widest hover:text-white hover:bg-white/10 transition-all"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-[#DDD6C8] text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest hover:text-[#1A4480] hover:bg-[#FAF8F4] transition-all shadow-sm"
               >
                 <Zap size={12} />
                 Auto-Restore
@@ -96,7 +96,7 @@ const StatsCards = ({
             {onRefresh && (
               <button 
                 onClick={onRefresh}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-[9px] font-bold text-white/40 uppercase tracking-widest hover:text-white hover:bg-white/10 transition-all"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-[#DDD6C8] text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest hover:text-[#1A4480] hover:bg-[#FAF8F4] transition-all shadow-sm"
               >
                 <RefreshCcw size={12} className={loading ? "animate-spin" : ""} />
                 Sync
@@ -109,18 +109,18 @@ const StatsCards = ({
         {cards.map((card) => (
           <div 
             key={card.key}
-            className="group relative flex flex-col h-[130px] rounded-xl border border-white/5 bg-zinc-900/50 p-5 backdrop-blur-xl transition-all duration-200 hover:border-white/10"
+            className="group relative flex flex-col h-[130px] rounded-xl border border-[#DDD6C8] bg-white p-5 shadow-sm transition-all duration-200 hover:border-[#2A8FA0]/30"
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex flex-col">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-white/20 mb-1">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-[#4A5A6A] mb-1">
                   {card.title}
                 </span>
-                <span className="text-2xl font-bold text-white tracking-tight">
+                <span className="text-2xl font-bold text-[#1C2B3A] tracking-tight">
                   {loading ? "..." : card.value.toLocaleString()}
                 </span>
               </div>
-              <div className={cn("flex h-9 w-9 items-center justify-center rounded-lg border border-white/5 bg-white/5 text-white/40 transition-colors group-hover:text-indigo-400 group-hover:bg-indigo-400/10")}>
+              <div className={cn("flex h-9 w-9 items-center justify-center rounded-lg border border-[#DDD6C8] bg-[#FAF8F4] text-[#4A5A6A] transition-colors group-hover:text-[#2A8FA0] group-hover:bg-[#2A8FA0]/10")}>
                 <card.icon size={18} />
               </div>
             </div>
@@ -135,12 +135,12 @@ const StatsCards = ({
                 ) : (
                   <TrendingDown size={12} className="text-red-500" />
                 )}
-                <span className="text-[9px] font-medium text-white/20 ml-1">
+                <span className="text-[9px] font-medium text-[#4A5A6A] ml-1">
                   vs last period
                 </span>
               </div>
               
-              <div className="h-1 w-full rounded-full bg-white/5 overflow-hidden">
+              <div className="h-1 w-full rounded-full bg-[#FAF8F4] overflow-hidden">
                 <div 
                   className={cn("h-full rounded-full transition-all duration-1000 ease-out", card.color)}
                   style={{ width: `${card.progress}%` }}
