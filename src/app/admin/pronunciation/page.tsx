@@ -21,12 +21,44 @@ import {
   ShieldCheck,
   Hash,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Ban,
+  Unlock,
+  ShieldAlert,
+  Timer
 } from "lucide-react";
-import { pronunciationAPI } from "@/lib/api";
+import { pronunciationAPI, userAPI } from "@/lib/api";
 import { getImageUrl } from "@/lib/utils";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export default function PronunciationPage() {
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatCountdown = (endDateStr: string) => {
+    if (!endDateStr) return null;
+    const end = new Date(endDateStr);
+    const diff = end.getTime() - now.getTime();
+    if (diff <= 0) return "Expired";
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    if (days > 0) return `${days}d ${hours}h left`;
+    if (hours > 0) return `${hours}h ${minutes}m left`;
+    return `${minutes}m ${seconds}s left`;
+  };
   const [clips, setClips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,6 +70,60 @@ export default function PronunciationPage() {
   const [limit, setLimit] = useState(12);
   const [total, setTotal] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Deactivation Dialog State (Reused from Users section)
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [targetUser, setTargetUser] = useState<any>(null);
+  const [deactivationData, setDeactivationData] = useState({
+    deactivation_type: 'temporary',
+    duration: '1day',
+    reason_category: 'Inappropriate Content',
+    deactivation_reason: ''
+  });
+
+  const handleActivate = async (userId: string) => {
+    try {
+      const response = await userAPI.activateUser(userId);
+      if (selectedUser && (selectedUser.user_id === userId || selectedUser._id === userId)) {
+        setSelectedUser({ ...selectedUser, user_info: { ...selectedUser.user_info, status: 'active' } });
+      }
+      fetchClips();
+    } catch (err) {
+      console.error("Activation failed:", err);
+    }
+  };
+
+  const handleDeactivateSubmit = async () => {
+    if (!targetUser) return;
+    try {
+      console.log("Submitting deactivation for:", targetUser.user_id || targetUser._id, deactivationData);
+      const apiData = {
+        ...deactivationData,
+        deactivation_reason: deactivationData.deactivation_reason
+          ? `[${deactivationData.reason_category}] ${deactivationData.deactivation_reason}`
+          : deactivationData.reason_category
+      };
+      const response = await userAPI.deactivateUser(targetUser.user_id || targetUser._id, apiData);
+
+      if (selectedUser && (selectedUser.user_id === targetUser.user_id || selectedUser._id === targetUser.user_id)) {
+        // Update with full data from server including calculated end_date
+        setSelectedUser({
+          ...selectedUser,
+          user_info: {
+            ...selectedUser.user_info,
+            status: 'inactive',
+            deactivation_type: response.deactivation_type,
+            deactivation_end_date: response.deactivation_end_date
+          }
+        });
+      }
+
+      setShowDeactivateModal(false);
+      fetchClips();
+    } catch (err) {
+      console.error("Deactivation failed:", err);
+    }
+  };
 
   const BAD_WORDS = new Set([
     "puta", "tangina", "gago", "kupal", "pota", "hayop", "bobo", "tarantado",
@@ -299,29 +385,64 @@ export default function PronunciationPage() {
                   <span className="text-[10px] font-bold uppercase tracking-widest">{selectedUser.flagged_count} Content Violations</span>
                 </div>
               )}
+              {selectedUser && (selectedUser.user_info?.status === 'inactive' || selectedUser.user_info?.is_active === false) && selectedUser.user_info?.deactivation_type === 'temporary' && (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-600">
+                  <Timer size={12} className="animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">
+                    {formatCountdown(selectedUser.user_info.deactivation_end_date)}
+                  </span>
+                </div>
+              )}
+              {selectedUser && (
+                <div className="flex items-center gap-2 ml-4">
+                  {selectedUser.user_info?.status === 'inactive' ? (
+                    <button
+                      onClick={() => handleActivate(selectedUser.user_id || selectedUser._id)}
+                      className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-100 transition-all"
+                    >
+                      <Unlock size={14} />
+                      Activate Account
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setTargetUser(selectedUser);
+                        setShowDeactivateModal(true);
+                      }}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 border rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                        selectedUser.flagged_count > 0
+                          ? "bg-red-600 text-white border-red-700 hover:bg-red-700"
+                          : "bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100"
+                      )}
+                    >
+                      <Ban size={14} />
+                      Ban Account
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          {selectedUser && (
-            <div className="flex items-center bg-white border border-[#DDD6C8] rounded-xl p-1 shadow-sm mr-2">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-[#1A4480] text-white shadow-md" : "text-[#4A5A6A] hover:bg-[#FAF8F4]"}`}
-                title="Grid View"
-              >
-                <LayoutGrid size={18} />
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-[#1A4480] text-white shadow-md" : "text-[#4A5A6A] hover:bg-[#FAF8F4]"}`}
-                title="List View"
-              >
-                <LayoutList size={18} />
-              </button>
-            </div>
-          )}
+          <div className="flex items-center bg-white border border-[#DDD6C8] rounded-xl p-1 shadow-sm mr-2">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-[#1A4480] text-white shadow-md" : "text-[#4A5A6A] hover:bg-[#FAF8F4]"}`}
+              title="Grid View"
+            >
+              <LayoutGrid size={18} />
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-[#1A4480] text-white shadow-md" : "text-[#4A5A6A] hover:bg-[#FAF8F4]"}`}
+              title="List View"
+            >
+              <LayoutList size={18} />
+            </button>
+          </div>
           <button onClick={fetchClips} className="p-3 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[#4A5A6A] hover:text-[#1A4480] transition-all hover:scale-105 shadow-sm">
             <AudioLines size={20} />
           </button>
@@ -351,126 +472,203 @@ export default function PronunciationPage() {
         </div>
       ) : (
         !selectedUser ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8">
-            {clips.map((item, index) => (
-              <div
-                key={`${item.user_id || index}-${index}`}
-                onClick={() => {
-                  setSelectedUser(item);
-                  setPage(0);
-                  setSearchTerm("");
-                }}
-                className="group cursor-pointer relative overflow-hidden flex flex-col rounded-2xl bg-white border border-[#DDD6C8] p-6 shadow-sm transition-all duration-300 hover:border-[#1A4480]/30 hover:shadow-xl hover:-translate-y-1 active:scale-[0.98]"
-              >
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <TrendingUp size={40} className="text-[#1A4480]" />
-                </div>
-
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="relative">
-                    <div className="h-14 w-14 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden shadow-inner">
-                      {getImageUrl(item.user_info?.profile_pic) ? (
-                        <img src={getImageUrl(item.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <User size={24} />
-                      )}
-                    </div>
-                    {item.avg_confidence > 80 && (
-                      <div className="absolute -top-1 -right-1 bg-emerald-500 text-white p-0.5 rounded-full border-2 border-white shadow-sm">
-                        <CheckCircle size={10} />
-                      </div>
-                    )}
+          viewMode === "grid" ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8">
+              {clips.map((item, index) => (
+                <div
+                  key={`${item.user_id || index}-${index}`}
+                  onClick={() => {
+                    setSelectedUser(item);
+                    setPage(0);
+                    setSearchTerm("");
+                  }}
+                  className="group cursor-pointer relative overflow-hidden flex flex-col rounded-2xl bg-white border border-[#DDD6C8] p-6 shadow-sm transition-all duration-300 hover:border-[#1A4480]/30 hover:shadow-xl hover:-translate-y-1 active:scale-[0.98]"
+                >
+                  {/* ... existing Grid Item content ... */}
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <TrendingUp size={40} className="text-[#1A4480]" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-bold text-[#1C2B3A] tracking-tight truncate">{item.user_info?.username || "Operator"}</h3>
-                      {item.flagged_count > 0 && (
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-50 border border-red-100 text-red-600 animate-pulse">
-                          <AlertTriangle size={10} />
-                          <span className="text-[9px] font-bold uppercase">{item.flagged_count} Flagged</span>
+
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="relative">
+                      <div className="h-14 w-14 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden shadow-inner">
+                        {getImageUrl(item.user_info?.profile_pic) ? (
+                          <img src={getImageUrl(item.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={24} />
+                        )}
+                      </div>
+                      {item.avg_confidence > 80 && (
+                        <div className="absolute -top-1 -right-1 bg-emerald-500 text-white p-0.5 rounded-full border-2 border-white shadow-sm">
+                          <CheckCircle size={10} />
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <ShieldCheck size={10} className="text-[#1A4480]" />
-                      <p className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest truncate">{item.user_info?.email}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-sm font-bold text-[#1C2B3A] tracking-tight truncate">{item.user_info?.username || "Operator"}</h3>
+                        <div className="flex items-center gap-1.5">
+                          {(item.user_info?.status === 'inactive' || item.user_info?.is_active === false) && (
+                            <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-100 text-amber-600">
+                                <Ban size={10} />
+                                <span className="text-[9px] font-bold uppercase">Banned</span>
+                              </div>
+
+                            </div>
+                          )}
+                          {item.flagged_count > 0 && (
+                            <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-50 border border-red-100 text-red-600 animate-pulse">
+                              <AlertTriangle size={10} />
+                              <span className="text-[9px] font-bold uppercase">{item.flagged_count} Flagged</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <ShieldCheck size={10} className="text-[#1A4480]" />
+                        <p className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest truncate">{item.user_info?.email}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="p-3 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8]/60">
-                    <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest block mb-1">Total Clips</span>
-                    <p className="text-lg font-bold text-[#1C2B3A]">{item.total_clips}</p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8]/60">
-                    <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest block mb-1">Avg Length</span>
-                    <p className="text-lg font-bold text-[#1A4480]">{item.avg_duration?.toFixed(1)}s</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Avg Confidence</span>
-                    <span className={`text-[10px] font-bold ${item.avg_confidence > 90 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                      {(item.avg_confidence || 95.4).toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full bg-[#FAF8F4] border border-[#DDD6C8]/30 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full transition-all duration-1000 ${item.avg_confidence > 90 ? 'bg-emerald-500' : 'bg-amber-500'}`} 
-                      style={{ width: `${item.avg_confidence || 95.4}%` }} 
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Primary Language</span>
-                    <span className="px-2 py-0.5 rounded-md bg-[#1A4480]/5 border border-[#1A4480]/10 text-[9px] font-bold text-[#1A4480] uppercase">
-                      {item.primary_language || 'EN-US'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-4 pt-4 border-t border-[#DDD6C8]/40">
-                  <div>
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <Hash size={10} className="text-[#4A5A6A]" />
-                      <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Commonly Used Vocabulary</span>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="p-3 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8]/60">
+                      <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest block mb-1">Total Clips</span>
+                      <p className="text-lg font-bold text-[#1C2B3A]">{item.total_clips}</p>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {(item.top_words || []).length > 0 ? (
-                        item.top_words.map((word: string) => (
-                          <span key={word} className="px-2 py-0.5 rounded-md bg-[#FAF8F4] border border-[#DDD6C8] text-[9px] font-bold text-[#1C2B3A] lowercase">
-                            {word}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-[9px] font-medium text-[#4A5A6A]/60 italic">Insufficient data for analysis</span>
-                      )}
+                    <div className="p-3 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8]/60">
+                      <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest block mb-1">Avg Length</span>
+                      <p className="text-lg font-bold text-[#1A4480]">{item.avg_duration?.toFixed(1)}s</p>
                     </div>
                   </div>
-                </div>
 
-                <div className="mt-auto pt-4 border-t border-[#DDD6C8]/40 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <Clock size={12} className="text-[#4A5A6A]/60" />
-                    <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">
-                      Active {formatDate(item.last_clip_date)}
-                    </span>
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Avg Confidence</span>
+                      <span className={`text-[10px] font-bold ${item.avg_confidence > 90 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                        {(item.avg_confidence || 95.4).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-[#FAF8F4] border border-[#DDD6C8]/30 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-1000 ${item.avg_confidence > 90 ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                        style={{ width: `${item.avg_confidence || 95.4}%` }}
+                      />
+                    </div>
                   </div>
-                  <span className="text-[9px] font-bold text-[#1A4480] uppercase tracking-widest group-hover:underline">View More</span>
+
+                  <div className="mt-auto pt-4 border-t border-[#DDD6C8]/40 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Clock size={12} className="text-[#4A5A6A]/60" />
+                      <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">
+                        Active {formatDate(item.last_clip_date)}
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-bold text-[#1A4480] uppercase tracking-widest group-hover:underline">View More</span>
+                  </div>
                 </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white border border-[#DDD6C8] rounded-2xl overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#FAF8F4] border-b border-[#DDD6C8]">
+                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Operator</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Activity</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Performance</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Status</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em] text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#DDD6C8]">
+                    {clips.map((item, index) => (
+                      <tr key={`${item.user_id || index}`} className="hover:bg-[#FAF8F4]/40 transition-colors group">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden shadow-inner">
+                              {getImageUrl(item.user_info?.profile_pic) ? (
+                                <img src={getImageUrl(item.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <User size={18} />
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-[#1C2B3A]">{item.user_info?.username || "Operator"}</p>
+                              <p className="text-[9px] font-medium text-[#4A5A6A] uppercase tracking-widest">{item.user_info?.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-bold text-[#1C2B3A]">{item.total_clips} Clips</p>
+                            <p className="text-[9px] font-medium text-[#4A5A6A] uppercase">Last: {formatDate(item.last_clip_date)}</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-20 h-1.5 bg-[#FAF8F4] rounded-full overflow-hidden border border-[#DDD6C8]/30">
+                              <div className={`h-full ${item.avg_confidence > 90 ? 'bg-emerald-500' : 'bg-amber-500'}`} style={{ width: `${item.avg_confidence || 0}%` }} />
+                            </div>
+                            <span className="text-[10px] font-bold text-[#1C2B3A]">{item.avg_confidence?.toFixed(1)}%</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-1.5">
+                            {(item.user_info?.status === 'inactive' || item.user_info?.is_active === false) ? (
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-100 w-fit">
+                                  <Ban size={10} />
+                                  <span className="text-[8px] font-bold uppercase">Banned</span>
+                                </div>
+                                {item.user_info?.deactivation_type === 'temporary' && (
+                                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-100 w-fit">
+                                    <Timer size={10} className="animate-pulse" />
+                                    <span className="text-[8px] font-bold uppercase">{formatCountdown(item.user_info.deactivation_end_date)}</span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 w-fit">
+                                <ShieldCheck size={10} />
+                                <span className="text-[8px] font-bold uppercase">Active</span>
+                              </div>
+                            )}
+                            {item.flagged_count > 0 && (
+                              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-red-50 text-red-600 border border-red-100 w-fit animate-pulse">
+                                <AlertTriangle size={10} />
+                                <span className="text-[8px] font-bold uppercase">{item.flagged_count} Violations</span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={() => setSelectedUser(item)}
+                            className="p-2 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[#1A4480] hover:bg-[#1A4480] hover:text-white transition-all shadow-sm"
+                          >
+                            <ExternalLink size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            ))}
-          </div>
-        ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
-            {filteredClips.map((clip) => (
-              <div
-                key={clip.id || clip._id}
-                className="group relative flex flex-col rounded-xl bg-white border border-[#DDD6C8] p-6 shadow-sm transition-all hover:border-[#1A4480]/30"
-              >
-                {/* USER HEAD */}
-                <div className="flex items-start justify-between mb-6">
+            </div>
+          )
+        ) : (
+          viewMode === "grid" ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+              {filteredClips.map((clip) => (
+                <div
+                  key={clip.id || clip._id}
+                  className="group relative flex flex-col rounded-xl bg-white border border-[#DDD6C8] p-6 shadow-sm transition-all hover:border-[#1A4480]/30"
+                >
+                  {/* USER HEAD */}
+                  <div className="flex items-start justify-between mb-6">
                     <div className="flex items-center gap-2">
                       <div className="h-10 w-10 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden relative shadow-inner">
                         {getImageUrl(clip.user_info?.profile_pic) ? (
@@ -494,147 +692,147 @@ export default function PronunciationPage() {
                       </div>
                     </div>
 
-                  <button
-                    onClick={() => handlePlayPause(clip)}
-                    className="h-10 w-10 rounded-lg bg-[#1A4480] text-white flex items-center justify-center shadow-lg hover:bg-[#0F2847] transition-all"
-                  >
-                    {playingId === (clip.id || clip._id) ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
-                  </button>
-                </div>
-
-                {/* TRANSCRIPT AREA */}
-                <div className="flex-1 bg-[#FAF8F4] rounded-xl p-4 mb-4 border border-[#DDD6C8] min-h-[80px] group-hover:bg-[#FAF8F4]/80 transition-colors">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-1 h-1 rounded-full bg-[#1A4480]" />
-                    <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Transcription</span>
+                    <button
+                      onClick={() => handlePlayPause(clip)}
+                      className="h-10 w-10 rounded-lg bg-[#1A4480] text-white flex items-center justify-center shadow-lg hover:bg-[#0F2847] transition-all"
+                    >
+                      {playingId === (clip.id || clip._id) ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
+                    </button>
                   </div>
-                  <p className="text-xs font-medium text-[#1C2B3A] line-clamp-3 italic leading-relaxed">
-                    "{highlightBadWords(clip.transcript) || "No neural output detected..."}"
-                  </p>
-                  {clip.corrected_transcript && (
-                    <div className="mt-4 pt-4 border-t border-[#DDD6C8]">
-                      <span className="text-[9px] font-bold text-[#1A4480] uppercase tracking-[0.2em] block mb-2">Refined Model</span>
-                      <p className="text-xs font-bold text-[#1A4480]">"{highlightBadWords(clip.corrected_transcript)}"</p>
+
+                  {/* TRANSCRIPT AREA */}
+                  <div className="flex-1 bg-[#FAF8F4] rounded-xl p-4 mb-4 border border-[#DDD6C8] min-h-[80px] group-hover:bg-[#FAF8F4]/80 transition-colors">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-1 h-1 rounded-full bg-[#1A4480]" />
+                      <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Transcription</span>
                     </div>
-                  )}
-                </div>
+                    <p className="text-xs font-medium text-[#1C2B3A] line-clamp-3 italic leading-relaxed">
+                      "{highlightBadWords(clip.transcript) || "No neural output detected..."}"
+                    </p>
+                    {clip.corrected_transcript && (
+                      <div className="mt-4 pt-4 border-t border-[#DDD6C8]">
+                        <span className="text-[9px] font-bold text-[#1A4480] uppercase tracking-[0.2em] block mb-2">Refined Model</span>
+                        <p className="text-xs font-bold text-[#1A4480]">"{highlightBadWords(clip.corrected_transcript)}"</p>
+                      </div>
+                    )}
+                  </div>
 
-                {/* METADATA FOOTER */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="flex items-center gap-2 text-[#4A5A6A]">
-                    <Clock size={12} className="text-[#1A4480]/60" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest">{clip.duration_seconds?.toFixed(1)}s Length</span>
+                  {/* METADATA FOOTER */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="flex items-center gap-2 text-[#4A5A6A]">
+                      <Clock size={12} className="text-[#1A4480]/60" />
+                      <span className="text-[9px] font-bold uppercase tracking-widest">{clip.duration_seconds?.toFixed(1)}s Length</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[#4A5A6A] justify-end">
+                      <TrendingUp size={12} className="text-emerald-600/60" />
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-700">{clip.overall_confidence?.toFixed(1) || "98.4"}% Conf</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-[#4A5A6A] justify-end">
-                    <TrendingUp size={12} className="text-emerald-600/60" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-700">{clip.overall_confidence?.toFixed(1) || "98.4"}% Conf</span>
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-[#DDD6C8]">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => generatePDF(clip)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest hover:bg-white hover:border-[#1A4480]/30 transition-all"
-                    >
-                      <ExternalLink size={12} />
-                      Report
-                    </button>
-                    <button
-                      onClick={() => handleDelete(clip.id || clip._id)}
-                      className="p-1.5 rounded-lg text-[#4A5A6A] hover:bg-red-50 hover:text-red-500 transition-all"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100">
-                    <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                    <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">Verified</span>
+                  <div className="flex items-center justify-between pt-4 border-t border-[#DDD6C8]">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => generatePDF(clip)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest hover:bg-white hover:border-[#1A4480]/30 transition-all"
+                      >
+                        <ExternalLink size={12} />
+                        Report
+                      </button>
+                      <button
+                        onClick={() => handleDelete(clip.id || clip._id)}
+                        className="p-1.5 rounded-lg text-[#4A5A6A] hover:bg-red-50 hover:text-red-500 transition-all"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100">
+                      <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                      <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">Verified</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white border border-[#DDD6C8] rounded-xl overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-[#FAF8F4] border-b border-[#DDD6C8]">
-                    <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">User</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Transcript</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Length</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Date</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em] text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#DDD6C8]">
-                  {filteredClips.map((clip) => (
-                    <tr key={clip.id || clip._id} className="hover:bg-[#FAF8F4]/40 transition-colors group">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden shadow-inner">
-                            {getImageUrl(clip.user_info?.profile_pic) ? (
-                              <img src={getImageUrl(clip.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <User size={14} />
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-[#1C2B3A]">{clip.user_info?.username || "ID Unknown"}</span>
-                            {clip.is_flagged && (
-                              <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-100 text-[7px] font-bold uppercase tracking-widest">Flagged</span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 max-w-md">
-                        <p className="text-xs font-medium text-[#1C2B3A] line-clamp-1 italic">
-                          "{highlightBadWords(clip.transcript) || "No neural output detected..."}"
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest bg-white px-2 py-1 rounded border border-[#DDD6C8]">
-                          {clip.duration_seconds?.toFixed(1)}s
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest">
-                          {new Date(clip.created_at).toLocaleDateString()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-2 opacity-40 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => handlePlayPause(clip)}
-                            className={`p-2 rounded-lg transition-all ${playingId === (clip.id || clip._id) ? "bg-[#1A4480] text-white" : "bg-[#FAF8F4] text-[#1A4480] border border-[#DDD6C8] hover:bg-white"}`}
-                          >
-                            {playingId === (clip.id || clip._id) ? <Pause size={14} /> : <Play size={14} fill="currentColor" />}
-                          </button>
-                          <button
-                            onClick={() => generatePDF(clip)}
-                            className="p-2 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[#4A5A6A] hover:bg-white transition-all"
-                            title="Generate Report"
-                          >
-                            <ExternalLink size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(clip.id || clip._id)}
-                            className="p-2 rounded-lg text-[#4A5A6A] hover:bg-red-50 hover:text-red-500 transition-all"
-                            title="Delete"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              ))}
             </div>
-          </div>
-        )
-      )}
+          ) : (
+            <div className="bg-white border border-[#DDD6C8] rounded-xl overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#FAF8F4] border-b border-[#DDD6C8]">
+                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">User</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Transcript</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Length</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Date</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em] text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#DDD6C8]">
+                    {filteredClips.map((clip) => (
+                      <tr key={clip.id || clip._id} className="hover:bg-[#FAF8F4]/40 transition-colors group">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden shadow-inner">
+                              {getImageUrl(clip.user_info?.profile_pic) ? (
+                                <img src={getImageUrl(clip.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <User size={14} />
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-[#1C2B3A]">{clip.user_info?.username || "ID Unknown"}</span>
+                              {clip.is_flagged && (
+                                <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-100 text-[7px] font-bold uppercase tracking-widest">Flagged</span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 max-w-md">
+                          <p className="text-xs font-medium text-[#1C2B3A] line-clamp-1 italic">
+                            "{highlightBadWords(clip.transcript) || "No neural output detected..."}"
+                          </p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest bg-white px-2 py-1 rounded border border-[#DDD6C8]">
+                            {clip.duration_seconds?.toFixed(1)}s
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest">
+                            {new Date(clip.created_at).toLocaleDateString()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-end gap-2 opacity-40 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => handlePlayPause(clip)}
+                              className={`p-2 rounded-lg transition-all ${playingId === (clip.id || clip._id) ? "bg-[#1A4480] text-white" : "bg-[#FAF8F4] text-[#1A4480] border border-[#DDD6C8] hover:bg-white"}`}
+                            >
+                              {playingId === (clip.id || clip._id) ? <Pause size={14} /> : <Play size={14} fill="currentColor" />}
+                            </button>
+                            <button
+                              onClick={() => generatePDF(clip)}
+                              className="p-2 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[#4A5A6A] hover:bg-white transition-all"
+                              title="Generate Report"
+                            >
+                              <ExternalLink size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(clip.id || clip._id)}
+                              className="p-2 rounded-lg text-[#4A5A6A] hover:bg-red-50 hover:text-red-500 transition-all"
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )
+        ))}
 
       {/* PAGINATION */}
       {!loading && clips.length > 0 && (
@@ -758,6 +956,111 @@ export default function PronunciationPage() {
                   className="px-10 py-4 rounded-xl bg-[#1A4480] text-[10px] font-bold text-white uppercase tracking-widest hover:bg-[#0F2847] transition-all shadow-lg shadow-[#1A4480]/20"
                 >
                   Export Report
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DEACTIVATE MODAL (Reused from Users section) */}
+      {showDeactivateModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#1C2B3A]/40 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-lg bg-white border border-[#DDD6C8] rounded-2xl p-8 relative shadow-2xl overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-transparent opacity-40" />
+
+            <button
+              onClick={() => setShowDeactivateModal(false)}
+              className="absolute top-8 right-8 text-[#4A5A6A] hover:text-[#1C2B3A] transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="space-y-8">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center">
+                  <ShieldAlert size={24} className="text-amber-500" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-[#1C2B3A] tracking-tight uppercase">Deactivate Operator</h3>
+                  <p className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest mt-1">Operator: {targetUser?.user_info?.username}</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={() => setDeactivationData({ ...deactivationData, deactivation_type: 'temporary' })}
+                    className={cn(
+                      "p-4 rounded-xl border transition-all text-left group",
+                      deactivationData.deactivation_type === 'temporary'
+                        ? "bg-amber-50 border-amber-500/30 text-amber-600"
+                        : "bg-[#FAF8F4] border-[#DDD6C8] text-[#4A5A6A] hover:bg-white hover:border-[#1A4480]/30"
+                    )}
+                  >
+                    <Clock size={18} className="mb-2" />
+                    <h5 className="text-[10px] font-bold uppercase tracking-widest">Temporary</h5>
+                    <p className="text-[9px] font-medium opacity-60 uppercase mt-1">Automatic Restore</p>
+                  </button>
+
+                  <button
+                    onClick={() => setDeactivationData({ ...deactivationData, deactivation_type: 'permanent' })}
+                    className={cn(
+                      "p-4 rounded-xl border transition-all text-left group",
+                      deactivationData.deactivation_type === 'permanent'
+                        ? "bg-red-50 border-red-500/30 text-red-600"
+                        : "bg-[#FAF8F4] border-[#DDD6C8] text-[#4A5A6A] hover:bg-white hover:border-[#1A4480]/30"
+                    )}
+                  >
+                    <Ban size={18} className="mb-2" />
+                    <h5 className="text-[10px] font-bold uppercase tracking-widest">Permanent</h5>
+                    <p className="text-[9px] font-medium opacity-60 uppercase mt-1">Manual Unlock</p>
+                  </button>
+                </div>
+
+                {deactivationData.deactivation_type === 'temporary' && (
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest ml-4 block">Suspension Duration</label>
+                    <select
+                      className="w-full bg-[#FAF8F4] border border-[#DDD6C8] rounded-xl p-4 text-xs font-bold uppercase tracking-widest text-[#1C2B3A] outline-none focus:bg-white focus:border-[#1A4480]/30 appearance-none shadow-sm"
+                      value={deactivationData.duration}
+                      onChange={(e) => setDeactivationData({ ...deactivationData, duration: e.target.value })}
+                    >
+                      <option value="1day">24 Standard Hours</option>
+                      <option value="1week">7 Operational Days</option>
+                      <option value="1month">30 Neural Cycles</option>
+                      <option value="1year">365 Standard Days</option>
+                    </select>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest ml-4 block">Violation Category</label>
+                  <select
+                    className="w-full bg-[#FAF8F4] border border-[#DDD6C8] rounded-xl p-4 text-xs font-bold uppercase tracking-widest text-[#1C2B3A] outline-none focus:bg-white focus:border-[#1A4480]/30 appearance-none shadow-sm"
+                    value={deactivationData.reason_category}
+                    onChange={(e) => setDeactivationData({ ...deactivationData, reason_category: e.target.value })}
+                  >
+                    <option value="Inappropriate Content">Protocol Violation (Inappropriate)</option>
+                    <option value="Spamming">Data Redundancy (Spam)</option>
+                    <option value="Policy Violation">Governance Breach (Policy)</option>
+                    <option value="Other">Anomalous Activity (Other)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  onClick={() => setShowDeactivateModal(false)}
+                  className="px-8 py-4 rounded-xl text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest hover:bg-[#FAF8F4] transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeactivateSubmit}
+                  className="px-10 py-4 rounded-xl bg-amber-600 text-[10px] font-bold text-white uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-600/20"
+                >
+                  Confirm Deactivation
                 </button>
               </div>
             </div>

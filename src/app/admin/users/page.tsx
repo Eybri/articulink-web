@@ -16,7 +16,8 @@ import {
   AlertCircle,
   X,
   MoreVertical,
-  Check
+  Check,
+  Timer
 } from "lucide-react";
 import { userAPI } from "@/lib/api";
 import StatsCards from "@/components/StatsCards";
@@ -50,6 +51,28 @@ export default function UsersPage() {
     reason_category: 'Spamming',
     deactivation_reason: ''
   });
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatCountdown = (endDateStr: string) => {
+    if (!endDateStr) return null;
+    const end = new Date(endDateStr);
+    const diff = end.getTime() - now.getTime();
+    if (diff <= 0) return "Expired";
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    if (days > 0) return `${days}d ${hours}h left`;
+    if (hours > 0) return `${hours}h ${minutes}m left`;
+    return `${minutes}m ${seconds}s left`;
+  };
 
   const fetchData = async () => {
     try {
@@ -252,6 +275,12 @@ export default function UsersPage() {
                       <td className="px-6 py-4">
                          <div className="flex flex-col gap-1">
                             {getStatusBadge(item.status)}
+                             {(item.status === 'inactive' || item.is_active === false) && item.deactivation_type === 'temporary' && (
+                               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-100 w-fit">
+                                 <Timer size={10} className="animate-pulse" />
+                                 <span className="text-[8px] font-bold uppercase">{formatCountdown(item.deactivation_end_date)}</span>
+                               </div>
+                             )}
                          </div>
                       </td>
                        <td className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest">
