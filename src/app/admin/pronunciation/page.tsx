@@ -20,7 +20,8 @@ import {
   TrendingUp,
   ShieldCheck,
   Hash,
-  X
+  X,
+  AlertTriangle
 } from "lucide-react";
 import { pronunciationAPI } from "@/lib/api";
 import { getImageUrl } from "@/lib/utils";
@@ -37,6 +38,24 @@ export default function PronunciationPage() {
   const [limit, setLimit] = useState(12);
   const [total, setTotal] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const BAD_WORDS = new Set([
+    "puta", "tangina", "gago", "kupal", "pota", "hayop", "bobo", "tarantado",
+    "puchu", "leche", "ulol", "pakshet", "shit", "fuck", "bitch", "asshole",
+    "damn", "hell", "bastard", "dick", "pussy"
+  ]);
+
+  const highlightBadWords = (text: string) => {
+    if (!text) return text;
+    const words = text.split(/(\s+)/);
+    return words.map((word, i) => {
+      const cleaned = word.replace(/[^\w\s]/g, '').toLowerCase();
+      if (BAD_WORDS.has(cleaned)) {
+        return <span key={i} className="text-red-600 font-bold underline decoration-wavy decoration-red-400/50">{word}</span>;
+      }
+      return word;
+    });
+  };
 
   const fetchClips = async () => {
     try {
@@ -270,9 +289,17 @@ export default function PronunciationPage() {
             <h2 className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest mb-1">
               {selectedUser ? "Operator History" : "Speech Analytics"}
             </h2>
-            <h1 className="text-2xl font-bold text-[#1C2B3A] tracking-tight">
-              {selectedUser ? selectedUser.user_info?.username : "Pronunciation Registry"}
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-[#1C2B3A] tracking-tight">
+                {selectedUser ? selectedUser.user_info?.username : "Pronunciation Registry"}
+              </h1>
+              {selectedUser && selectedUser.flagged_count > 0 && (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 border border-red-100 text-red-600 animate-pulse">
+                  <AlertTriangle size={12} />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">{selectedUser.flagged_count} Content Violations</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -355,7 +382,15 @@ export default function PronunciationPage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold text-[#1C2B3A] tracking-tight truncate">{item.user_info?.username || "Operator"}</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-[#1C2B3A] tracking-tight truncate">{item.user_info?.username || "Operator"}</h3>
+                      {item.flagged_count > 0 && (
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-50 border border-red-100 text-red-600 animate-pulse">
+                          <AlertTriangle size={10} />
+                          <span className="text-[9px] font-bold uppercase">{item.flagged_count} Flagged</span>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <ShieldCheck size={10} className="text-[#1A4480]" />
                       <p className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest truncate">{item.user_info?.email}</p>
@@ -436,23 +471,28 @@ export default function PronunciationPage() {
               >
                 {/* USER HEAD */}
                 <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden relative shadow-inner">
-                      {getImageUrl(clip.user_info?.profile_pic) ? (
-                        <img src={getImageUrl(clip.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <User size={16} />
-                      )}
+                    <div className="flex items-center gap-2">
+                      <div className="h-10 w-10 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden relative shadow-inner">
+                        {getImageUrl(clip.user_info?.profile_pic) ? (
+                          <img src={getImageUrl(clip.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={16} />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs font-bold text-[#1C2B3A] tracking-tight truncate max-w-[120px]">
+                            {clip.user_info?.username || "ID Unknown"}
+                          </h4>
+                          {clip.is_flagged && (
+                            <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-100 text-[8px] font-bold uppercase tracking-widest">Flagged</span>
+                          )}
+                        </div>
+                        <p className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest mt-0.5">
+                          {new Date(clip.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-[#1C2B3A] tracking-tight truncate max-w-[120px]">
-                        {clip.user_info?.username || "ID Unknown"}
-                      </h4>
-                      <p className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest mt-0.5">
-                        {new Date(clip.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
 
                   <button
                     onClick={() => handlePlayPause(clip)}
@@ -469,12 +509,12 @@ export default function PronunciationPage() {
                     <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Transcription</span>
                   </div>
                   <p className="text-xs font-medium text-[#1C2B3A] line-clamp-3 italic leading-relaxed">
-                    "{clip.transcript || "No neural output detected..."}"
+                    "{highlightBadWords(clip.transcript) || "No neural output detected..."}"
                   </p>
                   {clip.corrected_transcript && (
                     <div className="mt-4 pt-4 border-t border-[#DDD6C8]">
                       <span className="text-[9px] font-bold text-[#1A4480] uppercase tracking-[0.2em] block mb-2">Refined Model</span>
-                      <p className="text-xs font-bold text-[#1A4480]">"{clip.corrected_transcript}"</p>
+                      <p className="text-xs font-bold text-[#1A4480]">"{highlightBadWords(clip.corrected_transcript)}"</p>
                     </div>
                   )}
                 </div>
@@ -540,12 +580,17 @@ export default function PronunciationPage() {
                               <User size={14} />
                             )}
                           </div>
-                          <span className="text-xs font-bold text-[#1C2B3A]">{clip.user_info?.username || "ID Unknown"}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-[#1C2B3A]">{clip.user_info?.username || "ID Unknown"}</span>
+                            {clip.is_flagged && (
+                              <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-100 text-[7px] font-bold uppercase tracking-widest">Flagged</span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 max-w-md">
                         <p className="text-xs font-medium text-[#1C2B3A] line-clamp-1 italic">
-                          "{clip.transcript || "No neural output detected..."}"
+                          "{highlightBadWords(clip.transcript) || "No neural output detected..."}"
                         </p>
                       </td>
                       <td className="px-6 py-4">
@@ -685,7 +730,7 @@ export default function PronunciationPage() {
                 <div className="p-8 rounded-2xl bg-[#FAF8F4] border border-[#DDD6C8] shadow-inner">
                   <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest block mb-4">Communication Transcription</span>
                   <p className="text-2xl font-bold text-[#1C2B3A] leading-relaxed italic">
-                    "{selectedClip.corrected_transcript || selectedClip.transcript}"
+                    "{highlightBadWords(selectedClip.corrected_transcript || selectedClip.transcript)}"
                   </p>
                 </div>
 
