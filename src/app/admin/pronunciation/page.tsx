@@ -10,9 +10,12 @@ import {
   Globe, 
   Clock,
   AudioLines,
-  X,
   User,
-  ExternalLink
+  ExternalLink,
+  LayoutGrid,
+  LayoutList,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { pronunciationAPI } from "@/lib/api";
 import { getImageUrl } from "@/lib/utils";
@@ -23,13 +26,23 @@ export default function PronunciationPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [selectedClip, setSelectedClip] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [page, setPage] = useState(0);
+  const [limit, setLimit] = useState(12);
+  const [total, setTotal] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const fetchClips = async () => {
     try {
       setLoading(true);
-      const data = await pronunciationAPI.getAudioClips();
-      setClips(data);
+      const data = await pronunciationAPI.getAudioClips({ skip: page * limit, limit });
+      if (data && data.items) {
+        setClips(data.items);
+        setTotal(data.total);
+      } else {
+        // Fallback for old API format if it ever happens
+        setClips(Array.isArray(data) ? data : []);
+      }
     } catch (err) {
       console.error("Error fetching clips:", err);
     } finally {
@@ -39,7 +52,7 @@ export default function PronunciationPage() {
 
   useEffect(() => {
     fetchClips();
-  }, []);
+  }, [page, limit]);
 
   const handlePlayPause = (clip: any) => {
     if (playingId === clip.id || playingId === clip._id) {
@@ -230,7 +243,23 @@ export default function PronunciationPage() {
         </div>
         
         <div className="flex items-center gap-3">
-           <button onClick={fetchClips} className="p-3 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-white transition-all hover:scale-105">
+           <div className="flex items-center bg-white border border-[#DDD6C8] rounded-xl p-1 shadow-sm mr-2">
+             <button 
+               onClick={() => setViewMode("grid")}
+               className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-[#1A4480] text-white shadow-md" : "text-[#4A5A6A] hover:bg-[#FAF8F4]"}`}
+               title="Grid View"
+             >
+               <LayoutGrid size={18} />
+             </button>
+             <button 
+               onClick={() => setViewMode("list")}
+               className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-[#1A4480] text-white shadow-md" : "text-[#4A5A6A] hover:bg-[#FAF8F4]"}`}
+               title="List View"
+             >
+               <LayoutList size={18} />
+             </button>
+           </div>
+           <button onClick={fetchClips} className="p-3 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[#4A5A6A] hover:text-[#1A4480] transition-all hover:scale-105 shadow-sm">
               <AudioLines size={20} />
            </button>
         </div>
@@ -257,93 +286,233 @@ export default function PronunciationPage() {
            <p className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest">Decoding Audio Stream...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-           {filteredClips.map((clip) => (
-             <div 
-               key={clip.id || clip._id}
-               className="group relative flex flex-col rounded-xl bg-white border border-[#DDD6C8] p-6 shadow-sm transition-all hover:border-[#1A4480]/30"
-             >
-
-                {/* USER HEAD */}
-                <div className="flex items-start justify-between mb-6">
-                   <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden relative shadow-inner">
-                         {getImageUrl(clip.user_info?.profile_pic) ? (
-                           <img src={getImageUrl(clip.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
-                         ) : (
-                           <User size={16} />
-                         )}
-                      </div>
-                      <div>
-                         <h4 className="text-xs font-bold text-[#1C2B3A] tracking-tight truncate max-w-[120px]">
-                            {clip.user_info?.username || "ID Unknown"}
-                         </h4>
-                         <p className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest mt-0.5">
-                            {new Date(clip.created_at).toLocaleDateString()}
-                         </p>
-                      </div>
-                   </div>
-
-                   <button 
-                     onClick={() => handlePlayPause(clip)}
-                     className="h-10 w-10 rounded-lg bg-[#1A4480] text-white flex items-center justify-center shadow-lg hover:bg-[#0F2847] transition-all"
-                   >
-                      {playingId === (clip.id || clip._id) ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
-                   </button>
-                </div>
-
-                {/* TRANSCRIPT AREA */}
-                <div className="flex-1 bg-[#FAF8F4] rounded-xl p-4 mb-4 border border-[#DDD6C8] min-h-[80px] group-hover:bg-[#FAF8F4]/80 transition-colors">
-                   <div className="flex items-center gap-2 mb-2">
-                      <div className="w-1 h-1 rounded-full bg-[#1A4480]" />
-                      <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Transcription</span>
-                   </div>
-                   <p className="text-xs font-medium text-[#1C2B3A] line-clamp-3 italic leading-relaxed">
-                      "{clip.transcript || "No neural output detected..."}"
-                   </p>
-                   {clip.corrected_transcript && (
-                     <div className="mt-4 pt-4 border-t border-[#DDD6C8]">
-                        <span className="text-[9px] font-bold text-[#1A4480] uppercase tracking-[0.2em] block mb-2">Refined Model</span>
-                        <p className="text-xs font-bold text-[#1A4480]">"{clip.corrected_transcript}"</p>
-                     </div>
-                   )}
-                </div>
-
-                {/* METADATA FOOTER */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                   <div className="flex items-center gap-2 text-[#4A5A6A]">
-                      <Clock size={12} className="text-[#1A4480]/60" />
-                      <span className="text-[9px] font-bold uppercase tracking-widest">{clip.duration_seconds?.toFixed(1)}s Length</span>
-                   </div>
-                   <div className="flex items-center gap-2 text-[#4A5A6A] justify-end">
-                      <Globe size={12} className="text-[#2A8FA0]/60" />
-                      <span className="text-[9px] font-bold uppercase tracking-widest">{clip.language?.toUpperCase() || "EN"} Local</span>
-                   </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-[#DDD6C8]">
-                    <div className="flex gap-2">
-                       <button 
-                         onClick={() => generatePDF(clip)}
-                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest hover:bg-white hover:border-[#1A4480]/30 transition-all"
-                       >
-                          <ExternalLink size={12} />
-                          Report
-                       </button>
-                       <button 
-                         onClick={() => handleDelete(clip.id || clip._id)}
-                         className="p-1.5 rounded-lg text-[#4A5A6A] hover:bg-red-50 hover:text-red-500 transition-all"
-                       >
-                          <Trash2 size={14} />
-                       </button>
+        viewMode === "grid" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredClips.map((clip) => (
+              <div 
+                key={clip.id || clip._id}
+                className="group relative flex flex-col rounded-xl bg-white border border-[#DDD6C8] p-6 shadow-sm transition-all hover:border-[#1A4480]/30"
+              >
+                  {/* USER HEAD */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden relative shadow-inner">
+                          {getImageUrl(clip.user_info?.profile_pic) ? (
+                            <img src={getImageUrl(clip.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <User size={16} />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-[#1C2B3A] tracking-tight truncate max-w-[120px]">
+                              {clip.user_info?.username || "ID Unknown"}
+                          </h4>
+                          <p className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest mt-0.5">
+                              {new Date(clip.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100">
-                       <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                       <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">Verified</span>
+
+                    <button 
+                      onClick={() => handlePlayPause(clip)}
+                      className="h-10 w-10 rounded-lg bg-[#1A4480] text-white flex items-center justify-center shadow-lg hover:bg-[#0F2847] transition-all"
+                    >
+                        {playingId === (clip.id || clip._id) ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
+                    </button>
+                  </div>
+
+                  {/* TRANSCRIPT AREA */}
+                  <div className="flex-1 bg-[#FAF8F4] rounded-xl p-4 mb-4 border border-[#DDD6C8] min-h-[80px] group-hover:bg-[#FAF8F4]/80 transition-colors">
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="w-1 h-1 rounded-full bg-[#1A4480]" />
+                        <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Transcription</span>
                     </div>
-                 </div>
-             </div>
-           ))}
+                    <p className="text-xs font-medium text-[#1C2B3A] line-clamp-3 italic leading-relaxed">
+                        "{clip.transcript || "No neural output detected..."}"
+                    </p>
+                    {clip.corrected_transcript && (
+                      <div className="mt-4 pt-4 border-t border-[#DDD6C8]">
+                          <span className="text-[9px] font-bold text-[#1A4480] uppercase tracking-[0.2em] block mb-2">Refined Model</span>
+                          <p className="text-xs font-bold text-[#1A4480]">"{clip.corrected_transcript}"</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* METADATA FOOTER */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="flex items-center gap-2 text-[#4A5A6A]">
+                        <Clock size={12} className="text-[#1A4480]/60" />
+                        <span className="text-[9px] font-bold uppercase tracking-widest">{clip.duration_seconds?.toFixed(1)}s Length</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[#4A5A6A] justify-end">
+                        <Globe size={12} className="text-[#2A8FA0]/60" />
+                        <span className="text-[9px] font-bold uppercase tracking-widest">{clip.language?.toUpperCase() || "EN"} Local</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-[#DDD6C8]">
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => generatePDF(clip)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest hover:bg-white hover:border-[#1A4480]/30 transition-all"
+                        >
+                            <ExternalLink size={12} />
+                            Report
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(clip.id || clip._id)}
+                          className="p-1.5 rounded-lg text-[#4A5A6A] hover:bg-red-50 hover:text-red-500 transition-all"
+                        >
+                            <Trash2 size={14} />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100">
+                        <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                        <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">Verified</span>
+                      </div>
+                  </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white border border-[#DDD6C8] rounded-xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#FAF8F4] border-b border-[#DDD6C8]">
+                    <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">User</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Transcript</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Length</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Date</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em] text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#DDD6C8]">
+                  {filteredClips.map((clip) => (
+                    <tr key={clip.id || clip._id} className="hover:bg-[#FAF8F4]/40 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden shadow-inner">
+                            {getImageUrl(clip.user_info?.profile_pic) ? (
+                              <img src={getImageUrl(clip.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <User size={14} />
+                            )}
+                          </div>
+                          <span className="text-xs font-bold text-[#1C2B3A]">{clip.user_info?.username || "ID Unknown"}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 max-w-md">
+                        <p className="text-xs font-medium text-[#1C2B3A] line-clamp-1 italic">
+                          "{clip.transcript || "No neural output detected..."}"
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest bg-white px-2 py-1 rounded border border-[#DDD6C8]">
+                          {clip.duration_seconds?.toFixed(1)}s
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest">
+                          {new Date(clip.created_at).toLocaleDateString()}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-2 opacity-40 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => handlePlayPause(clip)}
+                            className={`p-2 rounded-lg transition-all ${playingId === (clip.id || clip._id) ? "bg-[#1A4480] text-white" : "bg-[#FAF8F4] text-[#1A4480] border border-[#DDD6C8] hover:bg-white"}`}
+                          >
+                            {playingId === (clip.id || clip._id) ? <Pause size={14} /> : <Play size={14} fill="currentColor" />}
+                          </button>
+                          <button 
+                            onClick={() => generatePDF(clip)}
+                            className="p-2 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[#4A5A6A] hover:bg-white transition-all"
+                            title="Generate Report"
+                          >
+                            <ExternalLink size={14} />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(clip.id || clip._id)}
+                            className="p-2 rounded-lg text-[#4A5A6A] hover:bg-red-50 hover:text-red-500 transition-all"
+                            title="Delete"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      )}
+
+      {/* PAGINATION */}
+      {!loading && clips.length > 0 && (
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-[#DDD6C8]/60 mt-8">
+           <div className="flex items-center gap-4">
+              <span className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest">Show</span>
+              <select 
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(0);
+                }}
+                className="bg-white border border-[#DDD6C8] rounded-lg px-2 py-1 text-[10px] font-bold text-[#1C2B3A] outline-none"
+              >
+                {[12, 24, 48, 96].map(n => (
+                  <option key={n} value={n}>{n} Items</option>
+                ))}
+              </select>
+              <p className="text-[10px] font-medium text-[#4A5A6A] tracking-wider">
+                Showing <span className="font-bold text-[#1A4480]">{page * limit + 1}</span> to <span className="font-bold text-[#1A4480]">{Math.min((page + 1) * limit, total)}</span> of <span className="font-bold text-[#1A4480]">{total}</span> results
+              </p>
+           </div>
+
+           <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setPage(Math.max(0, page - 1))}
+                disabled={page === 0}
+                className="p-2 rounded-lg bg-white border border-[#DDD6C8] text-[#4A5A6A] disabled:opacity-30 disabled:cursor-not-allowed hover:border-[#1A4480]/30 transition-all shadow-sm"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              
+              <div className="flex items-center bg-white border border-[#DDD6C8] rounded-xl p-1 shadow-sm">
+                {[...Array(Math.min(5, Math.ceil(total / limit)))].map((_, i) => {
+                  const totalPages = Math.ceil(total / limit);
+                  let pageNum = page;
+                  
+                  // Simple windowing logic
+                  if (page < 2) pageNum = i;
+                  else if (page > totalPages - 3) pageNum = totalPages - 5 + i;
+                  else pageNum = page - 2 + i;
+
+                  if (pageNum < 0 || pageNum >= totalPages) return null;
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setPage(pageNum)}
+                      className={`min-w-[32px] h-8 rounded-lg text-[10px] font-bold transition-all ${page === pageNum ? "bg-[#1A4480] text-white shadow-md" : "text-[#4A5A6A] hover:bg-[#FAF8F4]"}`}
+                    >
+                      {pageNum + 1}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button 
+                onClick={() => setPage(Math.min(Math.ceil(total / limit) - 1, page + 1))}
+                disabled={page >= Math.ceil(total / limit) - 1}
+                className="p-2 rounded-lg bg-white border border-[#DDD6C8] text-[#4A5A6A] disabled:opacity-30 disabled:cursor-not-allowed hover:border-[#1A4480]/30 transition-all shadow-sm"
+              >
+                <ChevronRight size={16} />
+              </button>
+           </div>
         </div>
       )}
 
