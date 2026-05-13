@@ -1,215 +1,31 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import {
-  Mic,
-  Play,
-  Pause,
-  Trash2,
-  Search,
-  Globe,
-  Clock,
-  AudioLines,
-  User,
-  ExternalLink,
-  LayoutGrid,
-  LayoutList,
-  ChevronLeft,
-  ChevronRight,
-  ArrowLeft,
-  TrendingUp,
-  ShieldCheck,
-  Hash,
-  X,
-  AlertTriangle,
-  Ban,
-  Unlock,
-  ShieldAlert,
-  Timer
-} from "lucide-react";
-import { pronunciationAPI, userAPI } from "@/lib/api";
-import { getImageUrl } from "@/lib/utils";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import React from "react";
+import { Mic } from "lucide-react";
+import { usePronunciation } from "./hooks/usePronunciation";
+import { addBrandedHeader, addBrandedFooter } from "@/lib/pdfUtils";
+import PronunciationHeader from "./components/PronunciationHeader";
+import UserGridCard from "./components/UserGridCard";
+import UserListTable from "./components/UserListTable";
+import ClipGridCard from "./components/ClipGridCard";
+import ClipListTable from "./components/ClipListTable";
+import ClipDetailModal from "./components/ClipDetailModal";
+import DeactivateModal from "@/components/DeactivateModal";
+import Pagination from "@/components/Pagination";
 
 export default function PronunciationPage() {
-  const [now, setNow] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatCountdown = (endDateStr: string) => {
-    if (!endDateStr) return null;
-    const end = new Date(endDateStr);
-    const diff = end.getTime() - now.getTime();
-    if (diff <= 0) return "Expired";
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-    if (days > 0) return `${days}d ${hours}h left`;
-    if (hours > 0) return `${hours}h ${minutes}m left`;
-    return `${minutes}m ${seconds}s left`;
-  };
-  const [clips, setClips] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [playingId, setPlayingId] = useState<string | null>(null);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [selectedClip, setSelectedClip] = useState<any>(null);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [page, setPage] = useState(0);
-  const [limit, setLimit] = useState(12);
-  const [total, setTotal] = useState(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Deactivation Dialog State (Reused from Users section)
-  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
-  const [targetUser, setTargetUser] = useState<any>(null);
-  const [deactivationData, setDeactivationData] = useState({
-    deactivation_type: 'temporary',
-    duration: '1day',
-    reason_category: 'Inappropriate Content',
-    deactivation_reason: ''
-  });
-
-  const handleActivate = async (userId: string) => {
-    try {
-      const response = await userAPI.activateUser(userId);
-      if (selectedUser && (selectedUser.user_id === userId || selectedUser._id === userId)) {
-        setSelectedUser({ ...selectedUser, user_info: { ...selectedUser.user_info, status: 'active' } });
-      }
-      fetchClips();
-    } catch (err) {
-      console.error("Activation failed:", err);
-    }
-  };
-
-  const handleDeactivateSubmit = async () => {
-    if (!targetUser) return;
-    try {
-      console.log("Submitting deactivation for:", targetUser.user_id || targetUser._id, deactivationData);
-      const apiData = {
-        ...deactivationData,
-        deactivation_reason: deactivationData.deactivation_reason
-          ? `[${deactivationData.reason_category}] ${deactivationData.deactivation_reason}`
-          : deactivationData.reason_category
-      };
-      const response = await userAPI.deactivateUser(targetUser.user_id || targetUser._id, apiData);
-
-      if (selectedUser && (selectedUser.user_id === targetUser.user_id || selectedUser._id === targetUser.user_id)) {
-        // Update with full data from server including calculated end_date
-        setSelectedUser({
-          ...selectedUser,
-          user_info: {
-            ...selectedUser.user_info,
-            status: 'inactive',
-            deactivation_type: response.deactivation_type,
-            deactivation_end_date: response.deactivation_end_date
-          }
-        });
-      }
-
-      setShowDeactivateModal(false);
-      fetchClips();
-    } catch (err) {
-      console.error("Deactivation failed:", err);
-    }
-  };
-
-  const BAD_WORDS = new Set([
-    "puta", "tangina", "gago", "kupal", "pota", "hayop", "bobo", "tarantado",
-    "puchu", "leche", "ulol", "pakshet", "shit", "fuck", "bitch", "asshole",
-    "damn", "hell", "bastard", "dick", "pussy"
-  ]);
-
-  const highlightBadWords = (text: string) => {
-    if (!text) return text;
-    const words = text.split(/(\s+)/);
-    return words.map((word, i) => {
-      const cleaned = word.replace(/[^\w\s]/g, '').toLowerCase();
-      if (BAD_WORDS.has(cleaned)) {
-        return <span key={i} className="text-red-600 font-bold underline decoration-wavy decoration-red-400/50">{word}</span>;
-      }
-      return word;
-    });
-  };
-
-  const fetchClips = async () => {
-    try {
-      setLoading(true);
-      setClips([]); // Clear existing data to prevent key collisions during transition
-      if (selectedUser) {
-        const data = await pronunciationAPI.getAudioClips({
-          skip: page * limit,
-          limit,
-          userId: selectedUser.user_id
-        });
-        if (data && data.items) {
-          setClips(data.items);
-          setTotal(data.total);
-        }
-      } else {
-        const data = await pronunciationAPI.getPronunciationUsers({
-          skip: page * limit,
-          limit,
-          search: searchTerm
-        });
-        setClips(data.items || []);
-        setTotal(data.total || 0);
-      }
-    } catch (err) {
-      console.error("Error fetching data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchClips();
-  }, [page, limit, selectedUser]);
-
-  const handlePlayPause = (clip: any) => {
-    if (playingId === clip.id || playingId === clip._id) {
-      audioRef.current?.pause();
-      setPlayingId(null);
-    } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      audioRef.current = new Audio(clip.audio_url);
-      audioRef.current.play();
-      setPlayingId(clip.id || clip._id);
-      audioRef.current.onended = () => setPlayingId(null);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (confirm("Permanently delete this communication audio recording?")) {
-      try {
-        await pronunciationAPI.deleteAudioClip(id);
-        fetchClips();
-      } catch (err) {
-        console.error("Delete failed:", err);
-      }
-    }
-  };
-
-  const filteredClips = clips;
-
-  const formatDate = (date: any) => {
-    if (!date) return "Never Active";
-    const d = new Date(date);
-    return isNaN(d.getTime()) ? "Recent Activity" : d.toLocaleDateString();
-  };
+  const {
+    clips, loading, total, now,
+    page, setPage, limit, setLimit,
+    searchTerm, setSearchTerm, fetchClips,
+    viewMode, setViewMode,
+    selectedUser, selectUser, goBackToList,
+    selectedClip, setSelectedClip,
+    playingId, handlePlayPause,
+    handleDelete, handleActivate, handleDeactivateSubmit,
+    showDeactivateModal, setShowDeactivateModal,
+    targetUser, openDeactivateModal,
+  } = usePronunciation();
 
   const generatePDF = async (clip: any) => {
     try {
@@ -219,48 +35,11 @@ export default function PronunciationPage() {
       const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 15;
       const contentWidth = pageWidth - (margin * 2);
-      let currentY = margin;
 
-      // --- BRANDED HEADER ---
-      try {
-        const logoImg = new Image();
-        logoImg.src = "/images/logo2-nobg.png";
-        await new Promise((resolve) => {
-          logoImg.onload = resolve;
-          logoImg.onerror = resolve;
-        });
-        if (logoImg.complete && logoImg.naturalWidth !== 0) {
-          const logoAspect = logoImg.naturalHeight / logoImg.naturalWidth;
-          const logoWidth = 12;
-          pdf.addImage(logoImg, "PNG", margin, currentY, logoWidth, logoWidth * logoAspect);
-        }
-      } catch (e) { }
-
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(18);
-      pdf.setTextColor(30, 30, 30);
-      pdf.text("ArticuLink", margin + 15, currentY + 6);
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(7);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text("ADVANCED COMMUNICATION SPEECH ANALYTICS PLATFORM", margin + 15, currentY + 10);
-
-      pdf.setDrawColor(220, 220, 220);
-      pdf.line(margin, currentY + 15, pageWidth - margin, currentY + 15);
-      currentY += 25;
-
-      // --- REPORT TITLE ---
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(14);
-      pdf.setTextColor(15, 15, 15);
-      pdf.text("SYSTEM INTELLIGENCE OVERVIEW", margin, currentY);
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(8);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(`ISSUED TO: ${clip.user_info?.username?.toUpperCase() || "SYSTEM ADMINISTRATOR"} | NODE: ART-SYS-MAIN`, margin, currentY + 5);
-      currentY += 12;
+      let currentY = await addBrandedHeader(pdf, {
+        userName: clip.user_info?.username || "SYSTEM ADMINISTRATOR",
+        reportTitle: "SYSTEM INTELLIGENCE OVERVIEW",
+      });
 
       const panelHeight = Math.min(160, pageHeight - currentY - 26);
       pdf.setFillColor(9, 9, 11);
@@ -290,7 +69,7 @@ export default function PronunciationPage() {
 
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor(225, 225, 225);
-      const summaryText = `This report provides a comprehensive communication evaluation of the audio interaction captured for ${clip.user_info?.username || "the specified patient"}. Our proprietary Processing engine analyzed the phonetic integrity, response latency, and semantic accuracy of the utterance. This data is critical for tracking longitudinal recovery and refining the patient's individual speech profile within the ArticuLink ecosystem.`;
+      const summaryText = `This report provides a comprehensive communication evaluation of the audio interaction captured for ${clip.user_info?.username || "the specified patient"}.`;
       const splitSummary = pdf.splitTextToSize(summaryText, contentWidth - 10);
       pdf.text(splitSummary, textLeft, textY);
       textY += (splitSummary.length * 4.2) + 5;
@@ -303,7 +82,7 @@ export default function PronunciationPage() {
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor(225, 225, 225);
       const transcript = clip.transcript || "No neural output detected...";
-      const splitTranscript = pdf.splitTextToSize(`\"${transcript}\"`, contentWidth - 10);
+      const splitTranscript = pdf.splitTextToSize(`"${transcript}"`, contentWidth - 10);
       pdf.text(splitTranscript, textLeft, textY);
       textY += (splitTranscript.length * 4.2) + 6;
 
@@ -312,10 +91,9 @@ export default function PronunciationPage() {
         pdf.setTextColor(220, 220, 220);
         pdf.text("Communication Refined Output", textLeft, textY);
         textY += 5;
-
         pdf.setFont("helvetica", "normal");
         pdf.setTextColor(225, 225, 225);
-        const splitCorrected = pdf.splitTextToSize(`\"${clip.corrected_transcript}\"`, contentWidth - 10);
+        const splitCorrected = pdf.splitTextToSize(`"${clip.corrected_transcript}"`, contentWidth - 10);
         const maxLines = Math.max(1, Math.floor((currentY + panelHeight - textY - 2) / 4.2));
         pdf.text(splitCorrected.slice(0, maxLines), textLeft, textY);
         textY += (Math.min(splitCorrected.length, maxLines) * 4.2) + 6;
@@ -326,7 +104,6 @@ export default function PronunciationPage() {
         pdf.setTextColor(220, 220, 220);
         pdf.text("Biolinguistic Analytics", textLeft, textY);
         textY += 5;
-
         pdf.setFont("helvetica", "normal");
         pdf.setTextColor(225, 225, 225);
         const analyticsText = [
@@ -343,12 +120,7 @@ export default function PronunciationPage() {
         });
       }
 
-      // --- FOOTER ---
-      pdf.setFontSize(7);
-      pdf.setTextColor(180, 180, 180);
-      pdf.text(`Intelligence Report ID: AL-SPEECH-${Math.random().toString(36).substr(2, 6).toUpperCase()} | Generated: ${new Date().toLocaleString()}`, margin, pageHeight - 10);
-      pdf.text("Proprietary System Data - Internal Use Only", pageWidth - margin, pageHeight - 10, { align: "right" });
-
+      addBrandedFooter(pdf, { prefix: "AL-SPEECH" });
       pdf.save(`articulink_full_intelligence_speech_${clip.id || clip._id}.pdf`);
     } catch (error) {
       console.error("PDF generation failed:", error);
@@ -357,110 +129,19 @@ export default function PronunciationPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="flex items-center gap-4">
-          {selectedUser && (
-            <button
-              onClick={() => {
-                setSelectedUser(null);
-                setPage(0);
-              }}
-              className="p-3 rounded-xl bg-white border border-[#DDD6C8] text-[#4A5A6A] hover:text-[#1A4480] transition-all shadow-sm"
-            >
-              <ArrowLeft size={20} />
-            </button>
-          )}
-          <div>
-            <h2 className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest mb-1">
-              {selectedUser ? "Operator History" : "Speech Analytics"}
-            </h2>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-[#1C2B3A] tracking-tight">
-                {selectedUser ? selectedUser.user_info?.username : "Pronunciation Registry"}
-              </h1>
-              {selectedUser && selectedUser.flagged_count > 0 && (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 border border-red-100 text-red-600 animate-pulse">
-                  <AlertTriangle size={12} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">{selectedUser.flagged_count} Content Violations</span>
-                </div>
-              )}
-              {selectedUser && (selectedUser.user_info?.status === 'inactive' || selectedUser.user_info?.is_active === false) && selectedUser.user_info?.deactivation_type === 'temporary' && (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-600">
-                  <Timer size={12} className="animate-pulse" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">
-                    {formatCountdown(selectedUser.user_info.deactivation_end_date)}
-                  </span>
-                </div>
-              )}
-              {selectedUser && (
-                <div className="flex items-center gap-2 ml-4">
-                  {selectedUser.user_info?.status === 'inactive' ? (
-                    <button
-                      onClick={() => handleActivate(selectedUser.user_id || selectedUser._id)}
-                      className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-100 transition-all"
-                    >
-                      <Unlock size={14} />
-                      Activate Account
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setTargetUser(selectedUser);
-                        setShowDeactivateModal(true);
-                      }}
-                      className={cn(
-                        "flex items-center gap-2 px-4 py-2 border rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
-                        selectedUser.flagged_count > 0
-                          ? "bg-red-600 text-white border-red-700 hover:bg-red-700"
-                          : "bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100"
-                      )}
-                    >
-                      <Ban size={14} />
-                      Ban Account
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center bg-white border border-[#DDD6C8] rounded-xl p-1 shadow-sm mr-2">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-[#1A4480] text-white shadow-md" : "text-[#4A5A6A] hover:bg-[#FAF8F4]"}`}
-              title="Grid View"
-            >
-              <LayoutGrid size={18} />
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-[#1A4480] text-white shadow-md" : "text-[#4A5A6A] hover:bg-[#FAF8F4]"}`}
-              title="List View"
-            >
-              <LayoutList size={18} />
-            </button>
-          </div>
-          <button onClick={fetchClips} className="p-3 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[#4A5A6A] hover:text-[#1A4480] transition-all hover:scale-105 shadow-sm">
-            <AudioLines size={20} />
-          </button>
-        </div>
-      </div>
-
-      {/* SEARCH/FILTERS */}
-      <div className="relative group max-w-xl">
-        <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#4A5A6A] transition-all group-focus-within:text-[#1A4480]" />
-        <input
-          type="text"
-          placeholder={selectedUser ? "Search in this user's history..." : "Search by username or email..."}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && fetchClips()}
-          className="w-full bg-white border border-[#DDD6C8] rounded-xl py-4 pl-14 pr-8 text-xs font-medium text-[#1C2B3A] outline-none transition-all focus:border-[#1A4480]/30 shadow-sm"
-        />
-      </div>
+      <PronunciationHeader
+        selectedUser={selectedUser}
+        now={now}
+        viewMode={viewMode}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        onSearchSubmit={fetchClips}
+        onViewModeChange={setViewMode}
+        onRefresh={fetchClips}
+        onBack={goBackToList}
+        onActivate={handleActivate}
+        onOpenDeactivateModal={openDeactivateModal}
+      />
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 space-y-4">
@@ -470,603 +151,61 @@ export default function PronunciationPage() {
           </div>
           <p className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest">Decoding Audio Stream...</p>
         </div>
-      ) : (
-        !selectedUser ? (
-          viewMode === "grid" ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8">
-              {clips.map((item, index) => (
-                <div
-                  key={`${item.user_id || index}-${index}`}
-                  onClick={() => {
-                    setSelectedUser(item);
-                    setPage(0);
-                    setSearchTerm("");
-                  }}
-                  className="group cursor-pointer relative overflow-hidden flex flex-col rounded-2xl bg-white border border-[#DDD6C8] p-6 shadow-sm transition-all duration-300 hover:border-[#1A4480]/30 hover:shadow-xl hover:-translate-y-1 active:scale-[0.98]"
-                >
-                  {/* ... existing Grid Item content ... */}
-                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <TrendingUp size={40} className="text-[#1A4480]" />
-                  </div>
-
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="relative">
-                      <div className="h-14 w-14 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden shadow-inner">
-                        {getImageUrl(item.user_info?.profile_pic) ? (
-                          <img src={getImageUrl(item.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <User size={24} />
-                        )}
-                      </div>
-                      {item.avg_confidence > 80 && (
-                        <div className="absolute -top-1 -right-1 bg-emerald-500 text-white p-0.5 rounded-full border-2 border-white shadow-sm">
-                          <CheckCircle size={10} />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="text-sm font-bold text-[#1C2B3A] tracking-tight truncate">{item.user_info?.username || "Operator"}</h3>
-                        <div className="flex items-center gap-1.5">
-                          {(item.user_info?.status === 'inactive' || item.user_info?.is_active === false) && (
-                            <div className="flex items-center gap-1.5">
-                              <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-100 text-amber-600">
-                                <Ban size={10} />
-                                <span className="text-[9px] font-bold uppercase">Banned</span>
-                              </div>
-
-                            </div>
-                          )}
-                          {item.flagged_count > 0 && (
-                            <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-50 border border-red-100 text-red-600 animate-pulse">
-                              <AlertTriangle size={10} />
-                              <span className="text-[9px] font-bold uppercase">{item.flagged_count} Flagged</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <ShieldCheck size={10} className="text-[#1A4480]" />
-                        <p className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest truncate">{item.user_info?.email}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="p-3 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8]/60">
-                      <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest block mb-1">Total Clips</span>
-                      <p className="text-lg font-bold text-[#1C2B3A]">{item.total_clips}</p>
-                    </div>
-                    <div className="p-3 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8]/60">
-                      <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest block mb-1">Avg Length</span>
-                      <p className="text-lg font-bold text-[#1A4480]">{item.avg_duration?.toFixed(1)}s</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Avg Confidence</span>
-                      <span className={`text-[10px] font-bold ${item.avg_confidence > 90 ? 'text-emerald-600' : 'text-amber-600'}`}>
-                        {(item.avg_confidence || 95.4).toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="h-1.5 w-full bg-[#FAF8F4] border border-[#DDD6C8]/30 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-1000 ${item.avg_confidence > 90 ? 'bg-emerald-500' : 'bg-amber-500'}`}
-                        style={{ width: `${item.avg_confidence || 95.4}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-auto pt-4 border-t border-[#DDD6C8]/40 flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <Clock size={12} className="text-[#4A5A6A]/60" />
-                      <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">
-                        Active {formatDate(item.last_clip_date)}
-                      </span>
-                    </div>
-                    <span className="text-[9px] font-bold text-[#1A4480] uppercase tracking-widest group-hover:underline">View More</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white border border-[#DDD6C8] rounded-2xl overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-[#FAF8F4] border-b border-[#DDD6C8]">
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Operator</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Activity</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Performance</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Status</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em] text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#DDD6C8]">
-                    {clips.map((item, index) => (
-                      <tr key={`${item.user_id || index}`} className="hover:bg-[#FAF8F4]/40 transition-colors group">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden shadow-inner">
-                              {getImageUrl(item.user_info?.profile_pic) ? (
-                                <img src={getImageUrl(item.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <User size={18} />
-                              )}
-                            </div>
-                            <div>
-                              <p className="text-xs font-bold text-[#1C2B3A]">{item.user_info?.username || "Operator"}</p>
-                              <p className="text-[9px] font-medium text-[#4A5A6A] uppercase tracking-widest">{item.user_info?.email}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-bold text-[#1C2B3A]">{item.total_clips} Clips</p>
-                            <p className="text-[9px] font-medium text-[#4A5A6A] uppercase">Last: {formatDate(item.last_clip_date)}</p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-20 h-1.5 bg-[#FAF8F4] rounded-full overflow-hidden border border-[#DDD6C8]/30">
-                              <div className={`h-full ${item.avg_confidence > 90 ? 'bg-emerald-500' : 'bg-amber-500'}`} style={{ width: `${item.avg_confidence || 0}%` }} />
-                            </div>
-                            <span className="text-[10px] font-bold text-[#1C2B3A]">{item.avg_confidence?.toFixed(1)}%</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-1.5">
-                            {(item.user_info?.status === 'inactive' || item.user_info?.is_active === false) ? (
-                              <div className="flex flex-col gap-1">
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-100 w-fit">
-                                  <Ban size={10} />
-                                  <span className="text-[8px] font-bold uppercase">Banned</span>
-                                </div>
-                                {item.user_info?.deactivation_type === 'temporary' && (
-                                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-100 w-fit">
-                                    <Timer size={10} className="animate-pulse" />
-                                    <span className="text-[8px] font-bold uppercase">{formatCountdown(item.user_info.deactivation_end_date)}</span>
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 w-fit">
-                                <ShieldCheck size={10} />
-                                <span className="text-[8px] font-bold uppercase">Active</span>
-                              </div>
-                            )}
-                            {item.flagged_count > 0 && (
-                              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-red-50 text-red-600 border border-red-100 w-fit animate-pulse">
-                                <AlertTriangle size={10} />
-                                <span className="text-[8px] font-bold uppercase">{item.flagged_count} Violations</span>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <button
-                            onClick={() => setSelectedUser(item)}
-                            className="p-2 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[#1A4480] hover:bg-[#1A4480] hover:text-white transition-all shadow-sm"
-                          >
-                            <ExternalLink size={14} />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )
+      ) : !selectedUser ? (
+        viewMode === "grid" ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8">
+            {clips.map((item, index) => (
+              <UserGridCard key={`${item.user_id || index}-${index}`} item={item} now={now} onSelect={selectUser} />
+            ))}
+          </div>
         ) : (
-          viewMode === "grid" ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
-              {filteredClips.map((clip) => (
-                <div
-                  key={clip.id || clip._id}
-                  className="group relative flex flex-col rounded-xl bg-white border border-[#DDD6C8] p-6 shadow-sm transition-all hover:border-[#1A4480]/30"
-                >
-                  {/* USER HEAD */}
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center gap-2">
-                      <div className="h-10 w-10 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden relative shadow-inner">
-                        {getImageUrl(clip.user_info?.profile_pic) ? (
-                          <img src={getImageUrl(clip.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <User size={16} />
-                        )}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-bold text-[#1C2B3A] tracking-tight truncate max-w-[120px]">
-                            {clip.user_info?.username || "ID Unknown"}
-                          </h4>
-                          {clip.is_flagged && (
-                            <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-100 text-[8px] font-bold uppercase tracking-widest">Flagged</span>
-                          )}
-                        </div>
-                        <p className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest mt-0.5">
-                          {new Date(clip.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
+          <UserListTable items={clips} now={now} onSelectUser={selectUser} />
+        )
+      ) : viewMode === "grid" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+          {clips.map((clip) => (
+            <ClipGridCard
+              key={clip.id || clip._id}
+              clip={clip}
+              playingId={playingId}
+              onPlayPause={handlePlayPause}
+              onDelete={handleDelete}
+              onGeneratePDF={generatePDF}
+            />
+          ))}
+        </div>
+      ) : (
+        <ClipListTable
+          clips={clips}
+          playingId={playingId}
+          onPlayPause={handlePlayPause}
+          onDelete={handleDelete}
+          onGeneratePDF={generatePDF}
+        />
+      )}
 
-                    <button
-                      onClick={() => handlePlayPause(clip)}
-                      className="h-10 w-10 rounded-lg bg-[#1A4480] text-white flex items-center justify-center shadow-lg hover:bg-[#0F2847] transition-all"
-                    >
-                      {playingId === (clip.id || clip._id) ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
-                    </button>
-                  </div>
-
-                  {/* TRANSCRIPT AREA */}
-                  <div className="flex-1 bg-[#FAF8F4] rounded-xl p-4 mb-4 border border-[#DDD6C8] min-h-[80px] group-hover:bg-[#FAF8F4]/80 transition-colors">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-1 h-1 rounded-full bg-[#1A4480]" />
-                      <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Transcription</span>
-                    </div>
-                    <p className="text-xs font-medium text-[#1C2B3A] line-clamp-3 italic leading-relaxed">
-                      "{highlightBadWords(clip.transcript) || "No neural output detected..."}"
-                    </p>
-                    {clip.corrected_transcript && (
-                      <div className="mt-4 pt-4 border-t border-[#DDD6C8]">
-                        <span className="text-[9px] font-bold text-[#1A4480] uppercase tracking-[0.2em] block mb-2">Refined Model</span>
-                        <p className="text-xs font-bold text-[#1A4480]">"{highlightBadWords(clip.corrected_transcript)}"</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* METADATA FOOTER */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="flex items-center gap-2 text-[#4A5A6A]">
-                      <Clock size={12} className="text-[#1A4480]/60" />
-                      <span className="text-[9px] font-bold uppercase tracking-widest">{clip.duration_seconds?.toFixed(1)}s Length</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[#4A5A6A] justify-end">
-                      <TrendingUp size={12} className="text-emerald-600/60" />
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-700">{clip.overall_confidence?.toFixed(1) || "98.4"}% Conf</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 border-t border-[#DDD6C8]">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => generatePDF(clip)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest hover:bg-white hover:border-[#1A4480]/30 transition-all"
-                      >
-                        <ExternalLink size={12} />
-                        Report
-                      </button>
-                      <button
-                        onClick={() => handleDelete(clip.id || clip._id)}
-                        className="p-1.5 rounded-lg text-[#4A5A6A] hover:bg-red-50 hover:text-red-500 transition-all"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100">
-                      <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                      <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">Verified</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white border border-[#DDD6C8] rounded-xl overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-[#FAF8F4] border-b border-[#DDD6C8]">
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">User</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Transcript</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Length</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em]">Date</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-[#4A5A6A] uppercase tracking-[0.2em] text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#DDD6C8]">
-                    {filteredClips.map((clip) => (
-                      <tr key={clip.id || clip._id} className="hover:bg-[#FAF8F4]/40 transition-colors group">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden shadow-inner">
-                              {getImageUrl(clip.user_info?.profile_pic) ? (
-                                <img src={getImageUrl(clip.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <User size={14} />
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-[#1C2B3A]">{clip.user_info?.username || "ID Unknown"}</span>
-                              {clip.is_flagged && (
-                                <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-100 text-[7px] font-bold uppercase tracking-widest">Flagged</span>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 max-w-md">
-                          <p className="text-xs font-medium text-[#1C2B3A] line-clamp-1 italic">
-                            "{highlightBadWords(clip.transcript) || "No neural output detected..."}"
-                          </p>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest bg-white px-2 py-1 rounded border border-[#DDD6C8]">
-                            {clip.duration_seconds?.toFixed(1)}s
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest">
-                            {new Date(clip.created_at).toLocaleDateString()}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-end gap-2 opacity-40 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => handlePlayPause(clip)}
-                              className={`p-2 rounded-lg transition-all ${playingId === (clip.id || clip._id) ? "bg-[#1A4480] text-white" : "bg-[#FAF8F4] text-[#1A4480] border border-[#DDD6C8] hover:bg-white"}`}
-                            >
-                              {playingId === (clip.id || clip._id) ? <Pause size={14} /> : <Play size={14} fill="currentColor" />}
-                            </button>
-                            <button
-                              onClick={() => generatePDF(clip)}
-                              className="p-2 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[#4A5A6A] hover:bg-white transition-all"
-                              title="Generate Report"
-                            >
-                              <ExternalLink size={14} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(clip.id || clip._id)}
-                              className="p-2 rounded-lg text-[#4A5A6A] hover:bg-red-50 hover:text-red-500 transition-all"
-                              title="Delete"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )
-        ))}
-
-      {/* PAGINATION */}
       {!loading && clips.length > 0 && (
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 pt-10 border-t border-[#DDD6C8]/60 mt-12 pb-10">
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <span className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest">Show</span>
-            <select
-              value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value));
-                setPage(0);
-              }}
-              className="bg-white border border-[#DDD6C8] rounded-lg px-2 py-1 text-[10px] font-bold text-[#1C2B3A] outline-none"
-            >
-              {[12, 24, 48, 96].map(n => (
-                <option key={n} value={n}>{n} Items</option>
-              ))}
-            </select>
-            <p className="text-[10px] font-medium text-[#4A5A6A] tracking-wider">
-              Showing <span className="font-bold text-[#1A4480]">{page * limit + 1}</span> to <span className="font-bold text-[#1A4480]">{Math.min((page + 1) * limit, total)}</span> of <span className="font-bold text-[#1A4480]">{total}</span> results
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage(Math.max(0, page - 1))}
-              disabled={page === 0}
-              className="p-2 rounded-lg bg-white border border-[#DDD6C8] text-[#4A5A6A] disabled:opacity-30 disabled:cursor-not-allowed hover:border-[#1A4480]/30 transition-all shadow-sm"
-            >
-              <ChevronLeft size={16} />
-            </button>
-
-            <div className="flex items-center bg-white border border-[#DDD6C8] rounded-xl p-1 shadow-sm">
-              {[...Array(Math.min(5, Math.ceil(total / limit)))].map((_, i) => {
-                const totalPages = Math.ceil(total / limit);
-                let pageNum = page;
-
-                // Simple windowing logic
-                if (page < 2) pageNum = i;
-                else if (page > totalPages - 3) pageNum = totalPages - 5 + i;
-                else pageNum = page - 2 + i;
-
-                if (pageNum < 0 || pageNum >= totalPages) return null;
-
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => setPage(pageNum)}
-                    className={`min-w-[32px] h-8 rounded-lg text-[10px] font-bold transition-all ${page === pageNum ? "bg-[#1A4480] text-white shadow-md" : "text-[#4A5A6A] hover:bg-[#FAF8F4]"}`}
-                  >
-                    {pageNum + 1}
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              onClick={() => setPage(Math.min(Math.ceil(total / limit) - 1, page + 1))}
-              disabled={page >= Math.ceil(total / limit) - 1}
-              className="p-2 rounded-lg bg-white border border-[#DDD6C8] text-[#4A5A6A] disabled:opacity-30 disabled:cursor-not-allowed hover:border-[#1A4480]/30 transition-all shadow-sm"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
+        <Pagination
+          page={page}
+          limit={limit}
+          total={total}
+          onPageChange={setPage}
+          onLimitChange={setLimit}
+        />
       )}
 
-      {/* DETAIL MODAL */}
-      {selectedClip && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#1C2B3A]/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="w-full max-w-2xl bg-white border border-[#DDD6C8] rounded-2xl p-10 relative shadow-2xl overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1A4480] to-transparent opacity-20" />
+      <ClipDetailModal
+        clip={selectedClip}
+        onClose={() => setSelectedClip(null)}
+        onGeneratePDF={generatePDF}
+      />
 
-            <button
-              onClick={() => setSelectedClip(null)}
-              className="absolute top-8 right-8 text-[#4A5A6A] hover:text-[#1C2B3A] transition-colors"
-            >
-              <X size={24} />
-            </button>
-
-            <div className="space-y-8">
-              <div className="flex items-center gap-6">
-                <div className="w-20 h-20 rounded-xl bg-[#1A4480]/5 border border-[#1A4480]/10 flex items-center justify-center">
-                  <Mic size={32} className="text-[#1A4480]" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-[#1C2B3A] tracking-tight uppercase">Clip Analytics</h3>
-                  <p className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest mt-1">Registry ID: {selectedClip.id || selectedClip._id}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="p-8 rounded-2xl bg-[#FAF8F4] border border-[#DDD6C8] shadow-inner">
-                  <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest block mb-4">Communication Transcription</span>
-                  <p className="text-2xl font-bold text-[#1C2B3A] leading-relaxed italic">
-                    "{highlightBadWords(selectedClip.corrected_transcript || selectedClip.transcript)}"
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-6 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8] space-y-1">
-                    <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Confidence Score</span>
-                    <p className="text-xl font-bold text-emerald-600">98.4%</p>
-                  </div>
-                  <div className="p-6 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8] space-y-1">
-                    <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Neural Latency</span>
-                    <p className="text-xl font-bold text-[#1A4480]">42ms</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  onClick={() => setSelectedClip(null)}
-                  className="px-8 py-4 rounded-xl text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest hover:bg-[#FAF8F4] transition-all"
-                >
-                  Close Analytics
-                </button>
-                <button
-                  onClick={() => generatePDF(selectedClip)}
-                  className="px-10 py-4 rounded-xl bg-[#1A4480] text-[10px] font-bold text-white uppercase tracking-widest hover:bg-[#0F2847] transition-all shadow-lg shadow-[#1A4480]/20"
-                >
-                  Export Report
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* DEACTIVATE MODAL (Reused from Users section) */}
-      {showDeactivateModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#1C2B3A]/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="w-full max-w-lg bg-white border border-[#DDD6C8] rounded-2xl p-8 relative shadow-2xl overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-transparent opacity-40" />
-
-            <button
-              onClick={() => setShowDeactivateModal(false)}
-              className="absolute top-8 right-8 text-[#4A5A6A] hover:text-[#1C2B3A] transition-colors"
-            >
-              <X size={20} />
-            </button>
-
-            <div className="space-y-8">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center">
-                  <ShieldAlert size={24} className="text-amber-500" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-[#1C2B3A] tracking-tight uppercase">Deactivate Operator</h3>
-                  <p className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest mt-1">Operator: {targetUser?.user_info?.username}</p>
-                </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    onClick={() => setDeactivationData({ ...deactivationData, deactivation_type: 'temporary' })}
-                    className={cn(
-                      "p-4 rounded-xl border transition-all text-left group",
-                      deactivationData.deactivation_type === 'temporary'
-                        ? "bg-amber-50 border-amber-500/30 text-amber-600"
-                        : "bg-[#FAF8F4] border-[#DDD6C8] text-[#4A5A6A] hover:bg-white hover:border-[#1A4480]/30"
-                    )}
-                  >
-                    <Clock size={18} className="mb-2" />
-                    <h5 className="text-[10px] font-bold uppercase tracking-widest">Temporary</h5>
-                    <p className="text-[9px] font-medium opacity-60 uppercase mt-1">Automatic Restore</p>
-                  </button>
-
-                  <button
-                    onClick={() => setDeactivationData({ ...deactivationData, deactivation_type: 'permanent' })}
-                    className={cn(
-                      "p-4 rounded-xl border transition-all text-left group",
-                      deactivationData.deactivation_type === 'permanent'
-                        ? "bg-red-50 border-red-500/30 text-red-600"
-                        : "bg-[#FAF8F4] border-[#DDD6C8] text-[#4A5A6A] hover:bg-white hover:border-[#1A4480]/30"
-                    )}
-                  >
-                    <Ban size={18} className="mb-2" />
-                    <h5 className="text-[10px] font-bold uppercase tracking-widest">Permanent</h5>
-                    <p className="text-[9px] font-medium opacity-60 uppercase mt-1">Manual Unlock</p>
-                  </button>
-                </div>
-
-                {deactivationData.deactivation_type === 'temporary' && (
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest ml-4 block">Suspension Duration</label>
-                    <select
-                      className="w-full bg-[#FAF8F4] border border-[#DDD6C8] rounded-xl p-4 text-xs font-bold uppercase tracking-widest text-[#1C2B3A] outline-none focus:bg-white focus:border-[#1A4480]/30 appearance-none shadow-sm"
-                      value={deactivationData.duration}
-                      onChange={(e) => setDeactivationData({ ...deactivationData, duration: e.target.value })}
-                    >
-                      <option value="1day">24 Standard Hours</option>
-                      <option value="1week">7 Operational Days</option>
-                      <option value="1month">30 Neural Cycles</option>
-                      <option value="1year">365 Standard Days</option>
-                    </select>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <label className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest ml-4 block">Violation Category</label>
-                  <select
-                    className="w-full bg-[#FAF8F4] border border-[#DDD6C8] rounded-xl p-4 text-xs font-bold uppercase tracking-widest text-[#1C2B3A] outline-none focus:bg-white focus:border-[#1A4480]/30 appearance-none shadow-sm"
-                    value={deactivationData.reason_category}
-                    onChange={(e) => setDeactivationData({ ...deactivationData, reason_category: e.target.value })}
-                  >
-                    <option value="Inappropriate Content">Protocol Violation (Inappropriate)</option>
-                    <option value="Spamming">Data Redundancy (Spam)</option>
-                    <option value="Policy Violation">Governance Breach (Policy)</option>
-                    <option value="Other">Anomalous Activity (Other)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  onClick={() => setShowDeactivateModal(false)}
-                  className="px-8 py-4 rounded-xl text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest hover:bg-[#FAF8F4] transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeactivateSubmit}
-                  className="px-10 py-4 rounded-xl bg-amber-600 text-[10px] font-bold text-white uppercase tracking-widest hover:bg-amber-700 transition-all shadow-lg shadow-amber-600/20"
-                >
-                  Confirm Deactivation
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeactivateModal
+        isOpen={showDeactivateModal}
+        targetUser={targetUser}
+        onClose={() => setShowDeactivateModal(false)}
+        onSubmit={handleDeactivateSubmit}
+      />
     </div>
   );
 }
