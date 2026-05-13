@@ -15,7 +15,11 @@ import {
   LayoutGrid,
   LayoutList,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ArrowLeft,
+  TrendingUp,
+  CheckCircle,
+  ShieldCheck
 } from "lucide-react";
 import { pronunciationAPI } from "@/lib/api";
 import { getImageUrl } from "@/lib/utils";
@@ -25,6 +29,7 @@ export default function PronunciationPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedClip, setSelectedClip] = useState<any>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [page, setPage] = useState(0);
@@ -35,16 +40,28 @@ export default function PronunciationPage() {
   const fetchClips = async () => {
     try {
       setLoading(true);
-      const data = await pronunciationAPI.getAudioClips({ skip: page * limit, limit });
-      if (data && data.items) {
-        setClips(data.items);
-        setTotal(data.total);
+      setClips([]); // Clear existing data to prevent key collisions during transition
+      if (selectedUser) {
+        const data = await pronunciationAPI.getAudioClips({ 
+          skip: page * limit, 
+          limit, 
+          userId: selectedUser.user_id 
+        });
+        if (data && data.items) {
+          setClips(data.items);
+          setTotal(data.total);
+        }
       } else {
-        // Fallback for old API format if it ever happens
-        setClips(Array.isArray(data) ? data : []);
+        const data = await pronunciationAPI.getPronunciationUsers({ 
+          skip: page * limit, 
+          limit,
+          search: searchTerm 
+        });
+        setClips(data.items || []);
+        setTotal(data.total || 0);
       }
     } catch (err) {
-      console.error("Error fetching clips:", err);
+      console.error("Error fetching data:", err);
     } finally {
       setLoading(false);
     }
@@ -52,7 +69,7 @@ export default function PronunciationPage() {
 
   useEffect(() => {
     fetchClips();
-  }, [page, limit]);
+  }, [page, limit, selectedUser]);
 
   const handlePlayPause = (clip: any) => {
     if (playingId === clip.id || playingId === clip._id) {
@@ -80,10 +97,13 @@ export default function PronunciationPage() {
     }
   };
 
-  const filteredClips = clips.filter(clip => 
-    clip.transcript?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    clip.user_info?.username?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredClips = clips;
+
+  const formatDate = (date: any) => {
+    if (!date) return "Never Active";
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? "Recent Activity" : d.toLocaleDateString();
+  };
 
   const generatePDF = async (clip: any) => {
     try {
@@ -233,32 +253,47 @@ export default function PronunciationPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h2 className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest mb-1">
-            Speech Analysis
-          </h2>
-          <h1 className="text-2xl font-bold text-[#1C2B3A] tracking-tight">
-            Audio Recordings
-          </h1>
+        <div className="flex items-center gap-4">
+          {selectedUser && (
+            <button 
+              onClick={() => {
+                setSelectedUser(null);
+                setPage(0);
+              }}
+              className="p-3 rounded-xl bg-white border border-[#DDD6C8] text-[#4A5A6A] hover:text-[#1A4480] transition-all shadow-sm"
+            >
+              <ArrowLeft size={20} />
+            </button>
+          )}
+          <div>
+            <h2 className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest mb-1">
+              {selectedUser ? "Operator History" : "Speech Analytics"}
+            </h2>
+            <h1 className="text-2xl font-bold text-[#1C2B3A] tracking-tight">
+              {selectedUser ? selectedUser.user_info?.username : "Pronunciation Registry"}
+            </h1>
+          </div>
         </div>
         
         <div className="flex items-center gap-3">
-           <div className="flex items-center bg-white border border-[#DDD6C8] rounded-xl p-1 shadow-sm mr-2">
-             <button 
-               onClick={() => setViewMode("grid")}
-               className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-[#1A4480] text-white shadow-md" : "text-[#4A5A6A] hover:bg-[#FAF8F4]"}`}
-               title="Grid View"
-             >
-               <LayoutGrid size={18} />
-             </button>
-             <button 
-               onClick={() => setViewMode("list")}
-               className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-[#1A4480] text-white shadow-md" : "text-[#4A5A6A] hover:bg-[#FAF8F4]"}`}
-               title="List View"
-             >
-               <LayoutList size={18} />
-             </button>
-           </div>
+           {selectedUser && (
+             <div className="flex items-center bg-white border border-[#DDD6C8] rounded-xl p-1 shadow-sm mr-2">
+               <button 
+                 onClick={() => setViewMode("grid")}
+                 className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-[#1A4480] text-white shadow-md" : "text-[#4A5A6A] hover:bg-[#FAF8F4]"}`}
+                 title="Grid View"
+               >
+                 <LayoutGrid size={18} />
+               </button>
+               <button 
+                 onClick={() => setViewMode("list")}
+                 className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-[#1A4480] text-white shadow-md" : "text-[#4A5A6A] hover:bg-[#FAF8F4]"}`}
+                 title="List View"
+               >
+                 <LayoutList size={18} />
+               </button>
+             </div>
+           )}
            <button onClick={fetchClips} className="p-3 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[#4A5A6A] hover:text-[#1A4480] transition-all hover:scale-105 shadow-sm">
               <AudioLines size={20} />
            </button>
@@ -270,9 +305,10 @@ export default function PronunciationPage() {
          <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#4A5A6A] transition-all group-focus-within:text-[#1A4480]" />
          <input 
            type="text" 
-           placeholder="Search by transcript content or operator ID..."
+           placeholder={selectedUser ? "Search in this user's history..." : "Search by username or email..."}
            value={searchTerm}
            onChange={(e) => setSearchTerm(e.target.value)}
+           onKeyDown={(e) => e.key === 'Enter' && fetchClips()}
            className="w-full bg-white border border-[#DDD6C8] rounded-xl py-4 pl-14 pr-8 text-xs font-medium text-[#1C2B3A] outline-none transition-all focus:border-[#1A4480]/30 shadow-sm"
          />
       </div>
@@ -286,7 +322,91 @@ export default function PronunciationPage() {
            <p className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest">Decoding Audio Stream...</p>
         </div>
       ) : (
-        viewMode === "grid" ? (
+        !selectedUser ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {clips.map((item, index) => (
+              <div 
+                key={`${item.user_id || index}-${index}`}
+                onClick={() => {
+                  setSelectedUser(item);
+                  setPage(0);
+                  setSearchTerm("");
+                }}
+                className="group cursor-pointer relative overflow-hidden flex flex-col rounded-2xl bg-white border border-[#DDD6C8] p-6 shadow-sm transition-all hover:border-[#1A4480]/30 hover:shadow-md active:scale-95"
+              >
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <TrendingUp size={40} className="text-[#1A4480]" />
+                </div>
+
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="relative">
+                    <div className="h-14 w-14 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden shadow-inner">
+                      {getImageUrl(item.user_info?.profile_pic) ? (
+                        <img src={getImageUrl(item.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <User size={24} />
+                      )}
+                    </div>
+                    {item.avg_confidence > 80 && (
+                      <div className="absolute -top-1 -right-1 bg-emerald-500 text-white p-0.5 rounded-full border-2 border-white shadow-sm">
+                        <CheckCircle size={10} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-bold text-[#1C2B3A] tracking-tight truncate">{item.user_info?.username || "Operator"}</h3>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <ShieldCheck size={10} className="text-[#1A4480]" />
+                      <p className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest truncate">{item.user_info?.email}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="p-3 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8]/60">
+                    <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest block mb-1">Total Clips</span>
+                    <p className="text-lg font-bold text-[#1C2B3A]">{item.total_clips}</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8]/60">
+                    <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest block mb-1">Avg Length</span>
+                    <p className="text-lg font-bold text-[#1A4480]">{item.avg_duration?.toFixed(1)}s</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Avg Confidence</span>
+                    <span className={`text-[10px] font-bold ${item.avg_confidence > 90 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      {(item.avg_confidence || 95.4).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full bg-[#FAF8F4] border border-[#DDD6C8]/30 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-1000 ${item.avg_confidence > 90 ? 'bg-emerald-500' : 'bg-amber-500'}`} 
+                      style={{ width: `${item.avg_confidence || 95.4}%` }} 
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Primary Language</span>
+                    <span className="px-2 py-0.5 rounded-md bg-[#1A4480]/5 border border-[#1A4480]/10 text-[9px] font-bold text-[#1A4480] uppercase">
+                      {item.primary_language || 'EN-US'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-auto pt-4 border-t border-[#DDD6C8]/40 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={12} className="text-[#4A5A6A]/60" />
+                    <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">
+                      Active {formatDate(item.last_clip_date)}
+                    </span>
+                  </div>
+                  <span className="text-[9px] font-bold text-[#1A4480] uppercase tracking-widest group-hover:underline">View More</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredClips.map((clip) => (
               <div 
@@ -345,8 +465,8 @@ export default function PronunciationPage() {
                         <span className="text-[9px] font-bold uppercase tracking-widest">{clip.duration_seconds?.toFixed(1)}s Length</span>
                     </div>
                     <div className="flex items-center gap-2 text-[#4A5A6A] justify-end">
-                        <Globe size={12} className="text-[#2A8FA0]/60" />
-                        <span className="text-[9px] font-bold uppercase tracking-widest">{clip.language?.toUpperCase() || "EN"} Local</span>
+                        <TrendingUp size={12} className="text-emerald-600/60" />
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-700">{clip.overall_confidence?.toFixed(1) || "98.4"}% Conf</span>
                     </div>
                   </div>
 

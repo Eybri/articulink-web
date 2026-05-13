@@ -232,6 +232,10 @@ export const pronunciationAPI = {
     const response = await api.get('/api/pronunciation/audio-clips', { params });
     return response.data;
   },
+  getPronunciationUsers: async (params = {}) => {
+    const response = await api.get('/api/pronunciation/users', { params });
+    return response.data;
+  },
   getAudioClipById: async (id: string) => {
     const response = await api.get(`/api/pronunciation/audio-clips/${id}`);
     return response.data;
