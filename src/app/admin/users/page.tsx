@@ -17,6 +17,8 @@ import UserAvatar from "@/components/UserAvatar";
 import PageHeader from "@/components/PageHeader";
 import DeactivateModal from "@/components/DeactivateModal";
 import type { DeactivationData } from "@/components/DeactivateModal";
+import ConfirmationModal from "@/components/ConfirmationModal";
+import type { ConfirmationType } from "@/components/ConfirmationModal";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -27,11 +29,31 @@ export default function UsersPage() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filters, setFilters] = useState({ role: "", status: "" });
   const [search, setSearch] = useState("");
+  const [isConfirming, setIsConfirming] = useState(false);
 
   // Deactivation Dialog State
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [now, setNow] = useState(new Date());
+
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type: ConfirmationType;
+    confirmLabel: string;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+    type: 'info',
+    confirmLabel: "Confirm"
+  });
+
+  const closeConfirmModal = () => setConfirmModal(prev => ({ ...prev, isOpen: false }));
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -70,13 +92,26 @@ export default function UsersPage() {
     return () => clearTimeout(timer);
   }, [filters, page, rowsPerPage, search]);
 
-  const handleActivate = async (userId: string) => {
-    try {
-      await userAPI.activateUser(userId);
-      fetchData();
-    } catch (err) {
-      console.error("Activation failed:", err);
-    }
+  const handleActivate = (userId: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Activate User",
+      message: "Are you sure you want to restore full system access for this user account? This will allow them to log in and use all features.",
+      type: 'success',
+      confirmLabel: "Restore Access",
+      onConfirm: async () => {
+        try {
+          setIsConfirming(true);
+          await userAPI.activateUser(userId);
+          await fetchData();
+          closeConfirmModal();
+        } catch (err) {
+          console.error("Activation failed:", err);
+        } finally {
+          setIsConfirming(false);
+        }
+      }
+    });
   };
 
   const handleDeactivateSubmit = async (deactivationData: DeactivationData) => {
@@ -96,15 +131,26 @@ export default function UsersPage() {
     }
   };
 
-  const handleDelete = async (userId: string) => {
-    if (confirm("Permanently delete this user account? This action cannot be undone.")) {
-      try {
-        await userAPI.deleteUser(userId);
-        fetchData();
-      } catch (err) {
-        console.error("Delete failed:", err);
+  const handleDelete = (userId: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Account",
+      message: "WARNING: You are about to permanently purge this user account from the central registry. This action is irreversible and all associated data will be lost.",
+      type: 'danger',
+      confirmLabel: "Purge Account",
+      onConfirm: async () => {
+        try {
+          setIsConfirming(true);
+          await userAPI.deleteUser(userId);
+          await fetchData();
+          closeConfirmModal();
+        } catch (err) {
+          console.error("Delete failed:", err);
+        } finally {
+          setIsConfirming(false);
+        }
       }
-    }
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -139,10 +185,27 @@ export default function UsersPage() {
       <StatsCards
         stats={stats}
         loading={loading}
-        onAutoReactivate={async () => {
-          const res = await userAPI.triggerAutoReactivate();
-          alert(`Auto-reactivation sequence complete: ${res.reactivated_count} nodes restored.`);
-          fetchData();
+        onAutoReactivate={() => {
+          setConfirmModal({
+            isOpen: true,
+            title: "Auto-Reactivation",
+            message: "Execute global protocol to automatically restore all accounts whose temporary suspension period has expired? This may affect multiple records.",
+            type: 'info',
+            confirmLabel: "Execute Protocol",
+            onConfirm: async () => {
+              try {
+                setIsConfirming(true);
+                const res = await userAPI.triggerAutoReactivate();
+                alert(`Auto-reactivation sequence complete: ${res.reactivated_count} nodes restored.`);
+                await fetchData();
+                closeConfirmModal();
+              } catch (err) {
+                console.error("Auto-reactivate failed:", err);
+              } finally {
+                setIsConfirming(false);
+              }
+            }
+          });
         }}
         onRefresh={fetchData}
       />
@@ -283,6 +346,17 @@ export default function UsersPage() {
         targetUser={selectedUser}
         onClose={() => setShowDeactivateModal(false)}
         onSubmit={handleDeactivateSubmit}
+      />
+
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        confirmLabel={confirmModal.confirmLabel}
+        onConfirm={confirmModal.onConfirm}
+        onClose={closeConfirmModal}
+        isLoading={isConfirming}
       />
     </div>
   );

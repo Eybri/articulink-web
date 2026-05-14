@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { pronunciationAPI, userAPI } from "@/lib/api";
 import type { DeactivationData } from "@/components/DeactivateModal";
+import type { ConfirmationType } from "@/components/ConfirmationModal";
 
 export function usePronunciation() {
   const [clips, setClips] = useState<any[]>([]);
@@ -20,6 +21,28 @@ export function usePronunciation() {
   // Deactivation modal state
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
   const [targetUser, setTargetUser] = useState<any>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  // Confirmation modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    type: ConfirmationType;
+    confirmLabel: string;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+    type: 'info',
+    confirmLabel: "Confirm"
+  });
+
+  const closeConfirmModal = useCallback(() => {
+    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+  }, []);
 
   // Live clock for countdown timers
   const [now, setNow] = useState(new Date());
@@ -78,27 +101,51 @@ export function usePronunciation() {
     }
   }, [playingId]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    if (confirm("Permanently delete this communication audio recording?")) {
-      try {
-        await pronunciationAPI.deleteAudioClip(id);
-        fetchClips();
-      } catch (err) {
-        console.error("Delete failed:", err);
+  const handleDelete = useCallback((id: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Recording",
+      message: "Are you sure you want to permanently delete this communication audio recording? This action cannot be undone.",
+      type: 'danger',
+      confirmLabel: "Delete Recording",
+      onConfirm: async () => {
+        try {
+          setIsConfirming(true);
+          await pronunciationAPI.deleteAudioClip(id);
+          await fetchClips();
+          closeConfirmModal();
+        } catch (err) {
+          console.error("Delete failed:", err);
+        } finally {
+          setIsConfirming(false);
+        }
       }
-    }
+    });
   }, [fetchClips]);
 
-  const handleActivate = useCallback(async (userId: string) => {
-    try {
-      await userAPI.activateUser(userId);
-      if (selectedUser && (selectedUser.user_id === userId || selectedUser._id === userId)) {
-        setSelectedUser({ ...selectedUser, user_info: { ...selectedUser.user_info, status: 'active' } });
+  const handleActivate = useCallback((userId: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Restore User Access",
+      message: "Restore full system intelligence access for this user? This will re-enable all speech processing capabilities.",
+      type: 'success',
+      confirmLabel: "Restore Access",
+      onConfirm: async () => {
+        try {
+          setIsConfirming(true);
+          await userAPI.activateUser(userId);
+          if (selectedUser && (selectedUser.user_id === userId || selectedUser._id === userId)) {
+            setSelectedUser({ ...selectedUser, user_info: { ...selectedUser.user_info, status: 'active' } });
+          }
+          await fetchClips();
+          closeConfirmModal();
+        } catch (err) {
+          console.error("Activation failed:", err);
+        } finally {
+          setIsConfirming(false);
+        }
       }
-      fetchClips();
-    } catch (err) {
-      console.error("Activation failed:", err);
-    }
+    });
   }, [selectedUser, fetchClips]);
 
   const handleDeactivateSubmit = useCallback(async (deactivationData: DeactivationData) => {
@@ -190,5 +237,10 @@ export function usePronunciation() {
     setShowDeactivateModal,
     targetUser,
     openDeactivateModal,
+
+    // Confirmation modal
+    confirmModal,
+    closeConfirmModal,
+    isConfirming
   };
 }

@@ -11,6 +11,7 @@ import ClipGridCard from "./components/ClipGridCard";
 import ClipListTable from "./components/ClipListTable";
 import ClipDetailModal from "./components/ClipDetailModal";
 import DeactivateModal from "@/components/DeactivateModal";
+import ConfirmationModal from "@/components/ConfirmationModal";
 import Pagination from "@/components/Pagination";
 
 export default function PronunciationPage() {
@@ -25,6 +26,7 @@ export default function PronunciationPage() {
     handleDelete, handleActivate, handleDeactivateSubmit,
     showDeactivateModal, setShowDeactivateModal,
     targetUser, openDeactivateModal,
+    confirmModal, closeConfirmModal, isConfirming
   } = usePronunciation();
 
   const generatePDF = async (clip: any) => {
@@ -205,6 +207,17 @@ export default function PronunciationPage() {
         targetUser={targetUser}
         onClose={() => setShowDeactivateModal(false)}
         onSubmit={handleDeactivateSubmit}
+      />
+
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        confirmLabel={confirmModal.confirmLabel}
+        onConfirm={confirmModal.onConfirm}
+        onClose={closeConfirmModal}
+        isLoading={isConfirming}
       />
     </div>
   );

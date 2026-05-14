@@ -211,6 +211,10 @@ export const dashboardAPI = {
   getChatActivity: async (timeframe = 'daily') => {
     const response = await api.get(`/api/admin/dashboard/chat-activity?timeframe=${timeframe}`);
     return response.data;
+  },
+  testSmtp: async () => {
+    const response = await api.post('/api/admin/test-smtp');
+    return response.data;
   }
 };
 
