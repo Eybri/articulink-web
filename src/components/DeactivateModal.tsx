@@ -123,6 +123,7 @@ export default function DeactivateModal({ isOpen, targetUser, onClose, onSubmit 
                 onChange={(e) => setData({ ...data, reason_category: e.target.value })}
               >
                 <option value="Inappropriate Content">Protocol Violation (Inappropriate)</option>
+                <option value="Harassment / Hate Speech">Social Conduct Violation (Harassment/Hate)</option>
                 <option value="Spamming">Data Redundancy (Spam)</option>
                 <option value="Policy Violation">Governance Breach (Policy)</option>
                 <option value="Other">Anomalous Activity (Other)</option>
