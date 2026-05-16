@@ -44,17 +44,42 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    const data = getUser();
-    if (data) {
-      setUser(data);
-      setFormData({
-        first_name: data.first_name || "",
-        last_name: data.last_name || "",
-        username: data.username || "",
-        gender: data.gender || ""
-      });
-    }
-    setLoading(false);
+    const fetchProfile = async () => {
+      try {
+        // Load from local storage for immediate UI
+        const localData = getUser();
+        if (localData) {
+          setUser(localData);
+          setFormData({
+            first_name: localData.first_name || "",
+            last_name: localData.last_name || "",
+            username: localData.username || "",
+            gender: localData.gender || ""
+          });
+          // Only stop loading if we have local data, otherwise wait for API
+          setLoading(false);
+        }
+
+        // Fetch fresh data from DB
+        const data = await authAPI.getProfile();
+        if (data) {
+          setUser(data);
+          setLocalUser(data); // Sync local storage
+          setFormData({
+            first_name: data.first_name || "",
+            last_name: data.last_name || "",
+            username: data.username || "",
+            gender: data.gender || ""
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
   }, []);
 
   const handleSave = async () => {

@@ -13,13 +13,7 @@ import {
 import { useRouter, usePathname } from "next/navigation";
 import { logout, getUser } from "@/lib/api";
 import Link from "next/link";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-import { getImageUrl } from "@/lib/utils";
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn, getImageUrl } from "@/lib/utils";
 
 export const drawerWidth = 280;
 export const miniDrawerWidth = 80;

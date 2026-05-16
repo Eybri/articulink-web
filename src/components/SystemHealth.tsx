@@ -9,14 +9,18 @@ import {
   Database, 
   Sparkles, 
   Mic2, 
-  HardDrive 
+  HardDrive,
+  Mail
 } from "lucide-react";
 import { dashboardAPI } from "@/lib/api";
+import ConfirmationModal from "./ConfirmationModal";
 
 const SystemHealth = () => {
   const [healthData, setHealthData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [testingSmtp, setTestingSmtp] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const fetchHealth = async () => {
     try {
@@ -36,6 +40,24 @@ const SystemHealth = () => {
     const interval = setInterval(fetchHealth, 300000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleTestSmtp = async () => {
+    try {
+      setTestingSmtp(true);
+      const result = await dashboardAPI.testSmtp();
+      if (result.success) {
+        alert("✅ SMTP connection verified successfully.");
+      } else {
+        alert(`❌ SMTP connection failed: ${result.message}`);
+      }
+      fetchHealth();
+    } catch (error) {
+      console.error("Failed to test SMTP:", error);
+      alert("❌ An error occurred while testing SMTP connection.");
+    } finally {
+      setTestingSmtp(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -78,6 +100,7 @@ const SystemHealth = () => {
     { name: "Gemini AI", key: "gemini", icon: <Sparkles size={18} />, color: "text-[#2A8FA0] bg-[#2A8FA0]/10" },
     { name: "Whisper ASR", key: "whisper", icon: <Mic2 size={18} />, color: "text-[#f59e0b] bg-[#f59e0b]/10" },
     { name: "Storage", key: "storage", icon: <HardDrive size={18} />, color: "text-[#ef4444] bg-[#ef4444]/10" },
+    { name: "SMTP Server", key: "smtp", icon: <Mail size={18} />, color: "text-amber-600 bg-amber-50" },
   ];
 
   return (
@@ -117,11 +140,40 @@ const SystemHealth = () => {
                     : statusEntry?.detail || "Configuring..."}
                 </p>
               </div>
-              {getStatusIcon(statusEntry?.status)}
+              <div className="flex flex-col items-end gap-2">
+                {getStatusIcon(statusEntry?.status)}
+                {service.key === 'smtp' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowConfirm(true);
+                    }}
+                    disabled={testingSmtp}
+                    className="text-[9px] font-bold text-[#1A4480] uppercase tracking-widest hover:underline disabled:opacity-50"
+                  >
+                    {testingSmtp ? "Testing..." : "Test Link"}
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}
       </div>
+
+      <ConfirmationModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={async () => {
+          await handleTestSmtp();
+          setShowConfirm(false);
+        }}
+        title="Test SMTP Protocol"
+        message="This will initiate a neural handshake with the configured SMTP server to verify communication channels. Proceed with the diagnostic?"
+        confirmLabel="Run Diagnostic"
+        type="info"
+        isLoading={testingSmtp}
+        icon={<Mail size={24} className="text-[#1A4480]" />}
+      />
     </div>
   );
 };
