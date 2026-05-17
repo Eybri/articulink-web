@@ -1,76 +1,33 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { 
-  Mic, 
-  Play, 
-  Pause, 
-  Trash2, 
-  Search, 
-  Globe, 
-  Clock,
-  AudioLines,
-  X,
-  User,
-  ExternalLink
-} from "lucide-react";
-import { pronunciationAPI } from "@/lib/api";
-import { getImageUrl } from "@/lib/utils";
+import React from "react";
+import { Mic } from "lucide-react";
+import { usePronunciation } from "./hooks/usePronunciation";
+import { addBrandedHeader, addBrandedFooter } from "@/lib/pdfUtils";
+import PronunciationHeader from "./components/PronunciationHeader";
+import UserGridCard from "./components/UserGridCard";
+import UserListTable from "./components/UserListTable";
+import ClipGridCard from "./components/ClipGridCard";
+import ClipListTable from "./components/ClipListTable";
+import ClipDetailModal from "./components/ClipDetailModal";
+import DeactivateModal from "@/components/DeactivateModal";
+import ConfirmationModal from "@/components/ConfirmationModal";
+import Pagination from "@/components/Pagination";
 
 export default function PronunciationPage() {
-  const [clips, setClips] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [playingId, setPlayingId] = useState<string | null>(null);
-  const [selectedClip, setSelectedClip] = useState<any>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  const fetchClips = async () => {
-    try {
-      setLoading(true);
-      const data = await pronunciationAPI.getAudioClips();
-      setClips(data);
-    } catch (err) {
-      console.error("Error fetching clips:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchClips();
-  }, []);
-
-  const handlePlayPause = (clip: any) => {
-    if (playingId === clip.id || playingId === clip._id) {
-      audioRef.current?.pause();
-      setPlayingId(null);
-    } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      audioRef.current = new Audio(clip.audio_url);
-      audioRef.current.play();
-      setPlayingId(clip.id || clip._id);
-      audioRef.current.onended = () => setPlayingId(null);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (confirm("Permanently delete this communication audio recording?")) {
-      try {
-        await pronunciationAPI.deleteAudioClip(id);
-        fetchClips();
-      } catch (err) {
-        console.error("Delete failed:", err);
-      }
-    }
-  };
-
-  const filteredClips = clips.filter(clip => 
-    clip.transcript?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    clip.user_info?.username?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const {
+    clips, loading, total, now,
+    page, setPage, limit, setLimit,
+    searchTerm, setSearchTerm, fetchClips,
+    viewMode, setViewMode,
+    selectedUser, selectUser, goBackToList,
+    selectedClip, setSelectedClip,
+    playingId, handlePlayPause,
+    handleDelete, handleActivate, handleDeactivateSubmit,
+    showDeactivateModal, setShowDeactivateModal,
+    targetUser, openDeactivateModal,
+    confirmModal, closeConfirmModal, isConfirming
+  } = usePronunciation();
 
   const generatePDF = async (clip: any) => {
     try {
@@ -80,48 +37,11 @@ export default function PronunciationPage() {
       const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 15;
       const contentWidth = pageWidth - (margin * 2);
-      let currentY = margin;
 
-      // --- BRANDED HEADER ---
-      try {
-        const logoImg = new Image();
-        logoImg.src = "/images/logo2-nobg.png";
-        await new Promise((resolve) => {
-          logoImg.onload = resolve;
-          logoImg.onerror = resolve;
-        });
-        if (logoImg.complete && logoImg.naturalWidth !== 0) {
-          const logoAspect = logoImg.naturalHeight / logoImg.naturalWidth;
-          const logoWidth = 12;
-          pdf.addImage(logoImg, "PNG", margin, currentY, logoWidth, logoWidth * logoAspect);
-        }
-      } catch (e) {}
-
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(18);
-      pdf.setTextColor(30, 30, 30);
-      pdf.text("ArticuLink", margin + 15, currentY + 6);
-      
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(7);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text("ADVANCED COMMUNICATION SPEECH ANALYTICS PLATFORM", margin + 15, currentY + 10);
-
-      pdf.setDrawColor(220, 220, 220);
-      pdf.line(margin, currentY + 15, pageWidth - margin, currentY + 15);
-      currentY += 25;
-
-      // --- REPORT TITLE ---
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(14);
-      pdf.setTextColor(15, 15, 15);
-      pdf.text("SYSTEM INTELLIGENCE OVERVIEW", margin, currentY);
-
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(8);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(`ISSUED TO: ${clip.user_info?.username?.toUpperCase() || "SYSTEM ADMINISTRATOR"} | NODE: ART-SYS-MAIN`, margin, currentY + 5);
-      currentY += 12;
+      let currentY = await addBrandedHeader(pdf, {
+        userName: clip.user_info?.username || "SYSTEM ADMINISTRATOR",
+        reportTitle: "SYSTEM INTELLIGENCE OVERVIEW",
+      });
 
       const panelHeight = Math.min(160, pageHeight - currentY - 26);
       pdf.setFillColor(9, 9, 11);
@@ -151,7 +71,7 @@ export default function PronunciationPage() {
 
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor(225, 225, 225);
-      const summaryText = `This report provides a comprehensive communication evaluation of the audio interaction captured for ${clip.user_info?.username || "the specified patient"}. Our proprietary Processing engine analyzed the phonetic integrity, response latency, and semantic accuracy of the utterance. This data is critical for tracking longitudinal recovery and refining the patient's individual speech profile within the ArticuLink ecosystem.`;
+      const summaryText = `This report provides a comprehensive communication evaluation of the audio interaction captured for ${clip.user_info?.username || "the specified patient"}.`;
       const splitSummary = pdf.splitTextToSize(summaryText, contentWidth - 10);
       pdf.text(splitSummary, textLeft, textY);
       textY += (splitSummary.length * 4.2) + 5;
@@ -164,7 +84,7 @@ export default function PronunciationPage() {
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor(225, 225, 225);
       const transcript = clip.transcript || "No neural output detected...";
-      const splitTranscript = pdf.splitTextToSize(`\"${transcript}\"`, contentWidth - 10);
+      const splitTranscript = pdf.splitTextToSize(`"${transcript}"`, contentWidth - 10);
       pdf.text(splitTranscript, textLeft, textY);
       textY += (splitTranscript.length * 4.2) + 6;
 
@@ -173,10 +93,9 @@ export default function PronunciationPage() {
         pdf.setTextColor(220, 220, 220);
         pdf.text("Communication Refined Output", textLeft, textY);
         textY += 5;
-
         pdf.setFont("helvetica", "normal");
         pdf.setTextColor(225, 225, 225);
-        const splitCorrected = pdf.splitTextToSize(`\"${clip.corrected_transcript}\"`, contentWidth - 10);
+        const splitCorrected = pdf.splitTextToSize(`"${clip.corrected_transcript}"`, contentWidth - 10);
         const maxLines = Math.max(1, Math.floor((currentY + panelHeight - textY - 2) / 4.2));
         pdf.text(splitCorrected.slice(0, maxLines), textLeft, textY);
         textY += (Math.min(splitCorrected.length, maxLines) * 4.2) + 6;
@@ -187,7 +106,6 @@ export default function PronunciationPage() {
         pdf.setTextColor(220, 220, 220);
         pdf.text("Biolinguistic Analytics", textLeft, textY);
         textY += 5;
-
         pdf.setFont("helvetica", "normal");
         pdf.setTextColor(225, 225, 225);
         const analyticsText = [
@@ -204,12 +122,7 @@ export default function PronunciationPage() {
         });
       }
 
-      // --- FOOTER ---
-      pdf.setFontSize(7);
-      pdf.setTextColor(180, 180, 180);
-      pdf.text(`Intelligence Report ID: AL-SPEECH-${Math.random().toString(36).substr(2, 6).toUpperCase()} | Generated: ${new Date().toLocaleString()}`, margin, pageHeight - 10);
-      pdf.text("Proprietary System Data - Internal Use Only", pageWidth - margin, pageHeight - 10, { align: "right" });
-      
+      addBrandedFooter(pdf, { prefix: "AL-SPEECH" });
       pdf.save(`articulink_full_intelligence_speech_${clip.id || clip._id}.pdf`);
     } catch (error) {
       console.error("PDF generation failed:", error);
@@ -218,197 +131,94 @@ export default function PronunciationPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h2 className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest mb-1">
-            Speech Analysis
-          </h2>
-          <h1 className="text-2xl font-bold text-[#1C2B3A] tracking-tight">
-            Audio Recordings
-          </h1>
-        </div>
-        
-        <div className="flex items-center gap-3">
-           <button onClick={fetchClips} className="p-3 rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-white transition-all hover:scale-105">
-              <AudioLines size={20} />
-           </button>
-        </div>
-      </div>
-
-      {/* SEARCH/FILTERS */}
-      <div className="relative group max-w-xl">
-         <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#4A5A6A] transition-all group-focus-within:text-[#1A4480]" />
-         <input 
-           type="text" 
-           placeholder="Search by transcript content or operator ID..."
-           value={searchTerm}
-           onChange={(e) => setSearchTerm(e.target.value)}
-           className="w-full bg-white border border-[#DDD6C8] rounded-xl py-4 pl-14 pr-8 text-xs font-medium text-[#1C2B3A] outline-none transition-all focus:border-[#1A4480]/30 shadow-sm"
-         />
-      </div>
+      <PronunciationHeader
+        selectedUser={selectedUser}
+        now={now}
+        viewMode={viewMode}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        onSearchSubmit={fetchClips}
+        onViewModeChange={setViewMode}
+        onRefresh={fetchClips}
+        onBack={goBackToList}
+        onActivate={handleActivate}
+        onOpenDeactivateModal={openDeactivateModal}
+      />
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 space-y-4">
-           <div className="relative">
-              <div className="w-16 h-16 rounded-full border-4 border-[#1A4480]/10 border-t-[#1A4480] animate-spin" />
-              <Mic className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#1A4480]/40" size={24} />
-           </div>
-           <p className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest">Decoding Audio Stream...</p>
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-[#1A4480]/10 border-t-[#1A4480] animate-spin" />
+            <Mic className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#1A4480]/40" size={24} />
+          </div>
+          <p className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest">Decoding Audio Stream...</p>
+        </div>
+      ) : !selectedUser ? (
+        viewMode === "grid" ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8">
+            {clips.map((item, index) => (
+              <UserGridCard key={`${item.user_id || index}-${index}`} item={item} now={now} onSelect={selectUser} />
+            ))}
+          </div>
+        ) : (
+          <UserListTable items={clips} now={now} onSelectUser={selectUser} />
+        )
+      ) : viewMode === "grid" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+          {clips.map((clip) => (
+            <ClipGridCard
+              key={clip.id || clip._id}
+              clip={clip}
+              playingId={playingId}
+              onPlayPause={handlePlayPause}
+              onDelete={handleDelete}
+              onGeneratePDF={generatePDF}
+            />
+          ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-           {filteredClips.map((clip) => (
-             <div 
-               key={clip.id || clip._id}
-               className="group relative flex flex-col rounded-xl bg-white border border-[#DDD6C8] p-6 shadow-sm transition-all hover:border-[#1A4480]/30"
-             >
-
-                {/* USER HEAD */}
-                <div className="flex items-start justify-between mb-6">
-                   <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] flex items-center justify-center text-[#4A5A6A] overflow-hidden relative shadow-inner">
-                         {getImageUrl(clip.user_info?.profile_pic) ? (
-                           <img src={getImageUrl(clip.user_info.profile_pic)} alt="" className="w-full h-full object-cover" />
-                         ) : (
-                           <User size={16} />
-                         )}
-                      </div>
-                      <div>
-                         <h4 className="text-xs font-bold text-[#1C2B3A] tracking-tight truncate max-w-[120px]">
-                            {clip.user_info?.username || "ID Unknown"}
-                         </h4>
-                         <p className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest mt-0.5">
-                            {new Date(clip.created_at).toLocaleDateString()}
-                         </p>
-                      </div>
-                   </div>
-
-                   <button 
-                     onClick={() => handlePlayPause(clip)}
-                     className="h-10 w-10 rounded-lg bg-[#1A4480] text-white flex items-center justify-center shadow-lg hover:bg-[#0F2847] transition-all"
-                   >
-                      {playingId === (clip.id || clip._id) ? <Pause size={18} /> : <Play size={18} fill="currentColor" />}
-                   </button>
-                </div>
-
-                {/* TRANSCRIPT AREA */}
-                <div className="flex-1 bg-[#FAF8F4] rounded-xl p-4 mb-4 border border-[#DDD6C8] min-h-[80px] group-hover:bg-[#FAF8F4]/80 transition-colors">
-                   <div className="flex items-center gap-2 mb-2">
-                      <div className="w-1 h-1 rounded-full bg-[#1A4480]" />
-                      <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Transcription</span>
-                   </div>
-                   <p className="text-xs font-medium text-[#1C2B3A] line-clamp-3 italic leading-relaxed">
-                      "{clip.transcript || "No neural output detected..."}"
-                   </p>
-                   {clip.corrected_transcript && (
-                     <div className="mt-4 pt-4 border-t border-[#DDD6C8]">
-                        <span className="text-[9px] font-bold text-[#1A4480] uppercase tracking-[0.2em] block mb-2">Refined Model</span>
-                        <p className="text-xs font-bold text-[#1A4480]">"{clip.corrected_transcript}"</p>
-                     </div>
-                   )}
-                </div>
-
-                {/* METADATA FOOTER */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                   <div className="flex items-center gap-2 text-[#4A5A6A]">
-                      <Clock size={12} className="text-[#1A4480]/60" />
-                      <span className="text-[9px] font-bold uppercase tracking-widest">{clip.duration_seconds?.toFixed(1)}s Length</span>
-                   </div>
-                   <div className="flex items-center gap-2 text-[#4A5A6A] justify-end">
-                      <Globe size={12} className="text-[#2A8FA0]/60" />
-                      <span className="text-[9px] font-bold uppercase tracking-widest">{clip.language?.toUpperCase() || "EN"} Local</span>
-                   </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-[#DDD6C8]">
-                    <div className="flex gap-2">
-                       <button 
-                         onClick={() => generatePDF(clip)}
-                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FAF8F4] border border-[#DDD6C8] text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest hover:bg-white hover:border-[#1A4480]/30 transition-all"
-                       >
-                          <ExternalLink size={12} />
-                          Report
-                       </button>
-                       <button 
-                         onClick={() => handleDelete(clip.id || clip._id)}
-                         className="p-1.5 rounded-lg text-[#4A5A6A] hover:bg-red-50 hover:text-red-500 transition-all"
-                       >
-                          <Trash2 size={14} />
-                       </button>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100">
-                       <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                       <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-widest">Verified</span>
-                    </div>
-                 </div>
-             </div>
-           ))}
-        </div>
+        <ClipListTable
+          clips={clips}
+          playingId={playingId}
+          onPlayPause={handlePlayPause}
+          onDelete={handleDelete}
+          onGeneratePDF={generatePDF}
+        />
       )}
 
-      {/* DETAIL MODAL */}
-      {selectedClip && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#1C2B3A]/40 backdrop-blur-sm animate-in fade-in duration-300">
-           <div className="w-full max-w-2xl bg-white border border-[#DDD6C8] rounded-2xl p-10 relative shadow-2xl overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1A4480] to-transparent opacity-20" />
-              
-              <button 
-                onClick={() => setSelectedClip(null)}
-                className="absolute top-8 right-8 text-[#4A5A6A] hover:text-[#1C2B3A] transition-colors"
-              >
-                 <X size={24} />
-              </button>
-
-              <div className="space-y-8">
-                 <div className="flex items-center gap-6">
-                    <div className="w-20 h-20 rounded-xl bg-[#1A4480]/5 border border-[#1A4480]/10 flex items-center justify-center">
-                       <Mic size={32} className="text-[#1A4480]" />
-                    </div>
-                    <div>
-                       <h3 className="text-2xl font-bold text-[#1C2B3A] tracking-tight uppercase">Clip Analytics</h3>
-                       <p className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest mt-1">Registry ID: {selectedClip.id || selectedClip._id}</p>
-                    </div>
-                 </div>
-
-                 <div className="space-y-4">
-                    <div className="p-8 rounded-2xl bg-[#FAF8F4] border border-[#DDD6C8] shadow-inner">
-                       <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest block mb-4">Communication Transcription</span>
-                       <p className="text-2xl font-bold text-[#1C2B3A] leading-relaxed italic">
-                          "{selectedClip.corrected_transcript || selectedClip.transcript}"
-                       </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                       <div className="p-6 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8] space-y-1">
-                          <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Confidence Score</span>
-                          <p className="text-xl font-bold text-emerald-600">98.4%</p>
-                       </div>
-                       <div className="p-6 rounded-xl bg-[#FAF8F4] border border-[#DDD6C8] space-y-1">
-                          <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">Neural Latency</span>
-                          <p className="text-xl font-bold text-[#1A4480]">42ms</p>
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="flex justify-end gap-3 pt-4">
-                    <button 
-                      onClick={() => setSelectedClip(null)}
-                      className="px-8 py-4 rounded-xl text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest hover:bg-[#FAF8F4] transition-all"
-                    >
-                       Close Analytics
-                    </button>
-                    <button 
-                      onClick={() => generatePDF(selectedClip)}
-                      className="px-10 py-4 rounded-xl bg-[#1A4480] text-[10px] font-bold text-white uppercase tracking-widest hover:bg-[#0F2847] transition-all shadow-lg shadow-[#1A4480]/20"
-                    >
-                       Export Report
-                    </button>
-                 </div>
-              </div>
-           </div>
-        </div>
+      {!loading && clips.length > 0 && (
+        <Pagination
+          page={page}
+          limit={limit}
+          total={total}
+          onPageChange={setPage}
+          onLimitChange={setLimit}
+        />
       )}
+
+      <ClipDetailModal
+        clip={selectedClip}
+        onClose={() => setSelectedClip(null)}
+        onGeneratePDF={generatePDF}
+      />
+
+      <DeactivateModal
+        isOpen={showDeactivateModal}
+        targetUser={targetUser}
+        onClose={() => setShowDeactivateModal(false)}
+        onSubmit={handleDeactivateSubmit}
+      />
+
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        confirmLabel={confirmModal.confirmLabel}
+        onConfirm={confirmModal.onConfirm}
+        onClose={closeConfirmModal}
+        isLoading={isConfirming}
+      />
     </div>
   );
 }

@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Download, FileText, Share2, Printer } from "lucide-react";
+import { Printer } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { addBrandedHeader, addBrandedFooter } from "@/lib/pdfUtils";
+import PageHeader from "@/components/PageHeader";
 import StatsCards from "@/components/StatsCards";
 import PlatformEngagementChart from "@/components/charts/PlatformEngagementChart";
 import UserGrowthChart from "@/components/charts/UserGrowthChart";
@@ -70,7 +72,6 @@ export default function DashboardPage() {
     if (!dashboardRef.current) return;
     const source = dashboardRef.current;
     
-    // Create temporary wrapper for capture
     const tempWrapper = document.createElement("div");
     tempWrapper.style.position = "fixed";
     tempWrapper.style.left = "-10000px";
@@ -91,7 +92,6 @@ export default function DashboardPage() {
         originalError.apply(console, args);
       };
 
-      // Apply inlined styles to the clone
       inlineComputedStyles(source, clonedNode);
       tempWrapper.appendChild(clonedNode);
       document.body.appendChild(tempWrapper);
@@ -107,52 +107,12 @@ export default function DashboardPage() {
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
       const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 15;
       const contentWidth = pageWidth - (margin * 2);
-      
-      let currentY = margin;
 
-      // --- BRANDED HEADER ---
-      try {
-        const logoImg = new Image();
-        logoImg.src = "/images/logo2-nobg.png";
-        await new Promise((resolve) => {
-          logoImg.onload = resolve;
-          logoImg.onerror = resolve;
-        });
-        if (logoImg.complete && logoImg.naturalWidth !== 0) {
-          const logoAspect = logoImg.naturalHeight / logoImg.naturalWidth;
-          const logoWidth = 12;
-          pdf.addImage(logoImg, "PNG", margin, currentY, logoWidth, logoWidth * logoAspect);
-        }
-      } catch (e) {}
-
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(18);
-      pdf.setTextColor(30, 30, 30);
-      pdf.text("ArticuLink", margin + 15, currentY + 6);
-      
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(7);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text("ADVANCED CLINICAL SPEECH ANALYTICS PLATFORM", margin + 15, currentY + 10);
-
-      pdf.setDrawColor(220, 220, 220);
-      pdf.line(margin, currentY + 15, pageWidth - margin, currentY + 15);
-      currentY += 25;
-
-      // --- REPORT TITLE ---
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(14);
-      pdf.setTextColor(15, 15, 15);
-      pdf.text("SYSTEM INTELLIGENCE OVERVIEW", margin, currentY);
-      
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(8);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(`ISSUED TO: ${user?.first_name?.toUpperCase() || 'SYSTEM ADMINISTRATOR'} | NODE: ART-SYS-MAIN`, margin, currentY + 5);
-      currentY += 12;
+      const currentY = await addBrandedHeader(pdf, {
+        userName: user?.first_name || 'SYSTEM ADMINISTRATOR',
+      });
 
       const imgProps = pdf.getImageProperties(imgData);
       const imgRatio = imgProps.height / imgProps.width;
@@ -162,12 +122,7 @@ export default function DashboardPage() {
       pdf.rect(margin - 0.5, currentY - 0.5, contentWidth + 1, displayHeight + 1, "F");
       pdf.addImage(imgData, "PNG", margin, currentY, contentWidth, displayHeight);
       
-      // --- FOOTER ---
-      const timestamp = new Date().toLocaleString();
-      pdf.setFontSize(7);
-      pdf.setTextColor(180, 180, 180);
-      pdf.text(`Intelligence Report ID: AL-DASH-${Math.random().toString(36).substr(2, 6).toUpperCase()} | Generated: ${timestamp}`, margin, pageHeight - 10);
-      pdf.text("Proprietary System Data - Internal Use Only", pageWidth - margin, pageHeight - 10, { align: "right" });
+      addBrandedFooter(pdf, { prefix: "AL-DASH" });
 
       pdf.save(`articulink_full_intelligence_${Date.now()}.pdf`);
     } catch (error) {
@@ -175,7 +130,6 @@ export default function DashboardPage() {
     } finally {
       setIsPrinting(false);
       tempWrapper.remove();
-      // Restore console.error if it was patched
       if (typeof window !== 'undefined' && (window as any)._originalConsoleError) {
         console.error = (window as any)._originalConsoleError;
         delete (window as any)._originalConsoleError;
@@ -185,72 +139,45 @@ export default function DashboardPage() {
 
   return (
     <div ref={dashboardRef} className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 pb-12">
-      {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h2 className="text-[10px] font-bold text-[#4A5A6A] uppercase tracking-widest mb-1">
-            System Overview
-          </h2>
-          <h1 className="text-2xl font-bold text-[#1C2B3A] tracking-tight">
-            Welcome back, {user?.first_name || user?.email?.split('@')[0] || 'Admin'}
-          </h1>
+      <PageHeader
+        label="System Overview"
+        title={`Welcome back, ${user?.first_name || user?.email?.split('@')[0] || 'Admin'}`}
+      >
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-[#DDD6C8] shadow-sm">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">System: Operational</span>
         </div>
-        
-        <div className="flex flex-wrap items-center gap-3">
-           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-[#DDD6C8] shadow-sm">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest">System: Operational</span>
-           </div>
 
-           <button 
-             onClick={handlePrintAll}
-             disabled={isPrinting}
-             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1A4480] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#0F2847] transition-all shadow-lg shadow-[#1A4480]/20 disabled:opacity-50"
-           >
-              {isPrinting ? (
-                <div className="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Printer size={14} />
-              )}
-              {isPrinting ? "Processing..." : "Export Report"}
-           </button>
-        </div>
-      </div>
+        <button 
+          onClick={handlePrintAll}
+          disabled={isPrinting}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1A4480] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#0F2847] transition-all shadow-lg shadow-[#1A4480]/20 disabled:opacity-50"
+        >
+          {isPrinting ? (
+            <div className="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+          ) : (
+            <Printer size={14} />
+          )}
+          {isPrinting ? "Processing..." : "Export Report"}
+        </button>
+      </PageHeader>
 
-      {/* KPI Section */}
       <StatsCards stats={stats} loading={loading} />
 
-      {/* Top Section: Engagement & Health */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <PlatformEngagementChart />
-        </div>
-        <div className="lg:col-span-1">
-          <SystemHealth />
-        </div>
+        <div className="lg:col-span-2"><PlatformEngagementChart /></div>
+        <div className="lg:col-span-1"><SystemHealth /></div>
       </div>
 
-      {/* Middle Section: Growth & Chat */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <UserGrowthChart />
-        </div>
-        <div className="lg:col-span-1">
-          <ChatActivityChart />
-        </div>
+        <div className="lg:col-span-2"><UserGrowthChart /></div>
+        <div className="lg:col-span-1"><ChatActivityChart /></div>
       </div>
 
-      {/* Bottom Section: Demographics & User List */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">
-          <GenderDemographicsChart />
-        </div>
-        <div className="lg:col-span-1">
-          <AgeDistributionChart />
-        </div>
-        <div className="lg:col-span-1 h-full">
-          <DashboardUserList />
-        </div>
+        <div className="lg:col-span-1"><GenderDemographicsChart /></div>
+        <div className="lg:col-span-1"><AgeDistributionChart /></div>
+        <div className="lg:col-span-1 h-full"><DashboardUserList /></div>
       </div>
     </div>
   );

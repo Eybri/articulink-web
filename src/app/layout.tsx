@@ -16,9 +16,9 @@ export const metadata: Metadata = {
   title: "ArticuLink | Clinical Admin Portal",
   description: "Advanced clinical speech monitoring and management system.",
   icons: {
-    icon: "/images/app-icon.png",
-    shortcut: "/images/app-icon.png",
-    apple: "/images/app-icon.png",
+    icon: "/images/icon-new.png",
+    shortcut: "/images/icon-new.png",
+    apple: "/images/icon-new.png",
   },
 };
 
