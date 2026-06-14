@@ -212,6 +212,14 @@ export const dashboardAPI = {
     const response = await api.get(`/api/admin/dashboard/chat-activity?timeframe=${timeframe}`);
     return response.data;
   },
+  getLanguageClarity: async () => {
+    const response = await api.get(`/api/admin/dashboard/language-clarity`);
+    return response.data;
+  },
+  getWordInsights: async () => {
+    const response = await api.get(`/api/admin/dashboard/word-insights`);
+    return response.data;
+  },
   testSmtp: async () => {
     const response = await api.post('/api/admin/test-smtp');
     return response.data;

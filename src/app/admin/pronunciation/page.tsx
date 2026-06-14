@@ -5,6 +5,7 @@ import { Mic } from "lucide-react";
 import { usePronunciation } from "./hooks/usePronunciation";
 import { addBrandedHeader, addBrandedFooter } from "@/lib/pdfUtils";
 import PronunciationHeader from "./components/PronunciationHeader";
+import PronunciationToolbar from "./components/PronunciationToolbar";
 import UserGridCard from "./components/UserGridCard";
 import UserListTable from "./components/UserListTable";
 import ClipGridCard from "./components/ClipGridCard";
@@ -13,6 +14,8 @@ import ClipDetailModal from "./components/ClipDetailModal";
 import DeactivateModal from "@/components/DeactivateModal";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import Pagination from "@/components/Pagination";
+import LanguageClarityChart from "@/components/charts/LanguageClarityChart";
+import WordInsightsChart from "@/components/charts/WordInsightsChart";
 
 export default function PronunciationPage() {
   const {
@@ -134,15 +137,26 @@ export default function PronunciationPage() {
       <PronunciationHeader
         selectedUser={selectedUser}
         now={now}
+        onBack={goBackToList}
+        onActivate={handleActivate}
+        onOpenDeactivateModal={openDeactivateModal}
+      />
+
+      {!selectedUser && (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full">
+          <LanguageClarityChart />
+          <WordInsightsChart />
+        </div>
+      )}
+
+      <PronunciationToolbar
         viewMode={viewMode}
         searchTerm={searchTerm}
+        selectedUser={selectedUser}
         onSearchChange={setSearchTerm}
         onSearchSubmit={fetchClips}
         onViewModeChange={setViewMode}
         onRefresh={fetchClips}
-        onBack={goBackToList}
-        onActivate={handleActivate}
-        onOpenDeactivateModal={openDeactivateModal}
       />
 
       {loading ? (
