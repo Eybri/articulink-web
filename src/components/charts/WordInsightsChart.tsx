@@ -14,6 +14,7 @@ interface WordStat {
 const WordInsightsChart = () => {
   const [topWords, setTopWords] = useState<WordStat[]>([]);
   const [bottomWords, setBottomWords] = useState<WordStat[]>([]);
+  const [commonWords, setCommonWords] = useState<WordStat[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,6 +25,7 @@ const WordInsightsChart = () => {
         if (response) {
           setTopWords(response.top || []);
           setBottomWords(response.needs_improvement || []);
+          setCommonWords(response.common || []);
         }
       } catch (err) {
         console.error("Error fetching word insights:", err);
@@ -95,6 +97,35 @@ const WordInsightsChart = () => {
                   </div>
                   <div className="h-1.5 w-full bg-[#FAF8F4] border border-[#DDD6C8]/20 rounded-full overflow-hidden">
                     <div className="h-full bg-amber-400 rounded-full" style={{ width: `${item.avg_confidence}%` }} />
+                  </div>
+                </div>
+              )) : (
+                <div className="text-[10px] font-medium text-[#4A5A6A] italic flex items-center justify-center h-full">Not enough data...</div>
+              )}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="w-[1px] h-[90%] my-auto bg-[#DDD6C8]/50" />
+
+          {/* Common Words */}
+          <div className="flex-1 flex flex-col h-full">
+            <h4 className="text-[11px] font-bold text-[#2A8FA0] uppercase tracking-widest mb-3 flex items-center justify-between border-b border-[#DDD6C8]/40 pb-2">
+              <span>Most Common</span>
+              <span className="text-[9px] text-[#2A8FA0] bg-[#2A8FA0]/10 px-1.5 py-0.5 rounded">Frequency</span>
+            </h4>
+            <div className="flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1">
+              {commonWords.length > 0 ? commonWords.map((item, idx) => (
+                <div key={idx} className="flex flex-col gap-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[12px] font-bold text-[#1C2B3A] capitalize">{item.word}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] font-bold text-[#4A5A6A]">{item.count}x</span>
+                      <span className="text-[11px] font-bold text-[#2A8FA0]">{item.avg_confidence.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                  <div className="h-1.5 w-full bg-[#FAF8F4] border border-[#DDD6C8]/20 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#2A8FA0] rounded-full" style={{ width: `${item.avg_confidence}%` }} />
                   </div>
                 </div>
               )) : (
