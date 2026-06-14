@@ -14,6 +14,7 @@ import DeactivateModal from "@/components/DeactivateModal";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import Pagination from "@/components/Pagination";
 import LanguageClarityChart from "@/components/charts/LanguageClarityChart";
+import WordInsightsChart from "@/components/charts/WordInsightsChart";
 
 export default function PronunciationPage() {
   const {
@@ -146,8 +147,9 @@ export default function PronunciationPage() {
         onOpenDeactivateModal={openDeactivateModal}
       />
 
-      <div className="mb-8 max-w-[800px]">
+      <div className="mb-8 grid grid-cols-1 xl:grid-cols-2 gap-6 w-full">
         <LanguageClarityChart />
+        <WordInsightsChart />
       </div>
 
       {loading ? (
