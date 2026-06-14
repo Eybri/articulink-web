@@ -112,9 +112,7 @@ const LanguageClarityChart = () => {
             endAngle={-270}
           >
             <RadialBar
-              minAngle={15}
               background={{ fill: '#FAF8F4' }}
-              clockWise
               dataKey="clarity_score"
               cornerRadius={10}
             >
