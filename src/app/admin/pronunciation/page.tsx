@@ -5,6 +5,7 @@ import { Mic } from "lucide-react";
 import { usePronunciation } from "./hooks/usePronunciation";
 import { addBrandedHeader, addBrandedFooter } from "@/lib/pdfUtils";
 import PronunciationHeader from "./components/PronunciationHeader";
+import PronunciationToolbar from "./components/PronunciationToolbar";
 import UserGridCard from "./components/UserGridCard";
 import UserListTable from "./components/UserListTable";
 import ClipGridCard from "./components/ClipGridCard";
@@ -136,21 +137,27 @@ export default function PronunciationPage() {
       <PronunciationHeader
         selectedUser={selectedUser}
         now={now}
-        viewMode={viewMode}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        onSearchSubmit={fetchClips}
-        onViewModeChange={setViewMode}
-        onRefresh={fetchClips}
         onBack={goBackToList}
         onActivate={handleActivate}
         onOpenDeactivateModal={openDeactivateModal}
       />
 
-      <div className="mb-8 grid grid-cols-1 xl:grid-cols-2 gap-6 w-full">
-        <LanguageClarityChart />
-        <WordInsightsChart />
-      </div>
+      {!selectedUser && (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full">
+          <LanguageClarityChart />
+          <WordInsightsChart />
+        </div>
+      )}
+
+      <PronunciationToolbar
+        viewMode={viewMode}
+        searchTerm={searchTerm}
+        selectedUser={selectedUser}
+        onSearchChange={setSearchTerm}
+        onSearchSubmit={fetchClips}
+        onViewModeChange={setViewMode}
+        onRefresh={fetchClips}
+      />
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 space-y-4">
