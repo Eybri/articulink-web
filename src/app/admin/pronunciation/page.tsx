@@ -13,6 +13,7 @@ import ClipDetailModal from "./components/ClipDetailModal";
 import DeactivateModal from "@/components/DeactivateModal";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import Pagination from "@/components/Pagination";
+import LanguageClarityChart from "@/components/charts/LanguageClarityChart";
 
 export default function PronunciationPage() {
   const {
@@ -144,6 +145,10 @@ export default function PronunciationPage() {
         onActivate={handleActivate}
         onOpenDeactivateModal={openDeactivateModal}
       />
+
+      <div className="mb-8 max-w-[800px]">
+        <LanguageClarityChart />
+      </div>
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 space-y-4">
