@@ -11,6 +11,7 @@ import UserListTable from "./components/UserListTable";
 import ClipGridCard from "./components/ClipGridCard";
 import ClipListTable from "./components/ClipListTable";
 import ClipDetailModal from "./components/ClipDetailModal";
+import UserAnalyticsOverview from "./components/UserAnalyticsOverview";
 import DeactivateModal from "@/components/DeactivateModal";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import Pagination from "@/components/Pagination";
@@ -43,7 +44,7 @@ export default function PronunciationPage() {
 
       let currentY = await addBrandedHeader(pdf, {
         userName: clip.user_info?.username || "SYSTEM ADMINISTRATOR",
-        reportTitle: "SYSTEM INTELLIGENCE OVERVIEW",
+        reportTitle: "SYSTEM OVERVIEW",
       });
 
       const panelHeight = Math.min(160, pageHeight - currentY - 26);
@@ -143,7 +144,7 @@ export default function PronunciationPage() {
       />
 
       {!selectedUser && (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full">
+        <div className="flex flex-col gap-6 w-full">
           <LanguageClarityChart />
           <WordInsightsChart />
         </div>
@@ -177,27 +178,32 @@ export default function PronunciationPage() {
         ) : (
           <UserListTable items={clips} now={now} onSelectUser={selectUser} />
         )
-      ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
-          {clips.map((clip) => (
-            <ClipGridCard
-              key={clip.id || clip._id}
-              clip={clip}
+      ) : (
+        <>
+          <UserAnalyticsOverview user={selectedUser} />
+          {viewMode === "grid" ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+              {clips.map((clip) => (
+                <ClipGridCard
+                  key={clip.id || clip._id}
+                  clip={clip}
+                  playingId={playingId}
+                  onPlayPause={handlePlayPause}
+                  onDelete={handleDelete}
+                  onGeneratePDF={generatePDF}
+                />
+              ))}
+            </div>
+          ) : (
+            <ClipListTable
+              clips={clips}
               playingId={playingId}
               onPlayPause={handlePlayPause}
               onDelete={handleDelete}
               onGeneratePDF={generatePDF}
             />
-          ))}
-        </div>
-      ) : (
-        <ClipListTable
-          clips={clips}
-          playingId={playingId}
-          onPlayPause={handlePlayPause}
-          onDelete={handleDelete}
-          onGeneratePDF={generatePDF}
-        />
+          )}
+        </>
       )}
 
       {!loading && clips.length > 0 && (
