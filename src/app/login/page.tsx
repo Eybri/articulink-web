@@ -76,7 +76,7 @@ function LoginForm() {
     <div className="w-full max-w-[1000px] flex flex-col md:flex-row rounded-2xl overflow-hidden shadow-[0_32px_64px_-12px_rgba(11,29,53,0.25)] z-20 relative">
 
       {/* Left Side: Image & Branding */}
-      <div className="hidden md:flex flex-1 relative overflow-hidden">
+      <div className="hidden md:flex flex-1 relative overflow-hidden animate-slideInLeft">
         {/* Full background image */}
         <img
           src="/images/bg.jpg"
@@ -141,7 +141,7 @@ function LoginForm() {
       </div>
 
       {/* Right Side: Form */}
-      <div className="w-full md:w-[380px] flex-shrink-0 p-8 md:p-10 flex flex-col justify-center bg-white relative">
+      <div className="w-full md:w-[380px] flex-shrink-0 p-8 md:p-10 flex flex-col justify-center bg-white relative animate-slideInRight">
 
         {/* Mobile logo */}
         <div className="md:hidden flex items-center gap-3 mb-8">
@@ -264,6 +264,33 @@ export default function LoginPage() {
         }
         .animate-shake {
           animation: shake 0.2s ease-in-out 0s 2;
+        }
+        @keyframes slideOutLeft {
+          0% {
+            opacity: 0;
+            transform: translateX(50%);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes slideOutRight {
+          0% {
+            opacity: 0;
+            transform: translateX(-50%);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        .animate-slideInLeft {
+          animation: slideOutLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-slideInRight {
+          animation: slideOutRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+          opacity: 0;
         }
       `}</style>
     </main>
