@@ -148,15 +148,17 @@ const UserAnalyticsOverview: React.FC<UserAnalyticsOverviewProps> = ({ user }) =
             {languageData.length > 0 ? (
               <div className="h-[200px] w-full relative">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                  <PieChart margin={{ bottom: 20 }}>
                     <Pie
                       data={languageData}
                       cx="50%"
-                      cy="50%"
+                      cy="45%"
                       innerRadius={60}
                       outerRadius={80}
                       paddingAngle={5}
                       dataKey="value"
+                      label={({ value }) => `${value}`}
+                      labelLine={false}
                     >
                       {languageData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={LANG_COLORS[index % LANG_COLORS.length]} />
@@ -170,7 +172,7 @@ const UserAnalyticsOverview: React.FC<UserAnalyticsOverviewProps> = ({ user }) =
                       verticalAlign="bottom" 
                       height={36}
                       iconType="circle"
-                      wrapperStyle={{ fontSize: '10px', fontWeight: 700, color: '#4A5A6A' }}
+                      wrapperStyle={{ fontSize: '10px', fontWeight: 700, color: '#4A5A6A', paddingTop: '15px' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
