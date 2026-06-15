@@ -36,11 +36,23 @@ const DashboardUserList = () => {
         limit: 10,
       });
 
-      if (response && response.users) {
-        setUsers(response.users);
-      } else if (Array.isArray(response)) {
-        setUsers(response.slice(0, 10));
+      let fetchedUsers = response && response.users ? response.users : Array.isArray(response) ? response : [];
+      
+      // Frontend filtering as requested
+      fetchedUsers = fetchedUsers.filter((u: any) => {
+        const uStatus = u.status || 'active';
+        return uStatus === status;
+      });
+
+      if (search) {
+        const lowerSearch = search.toLowerCase();
+        fetchedUsers = fetchedUsers.filter((u: any) => 
+          (u.username && u.username.toLowerCase().includes(lowerSearch)) || 
+          (u.email && u.email.toLowerCase().includes(lowerSearch))
+        );
       }
+
+      setUsers(fetchedUsers.slice(0, 10));
     } catch (error) {
       console.error("Error fetching dashboard users:", error);
     } finally {
@@ -129,7 +141,7 @@ const DashboardUserList = () => {
                           )}
                        </div>
                        <div className="min-w-0">
-                          <p className="truncate text-xs font-bold text-[#1C2B3A] tracking-tight">{item.username || item.email.split('@')[0]}</p>
+                          <p className="truncate text-xs font-bold text-[#1C2B3A] tracking-tight">{item.username || item.email?.split('@')[0] || 'Unknown'}</p>
                           <p className="truncate text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest mt-0.5">{item.role}</p>
                        </div>
                     </div>
