@@ -6,9 +6,11 @@ import {
   Lock,
   Eye,
   EyeOff,
-  ArrowRight,
+  AlertCircle,
   ShieldCheck,
-  AlertCircle
+  Mic,
+  BarChart3,
+  Users,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authAPI, setToken, setUser, logout } from "@/lib/api";
@@ -71,126 +73,164 @@ function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-[950px] flex flex-col md:flex-row rounded-3xl overflow-hidden bg-white border border-[#DDD6C8] shadow-[0_32px_64px_-12px_rgba(28,43,58,0.12)] z-20 relative">
-      {/* Left Side: Branding/Visual */}
-      <div className="hidden md:flex flex-1 bg-[#1A4480] p-16 flex-col justify-between relative overflow-hidden">
-        {/* Subtle bg.jpg overlay for branding side */}
-        <div className="absolute inset-0 opacity-20 mix-blend-overlay">
-          <img src="/images/bg.jpg" alt="" className="w-full h-full object-cover" />
-        </div>
+    <div className="w-full max-w-[1000px] flex flex-col md:flex-row rounded-2xl overflow-hidden shadow-[0_32px_64px_-12px_rgba(11,29,53,0.25)] z-20 relative">
 
-        <div className="absolute top-[-20%] right-[-20%] w-full h-full bg-gradient-to-br from-white/10 to-transparent rounded-full blur-3xl" />
+      {/* Left Side: Image & Branding */}
+      <div className="hidden md:flex flex-1 relative overflow-hidden animate-slideInLeft">
+        {/* Full background image */}
+        <img
+          src="/images/bg.jpg"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
 
-        <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-16">
-            <img src="/images/icon-white.png" alt="ArticuLink" className="w-12 h-12 object-contain" />
+        {/* Dark gradient overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0B1D35]/90 via-[#0B1D35]/50 to-[#1A4480]/40" />
+
+        {/* Decorative circles */}
+        <div className="absolute top-[-15%] right-[-15%] w-[50%] h-[50%] rounded-full bg-[#7DD3E8]/10 blur-[80px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#1A4480]/20 blur-[60px]" />
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-between p-10 w-full h-full min-h-[560px]">
+          {/* Top: Logo */}
+          <div className="flex items-center gap-3">
+            <img src="/images/icon-white.png" alt="ArticuLink" className="w-10 h-10 object-contain" />
             <div className="flex flex-col">
-              <span className="text-xl font-bold text-white tracking-tight leading-none">ArticuLink</span>
-              <span className="text-[8px] font-bold text-[#2A8FA0] uppercase tracking-[0.3em] mt-1">Admin Interface</span>
+              <span className="text-lg font-bold text-white tracking-tight leading-none">ArticuLink</span>
+              <span className="text-[9px] font-semibold text-white/40 uppercase tracking-[0.25em] mt-0.5">Admin Portal</span>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <h2 className="text-5xl font-bold text-white leading-tight tracking-tight">
-              Articulink <br />
-              <span className="text-[#2A8FA0]">Speech Analytics</span>
+          {/* Middle: Feature highlights */}
+          <div className="space-y-6">
+            <h2 className="text-3xl font-bold text-white leading-tight tracking-tight">
+              Speech Analytics<br />
+              <span className="text-[#7DD3E8]">Dashboard</span>
             </h2>
-            <p className="text-white/60 text-sm font-medium tracking-tight">
-              Advanced communication speech monitor interface.
+            <p className="text-white/50 text-sm leading-relaxed max-w-[280px]">
+              Monitor and analyze communication patterns with advanced speech recognition.
             </p>
-          </div>
-        </div>
 
+            {/* Feature pills */}
+            <div className="flex flex-col gap-2.5">
+              <div className="flex items-center gap-3 text-white/60 text-xs">
+                <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                  <Mic size={14} className="text-[#7DD3E8]" />
+                </div>
+                <span>Real-time speech monitoring</span>
+              </div>
+              <div className="flex items-center gap-3 text-white/60 text-xs">
+                <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                  <BarChart3 size={14} className="text-[#7DD3E8]" />
+                </div>
+                <span>Advanced analytics & reports</span>
+              </div>
+              <div className="flex items-center gap-3 text-white/60 text-xs">
+                <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                  <Users size={14} className="text-[#7DD3E8]" />
+                </div>
+                <span>User management tools</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom: Copyright */}
+          <p className="text-white/20 text-[10px]">© 2026 ArticuLink. All rights reserved.</p>
+        </div>
       </div>
 
       {/* Right Side: Form */}
-      <div className="flex-1 p-8 md:p-16 flex flex-col justify-center bg-white relative">
-        {/* Logo for mobile view */}
-        <div className="md:hidden flex items-center gap-3 mb-12">
-          <img src="/images/icon-white.png" alt="ArticuLink" className="w-10 h-10 object-contain" />
-          <h1 className="text-xl font-bold text-[#1C2B3A]">ArticuLink</h1>
+      <div className="w-full md:w-[380px] flex-shrink-0 p-8 md:p-10 flex flex-col justify-center bg-white relative animate-slideInRight">
+
+        {/* Mobile logo */}
+        <div className="md:hidden flex items-center gap-3 mb-8">
+          <img src="/images/icon-white.png" alt="ArticuLink" className="w-9 h-9 object-contain" />
+          <h1 className="text-lg font-bold text-[#1C2B3A]">ArticuLink</h1>
         </div>
 
-        <div className="max-w-[340px] mx-auto w-full space-y-10">
-          <div className="space-y-3">
-            <h1 className="text-3xl font-bold text-[#1C2B3A] tracking-tight">
-              Admin Login
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-[#1C2B3A] tracking-tight">
+              Welcome back
             </h1>
-            <div className="text-[#4A5A6A] text-[10px] font-bold uppercase tracking-widest leading-relaxed flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-[#1A4480]" />
-              Identity verification required
-            </div>
+            <p className="text-[#6B7280] text-sm">
+              Sign in to your admin account
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
             {err && (
-              <div className="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-widest animate-shake">
+              <div className="p-3 rounded-md bg-red-50 border border-red-200 text-red-600 text-xs animate-shake">
                 <div className="flex items-center gap-2">
-                  <AlertCircle size={14} />
-                  {err}
+                  <AlertCircle size={14} className="shrink-0" />
+                  <span>{err}</span>
                 </div>
               </div>
             )}
 
-            <div className="space-y-5">
-              <div className="space-y-2">
-                <label className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest ml-4 block">
-                  Biometric Identity (Email)
+            <div className="space-y-3">
+              {/* Email */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-[#374151] block">
+                  Email Address
                 </label>
                 <div className="relative group">
-                  <Mail size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#4A5A6A]/40 transition-colors group-focus-within:text-[#1A4480]" />
+                  <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] transition-colors group-focus-within:text-[#1A4480]" />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@articulink.com"
-                    className="w-full bg-[#FAF8F4] border border-[#DDD6C8] rounded-xl py-4 pl-14 pr-6 text-[#1C2B3A] text-xs font-medium outline-none focus:bg-white focus:border-[#1A4480]/30 transition-all shadow-sm"
+                    placeholder="you@example.com"
+                    className="w-full bg-white border border-[#D1D5DB] rounded-md py-2.5 pl-10 pr-3 text-[#1C2B3A] text-sm outline-none focus:border-[#1A4480] focus:ring-2 focus:ring-[#1A4480]/10 transition-all placeholder:text-[#9CA3AF]"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[9px] font-bold text-[#4A5A6A] uppercase tracking-widest ml-4 block">
-                  Security Neural Key
+              {/* Password */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-[#374151] block">
+                  Password
                 </label>
                 <div className="relative group">
-                  <Lock size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#4A5A6A]/40 transition-colors group-focus-within:text-[#1A4480]" />
+                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] transition-colors group-focus-within:text-[#1A4480]" />
                   <input
                     type={showPassword ? "text" : "password"}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-[#FAF8F4] border border-[#DDD6C8] rounded-xl py-4 pl-14 pr-14 text-[#1C2B3A] text-xs font-medium outline-none focus:bg-white focus:border-[#1A4480]/30 transition-all shadow-sm"
+                    className="w-full bg-white border border-[#D1D5DB] rounded-md py-2.5 pl-10 pr-10 text-[#1C2B3A] text-sm outline-none focus:border-[#1A4480] focus:ring-2 focus:ring-[#1A4480]/10 transition-all placeholder:text-[#9CA3AF]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-5 top-1/2 -translate-y-1/2 text-[#4A5A6A]/40 hover:text-[#1C2B3A] transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151] transition-colors"
                   >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                   </button>
                 </div>
               </div>
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#1A4480] text-white rounded-xl py-4 text-[10px] font-bold uppercase tracking-widest transition-all hover:bg-[#0F2847] shadow-lg shadow-[#1A4480]/20 disabled:opacity-50 group/btn active:scale-[0.98]"
+              className="w-full bg-[#1A4480] text-white rounded-md py-2.5 text-sm font-medium transition-all hover:bg-[#153A6E] active:scale-[0.99] disabled:opacity-50"
             >
-              <span className="flex items-center justify-center gap-2">
-                {isLoading ? "Validating Path..." : "Sign-in"}
-                {!isLoading && <ArrowRight size={16} className="transition-transform group-hover/btn:translate-x-1" />}
-              </span>
+              {isLoading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
-          <div className="pt-6 text-center">
-            <p className="text-[9px] font-bold text-[#4A5A6A]/30 uppercase tracking-[0.25em] flex items-center justify-center gap-3">
-              <ShieldCheck size={12} />
-              Articulink 2026 © All Rights Reserved.
+          {/* Footer */}
+          <div className="pt-4 text-center border-t border-[#F3F4F6]">
+            <p className="text-[10px] text-[#9CA3AF] flex items-center justify-center gap-1.5">
+              <ShieldCheck size={11} />
+              Secured with end-to-end encryption
             </p>
           </div>
         </div>
@@ -201,26 +241,16 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-[#FAF8F4] flex items-center justify-center p-4 relative overflow-hidden font-sans">
-      {/* Dynamic Background with bg.jpg */}
+    <main className="min-h-screen bg-[#F0EDE8] flex items-center justify-center p-4 relative overflow-hidden font-sans">
+      {/* Subtle background texture */}
       <div className="absolute inset-0 z-0">
-        <img
-          src="/images/bg.jpg"
-          alt=""
-          className="w-full h-full object-cover opacity-[0.08]"
-        />
-        <div className="absolute inset-0 bg-[#FAF8F4]/60 backdrop-blur-[1px]" />
-      </div>
-
-      {/* Decorative Background Elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-10">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#1A4480]/10 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#2A8FA0]/10 blur-[120px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(26,68,128,0.06)_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(42,143,160,0.06)_0%,transparent_50%)]" />
       </div>
 
       <Suspense fallback={
-        <div className="w-full max-w-[950px] h-[600px] bg-white rounded-3xl border border-[#DDD6C8] flex items-center justify-center z-20">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#1A4480]/10 border-t-[#1A4480]" />
+        <div className="w-full max-w-[1000px] h-[560px] bg-white rounded-2xl flex items-center justify-center z-20">
+          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#1A4480]/10 border-t-[#1A4480]" />
         </div>
       }>
         <LoginForm />
@@ -234,6 +264,33 @@ export default function LoginPage() {
         }
         .animate-shake {
           animation: shake 0.2s ease-in-out 0s 2;
+        }
+        @keyframes slideOutLeft {
+          0% {
+            opacity: 0;
+            transform: translateX(50%);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes slideOutRight {
+          0% {
+            opacity: 0;
+            transform: translateX(-50%);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        .animate-slideInLeft {
+          animation: slideOutLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-slideInRight {
+          animation: slideOutRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+          opacity: 0;
         }
       `}</style>
     </main>
