@@ -75,7 +75,7 @@ function LoginForm() {
       {/* Left Side: Branding/Visual */}
       <div className="hidden md:flex flex-1 bg-[#1A4480] p-16 flex-col justify-between relative overflow-hidden">
         {/* Subtle bg.jpg overlay for branding side */}
-        <div className="absolute inset-0 opacity-20 mix-blend-overlay">
+        <div className="absolute inset-0 mix-blend-overlay">
           <img src="/images/bg.jpg" alt="" className="w-full h-full object-cover" />
         </div>
 
