@@ -143,7 +143,7 @@ export default function PronunciationPage() {
       />
 
       {!selectedUser && (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full">
+        <div className="flex flex-col gap-6 w-full">
           <LanguageClarityChart />
           <WordInsightsChart />
         </div>
