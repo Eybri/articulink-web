@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Users,
   Mic,
+  MessageSquareText,
   Settings,
   LogOut,
   ChevronLeft,
@@ -60,6 +61,7 @@ export default function Sidebar({
     { text: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/admin/dashboard" },
     { text: "Users", icon: <Users size={20} />, path: "/admin/users" },
     { text: "Pronunciation", icon: <Mic size={20} />, path: "/admin/pronunciation" },
+    { text: "Feedback", icon: <MessageSquareText size={20} />, path: "/admin/feedback" },
     { text: "Settings", icon: <Settings size={20} />, path: "/admin/settings" },
   ];
 
