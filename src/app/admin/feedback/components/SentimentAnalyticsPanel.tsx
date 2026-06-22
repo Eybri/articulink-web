@@ -5,22 +5,25 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Sparkles, Lightbulb } from "lucide-react";
 import { FeedbackStats } from "../types";
 
+const COLORS = {
+  positive: '#10B981', // emerald-500
+  neutral: '#F59E0B',  // amber-500
+  negative: '#EF4444', // red-500
+};
+
 export function SentimentAnalyticsPanel({ stats }: { stats: FeedbackStats | null }) {
   if (!stats || !stats.sentimentDistribution || stats.sentimentDistribution.length === 0) {
     return null; // Don't show if no AI data is available
   }
 
-  const COLORS = {
-    positive: '#10B981', // emerald-500
-    neutral: '#F59E0B',  // amber-500
-    negative: '#EF4444', // red-500
-  };
-
-  const chartData = stats.sentimentDistribution.filter(d => d.count > 0).map(d => ({
-    name: d.sentiment.charAt(0).toUpperCase() + d.sentiment.slice(1),
-    value: d.count,
-    color: COLORS[d.sentiment as keyof typeof COLORS] || '#1A4480'
-  }));
+  const chartData = stats.sentimentDistribution.filter(d => d && d.count > 0 && d.sentiment).map(d => {
+    const sent = d.sentiment || 'neutral';
+    return {
+      name: sent.charAt(0).toUpperCase() + sent.slice(1),
+      value: d.count,
+      color: COLORS[sent as keyof typeof COLORS] || '#1A4480'
+    };
+  });
 
   const totalAnalyzed = stats.sentimentDistribution.reduce((sum, d) => sum + d.count, 0);
 
@@ -63,7 +66,7 @@ export function SentimentAnalyticsPanel({ stats }: { stats: FeedbackStats | null
               </ResponsiveContainer>
             </div>
             <div className="w-1/2 pl-4 space-y-3">
-              {stats.sentimentDistribution.map((s) => (
+              {stats.sentimentDistribution.filter(s => s && s.sentiment).map((s) => (
                 <div key={s.sentiment} className="flex flex-col">
                   <div className="flex items-center justify-between text-[10px] font-bold text-[#4A5A6A] uppercase tracking-wider mb-1">
                     <div className="flex items-center gap-1.5">
