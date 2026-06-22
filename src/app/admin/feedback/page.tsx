@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Search,
   RotateCw,
@@ -95,6 +95,8 @@ export default function FeedbackPage() {
           created_at: f.createdAt,
           status: "published" as const,
           attached_images: f.attachedImages || [],
+          admin_reply: f.adminReply || undefined,
+          admin_replied_at: f.updatedAt || undefined,
         };
       });
 
@@ -142,6 +144,13 @@ export default function FeedbackPage() {
       }
     });
   };
+
+  const handleReply = useCallback(async (reviewId: string, reply: string) => {
+    await feedbackAPI.replyToFeedback(reviewId, reply);
+    await fetchData();
+    // Update the selected review in the modal with the new reply
+    setSelectedReview(prev => prev ? { ...prev, admin_reply: reply, admin_replied_at: new Date().toISOString() } : null);
+  }, []);
 
   // Components have their own badge renderers now.
 
@@ -212,6 +221,7 @@ export default function FeedbackPage() {
         <FeedbackDetailModal
           selectedReview={selectedReview}
           setSelectedReview={setSelectedReview}
+          onReply={handleReply}
         />
       )}
     </div>

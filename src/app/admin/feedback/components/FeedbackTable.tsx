@@ -143,6 +143,12 @@ export function FeedbackTable({
                 <div className="flex flex-wrap gap-2">
                   {getCategoryBadge(review.category)}
                   {getSentimentBadge(review.sentiment)}
+                  {review.admin_reply && (
+                    <span className="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-[#1A4480]/5 text-[#1A4480] border-[#1A4480]/15 flex items-center gap-1">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+                      Replied
+                    </span>
+                  )}
                 </div>
                 
                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -13,6 +13,8 @@ export interface Review {
   created_at: string;
   status: "published" | "flagged" | "archived";
   attached_images?: string[];
+  admin_reply?: string;
+  admin_replied_at?: string;
 }
 
 export interface FeedbackStats {
