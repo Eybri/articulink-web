@@ -12,6 +12,7 @@ export interface Review {
   sentiment: "positive" | "neutral" | "negative";
   created_at: string;
   status: "published" | "flagged" | "archived";
+  attached_images?: string[];
 }
 
 export interface FeedbackStats {

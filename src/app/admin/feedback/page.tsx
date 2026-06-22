@@ -94,6 +94,7 @@ export default function FeedbackPage() {
           sentiment,
           created_at: f.createdAt,
           status: "published" as const,
+          attached_images: f.attachedImages || [],
         };
       });
 

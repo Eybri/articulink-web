@@ -117,10 +117,26 @@ export function FeedbackDetailModal({
 
           {/* Comment */}
           <div className="bg-[#FAF8F4] rounded-xl p-4 border border-[#DDD6C8]/50">
-            <p className="text-sm text-[#1C2B3A] leading-relaxed font-medium">
+            <p className="text-sm text-[#1C2B3A] leading-relaxed font-medium whitespace-pre-wrap">
               &ldquo;{selectedReview.comment}&rdquo;
             </p>
           </div>
+
+          {/* Attached Images */}
+          {selectedReview.attached_images && selectedReview.attached_images.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-[#4A5A6A] uppercase tracking-widest">
+                Attached Images
+              </p>
+              <div className="flex flex-wrap gap-3">
+                {selectedReview.attached_images.map((img, idx) => (
+                  <div key={idx} className="relative h-20 w-20 rounded-xl overflow-hidden border border-[#DDD6C8] shadow-sm group cursor-pointer hover:border-[#1A4480]/30 transition-colors">
+                    <img src={img} alt={`Attachment ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Tags */}
           <div className="flex items-center gap-2 flex-wrap">
