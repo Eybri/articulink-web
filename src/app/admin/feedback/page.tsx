@@ -23,6 +23,7 @@ import { FeedbackStatCard } from "./components/FeedbackStatCard";
 import { FeedbackFilters } from "./components/FeedbackFilters";
 import { FeedbackTable } from "./components/FeedbackTable";
 import { FeedbackDetailModal } from "./components/FeedbackDetailModal";
+import { SentimentAnalyticsPanel } from "./components/SentimentAnalyticsPanel";
 import { Review, FeedbackStats } from "./types";
 
 
@@ -91,7 +92,8 @@ export default function FeedbackPage() {
           rating: f.rating,
           comment: f.feedbackText || '(No comment provided)',
           category: Array.isArray(f.categories) && f.categories.length > 0 ? f.categories.join(', ') : 'General',
-          sentiment,
+          sentiment: f.sentiment || sentiment,
+          sentimentScore: f.sentimentScore,
           created_at: f.createdAt,
           status: "published" as const,
           attached_images: f.attachedImages || [],
@@ -190,6 +192,9 @@ export default function FeedbackPage() {
           color="bg-[#2A8FA0]/10"
         />
       </div>
+
+      {/* AI Sentiment Analytics Panel */}
+      <SentimentAnalyticsPanel stats={stats} />
 
       {/* Filters */}
       <FeedbackFilters

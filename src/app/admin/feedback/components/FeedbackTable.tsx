@@ -26,7 +26,7 @@ export function FeedbackTable({
   setSelectedReview,
   handleDelete,
 }: FeedbackTableProps) {
-  const getSentimentBadge = (sentiment: string) => {
+  const getSentimentBadge = (sentiment: string, isAi: boolean = false) => {
     const styles: Record<string, string> = {
       positive: "bg-emerald-50 text-emerald-600 border-emerald-100",
       neutral: "bg-amber-50 text-amber-600 border-amber-100",
@@ -35,11 +35,12 @@ export function FeedbackTable({
     return (
       <span
         className={cn(
-          "px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border",
+          "px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border flex items-center gap-1",
           styles[sentiment] || "bg-zinc-50 text-zinc-600 border-zinc-100"
         )}
       >
         {sentiment}
+        {isAi && <span className="opacity-70 text-[8px] ml-0.5" title="Analyzed by AI">✦</span>}
       </span>
     );
   };
@@ -142,7 +143,7 @@ export function FeedbackTable({
               <div className="pt-4 border-t border-[#DDD6C8]/50 flex items-center justify-between mt-auto">
                 <div className="flex flex-wrap gap-2">
                   {getCategoryBadge(review.category)}
-                  {getSentimentBadge(review.sentiment)}
+                  {getSentimentBadge(review.sentiment || 'neutral', !!review.sentimentScore)}
                   {review.admin_reply && (
                     <span className="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border bg-[#1A4480]/5 text-[#1A4480] border-[#1A4480]/15 flex items-center gap-1">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>

@@ -41,7 +41,7 @@ export function FeedbackDetailModal({
     }
   };
 
-  const getSentimentBadge = (sentiment: string) => {
+  const getSentimentBadge = (sentiment: string, isAi: boolean = false) => {
     const styles: Record<string, string> = {
       positive: "bg-emerald-50 text-emerald-600 border-emerald-100",
       neutral: "bg-amber-50 text-amber-600 border-amber-100",
@@ -50,11 +50,12 @@ export function FeedbackDetailModal({
     return (
       <span
         className={cn(
-          "px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border",
+          "px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest border flex items-center gap-1",
           styles[sentiment] || "bg-zinc-50 text-zinc-600 border-zinc-100"
         )}
       >
         {sentiment}
+        {isAi && <span className="opacity-70 text-[8px] ml-0.5" title="Analyzed by AI">✦</span>}
       </span>
     );
   };
@@ -168,7 +169,7 @@ export function FeedbackDetailModal({
           {/* Tags */}
           <div className="flex items-center gap-2 flex-wrap">
             {getCategoryBadge(selectedReview.category)}
-            {getSentimentBadge(selectedReview.sentiment)}
+            {getSentimentBadge(selectedReview.sentiment || 'neutral', !!selectedReview.sentimentScore)}
             {getStatusBadge(selectedReview.status)}
           </div>
 
