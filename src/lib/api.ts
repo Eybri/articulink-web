@@ -278,6 +278,26 @@ export const reportsAPI = {
   }
 };
 
+// Feedback API functions
+export const feedbackAPI = {
+  getFeedbacks: async (params = {}) => {
+    const response = await api.get('/api/admin/feedbacks', { params });
+    return response.data;
+  },
+  getFeedbackStats: async () => {
+    const response = await api.get('/api/admin/feedbacks/stats');
+    return response.data;
+  },
+  deleteFeedback: async (feedbackId: string) => {
+    const response = await api.delete(`/api/admin/feedbacks/${feedbackId}`);
+    return response.data;
+  },
+  replyToFeedback: async (feedbackId: string, reply: string) => {
+    const response = await api.put(`/api/admin/feedbacks/${feedbackId}/reply`, { reply });
+    return response.data;
+  }
+};
+
 export const apiUtils = {
   handleError: (error: any) => {
     if (error.response) {
