@@ -105,7 +105,7 @@ function LoginForm() {
           {/* Middle: Feature highlights */}
           <div className="space-y-6">
             <h2 className="text-3xl font-bold text-white leading-tight tracking-tight">
-              Speech Analytics<br />
+              Articulink Analytics<br />
               <span className="text-[#7DD3E8]">Dashboard</span>
             </h2>
             <p className="text-white/50 text-sm leading-relaxed max-w-[280px]">
@@ -118,7 +118,7 @@ function LoginForm() {
                 <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
                   <Mic size={14} className="text-[#7DD3E8]" />
                 </div>
-                <span>Real-time speech monitoring</span>
+                <span>Cleft speech monitoring</span>
               </div>
               <div className="flex items-center gap-3 text-white/60 text-xs">
                 <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
