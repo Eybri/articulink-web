@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Search,
   RotateCw,
@@ -23,6 +23,7 @@ import { FeedbackStatCard } from "./components/FeedbackStatCard";
 import { FeedbackFilters } from "./components/FeedbackFilters";
 import { FeedbackTable } from "./components/FeedbackTable";
 import { FeedbackDetailModal } from "./components/FeedbackDetailModal";
+import { SentimentAnalyticsPanel } from "./components/SentimentAnalyticsPanel";
 import { Review, FeedbackStats } from "./types";
 
 
@@ -91,9 +92,13 @@ export default function FeedbackPage() {
           rating: f.rating,
           comment: f.feedbackText || '(No comment provided)',
           category: Array.isArray(f.categories) && f.categories.length > 0 ? f.categories.join(', ') : 'General',
-          sentiment,
+          sentiment: f.sentiment || sentiment,
+          sentimentScore: f.sentimentScore,
           created_at: f.createdAt,
           status: "published" as const,
+          attached_images: f.attachedImages || [],
+          admin_reply: f.adminReply || undefined,
+          admin_replied_at: f.updatedAt || undefined,
         };
       });
 
@@ -142,6 +147,13 @@ export default function FeedbackPage() {
     });
   };
 
+  const handleReply = useCallback(async (reviewId: string, reply: string) => {
+    await feedbackAPI.replyToFeedback(reviewId, reply);
+    await fetchData();
+    // Update the selected review in the modal with the new reply
+    setSelectedReview(prev => prev ? { ...prev, admin_reply: reply, admin_replied_at: new Date().toISOString() } : null);
+  }, []);
+
   // Components have their own badge renderers now.
 
 
@@ -181,6 +193,9 @@ export default function FeedbackPage() {
         />
       </div>
 
+      {/* AI Sentiment Analytics Panel */}
+      <SentimentAnalyticsPanel stats={stats} />
+
       {/* Filters */}
       <FeedbackFilters
         search={search}
@@ -211,6 +226,7 @@ export default function FeedbackPage() {
         <FeedbackDetailModal
           selectedReview={selectedReview}
           setSelectedReview={setSelectedReview}
+          onReply={handleReply}
         />
       )}
     </div>
